@@ -1,0 +1,15 @@
+# Local agent knowledge and working notes
+AGENTS.md
+HANDOFF.md
+CLAUDE.md
+GEMINI.md
+.cursorrules
+docs/DEVELOPMENT.md
+**/*superpowers*/
+.agents/
+.codex/
+design-qa.md
+node_modules/
+
+# Local history exports
+exports/
