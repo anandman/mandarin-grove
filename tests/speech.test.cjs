@@ -1,0 +1,55 @@
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
+function harness(voice='auto') {
+ const spoken=[],audio=[],saved=new Map([['zh_voice',voice]]),events={};
+ const voices=[{name:'Mandarin',lang:'zh-CN',voiceURI:'mandarin',localService:true},{name:'Cantonese',lang:'zh-HK',voiceURI:'cantonese'}];
+ const synth={getVoices:()=>voices,cancel(){},speak(u){spoken.push(u)},addEventListener(n,f){events[n]=f}};
+ class Audio {constructor(url){this.url=url;audio.push(this)}play(){return Promise.resolve()}pause(){this.paused=true}}
+ const ctx=vm.createContext({window:{speechSynthesis:synth},speechSynthesis:synth,SpeechSynthesisUtterance:class{constructor(text){this.text=text}},Audio,localStorage:{getItem:k=>saved.get(k),setItem:(k,v)=>saved.set(k,v)},document:{getElementById:()=>null},setTimeout,clearTimeout});
+ vm.runInContext(fs.readFileSync('practice.js','utf8'),ctx);
+ vm.runInContext("const ALL=[{c:'狗',p:'gǒu'},{c:'子',p:'zǐ'},{c:'假',p:'jià / jiǎ'},{c:'满',p:'mǎn'}];",ctx);
+ vm.runInContext(fs.readFileSync('speech.js','utf8'),ctx);
+ return {ctx,spoken,audio,voices,saved,events};
+}
+test('device Mandarin voice receives context for problem characters',()=>{
+ const h=harness('mandarin');h.ctx.say('假');assert.equal(h.spoken[0].text,'假期的假');assert.equal(h.spoken[0].voice.lang,'zh-CN');
+ h.ctx.say('子');assert.equal(h.spoken[1].text,'子，子女的子');assert.equal(h.ctx.mandarinVoices().length,1);
+});
+test('recorded audio is an explicit selectable option',()=>{
+ const h=harness('recorded');h.ctx.say('狗');assert.equal(h.audio[0].url,'audio/%E7%8B%97.mp3');assert.equal(h.spoken.length,0);
+});
+test('late rejected playback cannot speak a previous question',async()=>{
+ const h=harness('recorded');h.ctx.say('狗');h.ctx.stopSpeech();h.audio[0].onerror();await Promise.resolve();assert.equal(h.spoken.length,0);
+});
+test('browser default is attempted even when voice enumeration is empty',()=>{
+ const h=harness();h.voices.length=0;h.ctx.say('狗');assert.equal(h.audio.length,0);assert.equal(h.spoken[0].lang,'zh-CN');assert.equal(h.spoken[0].voice,undefined);
+});
+test('navigation cancels queued instruction and character speech',async()=>{
+ const h=harness();h.ctx.sayThen('en_listen','狗');h.ctx.stopSpeech();h.audio[0].onended();await Promise.resolve();assert.equal(h.spoken.length,0);
+});
+
+test('automatic Mandarin leaves voice selection to browser, not first listed voice',()=>{
+ const h=harness();h.ctx.say('狗');assert.equal(h.spoken[0].voice,undefined);assert.equal(h.spoken[0].lang,'zh-CN');
+});
+test('exact duplicates collapse but same-name distinct voices stay selectable',()=>{
+ const h=harness();h.voices.push({...h.voices[0]},{...h.voices[0],voiceURI:'mandarin-enhanced'});
+ const voices=h.ctx.mandarinVoices();assert.equal(voices.length,2);
+ assert.notEqual(h.ctx.voiceKey(voices[0]),h.ctx.voiceKey(voices[1]));
+ assert.notEqual(h.ctx.voiceLabel(voices[0],voices),h.ctx.voiceLabel(voices[1],voices));
+ h.saved.set('zh_voice',h.ctx.voiceKey(voices[1]));h.ctx.say('子');assert.equal(h.spoken[0].voice.voiceURI,'mandarin-enhanced');
+});
+test('Mandarin language variants include cmn and script tags without Cantonese',()=>{
+ const h=harness();h.voices.push({name:'Lanlan',lang:'cmn_Hans_CN',voiceURI:'lanlan'},{name:'Other Mandarin',lang:'zh_Hans_CN',voiceURI:'hans'},{name:'Cantonese',lang:'yue-Hant-HK',voiceURI:'yue'});
+ assert.equal(h.ctx.mandarinVoices().length,3);
+});
+test('legacy stored voice URI still selects the same voice',()=>{
+ const h=harness('mandarin');h.ctx.say('狗');assert.equal(h.spoken[0].voice.voiceURI,'mandarin');
+});
+test('browser report shows unfiltered catalog, including excluded languages',()=>{
+ const h=harness();const report=JSON.parse(h.ctx.voiceReport());
+ assert.equal(report.voices.length,2);assert.equal(report.voices[1].lang,'zh-HK');assert.equal(report.voices[1].mandarin,false);
+ assert.ok(h.ctx.voiceSettingsMarkup().includes('Google Cloud TTS'));
+});
+
+test('selected voice receives 满 without a voice-specific pronunciation substitution',()=>{
+ const h=harness('mandarin');h.ctx.say('满');assert.equal(h.spoken[0].text,'满');assert.equal(h.spoken[0].voice.voiceURI,'mandarin');
+});

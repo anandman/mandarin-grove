@@ -80,3 +80,14 @@ body.kg #A .pin{display:none}body.kg .choices button{font-size:96px;min-width:13
 .set .zoo{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0;padding:0 8px 10px}.set .zoo div.z{padding:8px 2px;border-radius:14px}.set .zoo .ch{font-size:30px!important}.set .zoo .py{font-size:12px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #totop{position:fixed;right:14px;bottom:18px;z-index:40;border:0;border-radius:999px;padding:12px 18px;min-height:48px;font-size:18px;font-weight:800;background:#1F2937;color:#fff;box-shadow:0 4px 14px #0003;transform:translateY(120px);opacity:0;transition:transform .2s,opacity .2s;pointer-events:none}#totop.show{transform:none;opacity:1;pointer-events:auto}
 .cst{margin:12px 0 0;font-size:18px}.cnote{margin:6px 0 0;font-size:15px;color:#6B7280}.cb{font-size:17px;font-weight:800;padding:10px 18px;border-radius:999px;margin:10px 8px 0 0;min-height:44px}.cb:disabled{background:#E5E7EB!important;color:#6B7280!important;border-color:#E5E7EB!important}
+
+/* Unit selection and device speech controls */
+.reading-note{font-size:16px;line-height:1.5;color:#6B7280;margin:10px 0}
+.voice-label{display:block;font-weight:700;margin-bottom:8px}
+.voice-choice{width:100%;font-size:18px;padding:12px;border:2px solid #e5e7eb;border-radius:12px;background:#fff}
+.cram-units{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;text-align:left}
+.cram-unit{display:flex;align-items:flex-start;gap:12px;border:2px solid #e5e7eb;border-radius:16px;background:#fff;padding:16px;cursor:pointer}
+.cram-unit:has(input:checked){border-color:#1D4ED8;background:#EFF6FF}
+.cram-unit input{width:24px;height:24px;flex-shrink:0;accent-color:#1D4ED8}
+.cram-unit b{display:block;font-size:20px}.cram-unit small{display:block;font-size:20px;line-height:1.6;color:#4B5563}
+.cram-modes button{min-height:100px}.cram-modes button:disabled{opacity:.45;cursor:default}

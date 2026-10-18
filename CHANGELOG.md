@@ -11,3 +11,7 @@ Exact downloaded single-page HTML plus recovered static assets. This is the comp
 ## Split recovered source and enable LAN serving
 
 Separate unchanged inline scripts/styles into editable files and add an app-only static server plus local run commands. Serving/tooling is reconstructed from available files.
+
+## Align curriculum and add voices and mixed cross-grade cram
+
+Use the saved pre-learning app/cram snapshots for PDF-aligned units, pinyin grading, device voices, My Characters grouping and shuffled cross-grade cram. Companion helpers/tests reconstructed from compatible later files.
