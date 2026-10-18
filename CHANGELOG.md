@@ -19,3 +19,7 @@ Use the saved pre-learning app/cram snapshots for PDF-aligned units, pinyin grad
 ## Add spaced learning, mastery, saved sessions and mixed pinyin
 
 Reconstruct learning records, per-skill review scheduling, parent dashboard, capped30-question cram, unit-selection persistence and Grade2+ mixed pinyin from saved snapshots. Existing reward rules are preserved at this stage.
+
+## Add child progress, robust settings persistence and static feedback
+
+Exact public application snapshot saved before the current reward work, including child dashboard, stale-tab selection fix, versioned assets, voice corrections and local-only feedback reports. Companion browser tests are included.

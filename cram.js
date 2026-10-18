@@ -1,10 +1,15 @@
 // Cram uses a temporary pool; ordinary practice selection and resumable sessions stay intact.
 let CRAM = null;
 const cramSelection = {};
-function saveCramSelection(){
-  (S.cfg.cramUnits ||= {})[GR()] = [...(cramSelection[GR()] || [])];
-  save();
+function storedCramSelections(){
+  const stored=PR.cur?JSON.parse(localStorage.getItem('zh_p_'+PR.cur)||'null'):null;
+  return stored?.cfg?.cramUnits || S.cfg.cramUnits || {};
 }
+function saveCramSelection(){
+  S.cfg.cramUnits={...storedCramSelections(),[GR()]:[...(cramSelection[GR()]||[])]};
+  save(true);
+}
+
 function mixedCramModes(){return Number(GR())>=2?['listen','trace','flip','memory','dictation']:['listen','trace','flip','memory'];}
 const CRAM_MODES = [
   ['trace','Trace','Follow the strokes'], ['listen','Listen & Tap','Hear it, find it'],
@@ -28,9 +33,9 @@ function showCram() {
   CRAM = null; SESS = null; lq = []; mq = []; screen();
   const grade = GR(), units = cramChoices();
   const available = new Set(units.map(h=>h.id));
+  S.cfg.cramUnits=storedCramSelections();
   const stored = S.cfg.cramUnits?.[grade];
   cramSelection[grade] = new Set((Array.isArray(stored) ? stored : []).filter(id=>available.has(id)));
-  saveCramSelection();
   const groups = new Map();
   for (const unit of units) {
     const key=unit.grade+':'+unit.added+':'+unit.supplemental;

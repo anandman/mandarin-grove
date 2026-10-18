@@ -1,0 +1,31 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),headless:true,args:['--no-sandbox']});
+ const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{
+  const ting={name:'Tingting',lang:'zh-CN',voiceURI:'ting-basic',localService:true};
+  window.testVoices=[ting,{...ting},{...ting,voiceURI:'ting-other'},{name:'Meijia',lang:'zh-TW',voiceURI:'meijia',localService:true}];
+  window.testSpoken=[];window.voiceEvents={};
+  Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>window.testVoices,cancel(){},speak:u=>window.testSpoken.push(u),addEventListener:(event,f)=>window.voiceEvents[event]=f}});
+  window.SpeechSynthesisUtterance=class {constructor(text){this.text=text}};
+ });
+ await page.goto('http://127.0.0.1:4173');await page.evaluate(()=>grown());
+ const select=page.locator('#voice-choice');assert.equal(await select.locator('option').count(),5);
+ assert.ok(await select.locator('option').allTextContents().then(v=>v.includes('Google Cloud TTS recordings')));
+ await page.locator('#voice-preview').click();assert.equal(await page.evaluate(()=>window.testSpoken[0].voice),undefined);
+ const second=await select.locator('option').filter({hasText:'Tingting · zh-CN · variant 2'}).getAttribute('value');
+ await select.selectOption(second);await page.locator('#voice-preview').click();assert.equal(await page.evaluate(()=>window.testSpoken.at(-1).voice.voiceURI),'ting-other');
+ await page.evaluate(()=>{window.testVoices.push({name:'Lanlan',lang:'cmn_Hans_CN',voiceURI:'lanlan',localService:true});window.voiceEvents.voiceschanged()});
+ assert.equal(await select.inputValue(),second);assert.equal(await select.locator('option').count(),6);
+ const lanlan=await select.locator('option').filter({hasText:'Lanlan'}).getAttribute('value');await select.selectOption(lanlan);await page.locator('#voice-preview').click();
+ assert.equal(await page.evaluate(()=>window.testSpoken.at(-1).voice.name),'Lanlan');
+ await page.evaluate(()=>{window.testVoices=window.testVoices.filter(v=>v.name!=='Lanlan');window.dispatchEvent(new Event('focus'))});
+ assert.match(await page.locator('#voice-note').innerText(),/not currently exposed/);
+ assert.equal(await select.inputValue(),lanlan);
+ const report=JSON.parse(await page.locator('#voice-report').inputValue());assert.equal(report.voices.length,4);assert.ok(report.voices.every(v=>v.name!=='Lanlan'));
+ await select.selectOption('auto');await page.locator('#voice-preview').click();assert.equal(await page.evaluate(()=>window.testSpoken.at(-1).voice),undefined);
+ await page.screenshot({path:'/tmp/hanzi-voice-picker-mobile.png',fullPage:true});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
+ console.log('PASS: duplicate/variant picker, browser-default playback, delayed Lanlan discovery, exact saved selection, missing-voice feedback, raw report, mobile width. Mocked catalog; not proof of iOS voice availability.');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

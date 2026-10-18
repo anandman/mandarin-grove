@@ -91,3 +91,7 @@ body.kg #A .pin{display:none}body.kg .choices button{font-size:96px;min-width:13
 .cram-unit input{width:24px;height:24px;flex-shrink:0;accent-color:#1D4ED8}
 .cram-unit b{display:block;font-size:20px}.cram-unit small{display:block;font-size:20px;line-height:1.6;color:#4B5563}
 .cram-modes button{min-height:100px}.cram-modes button:disabled{opacity:.45;cursor:default}
+
+.progress-link{display:block;margin:14px auto 8px;min-height:44px;padding:8px 14px;border:0;background:transparent;color:#4B5563;text-decoration:underline;font-size:16px;cursor:pointer}
+
+#feedback-dialog{box-sizing:border-box;width:min(560px,94vw);max-height:90dvh;overflow:auto;border:0;border-radius:20px;padding:22px;background:#FAF7F2;color:#1F2937}#feedback-dialog::backdrop{background:#0008}#feedback-dialog textarea{display:block;box-sizing:border-box;width:100%;min-height:100px;font:16px system-ui;padding:10px;border:2px solid #ddd;border-radius:10px;margin:8px 0;user-select:text;-webkit-user-select:text}#feedback-dialog #feedback-output{min-height:180px;font:13px monospace}.feedback-close{float:right;min-width:44px;min-height:44px;border:0;border-radius:50%;font-size:20px}.feedback-actions{display:flex;flex-wrap:wrap}.feedback-actions .btn{font-size:16px;padding:10px}

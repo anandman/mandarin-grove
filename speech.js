@@ -92,6 +92,7 @@ async function speakPrompt(text, token) {
   const english = ENGLISH_PROMPTS[text];
   const card = ALL.find(c => c.c === text);
   const prompt = english || (card ? speechText(card) : text);
+  if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,prompt,preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:voicePreference()==='recorded'||!window.speechSynthesis?'bundled recording (device fallback if unavailable)':'browser speech',selectionNote:'Requested voice; actual browser audio is not verified.'};}
   if (!english && voicePreference() !== 'recorded' && window.speechSynthesis) {
     const ok = await speakDevice(prompt, token);
     // Do not substitute a potentially different recording after cancelled speech.
@@ -116,7 +117,7 @@ function voiceSettingsMarkup() {
   return `<label class="voice-label" for="voice-choice">Pronunciation voice</label>
     <select id="voice-choice" class="voice-choice"></select>
     <p id="voice-note" class="reading-note" role="status"></p>
-    <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假</button>
+    <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假 · 满</button>
     <button type="button" class="btn gray" id="voice-refresh">Refresh voices</button>
     <p class="reading-note">Google Cloud TTS recordings are the audio files bundled with this app. The other choices use browser speech.</p>
     <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try Browser default Mandarin; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
@@ -158,7 +159,7 @@ function bindVoiceSettings() {
   document.getElementById('voice-refresh').onclick = refreshVoiceCatalog;
   document.getElementById('voice-preview').onclick = async () => {
     stopSpeech(); const token = speechSequence;
-    for (const text of ['狗','子','假']) {
+    for (const text of ['狗','子','假','满']) {
       if (token !== speechSequence || !await speakPrompt(text, token)) break;
     }
   };
