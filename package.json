@@ -1,0 +1,9 @@
+{
+  "name": "chinese-practice",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "python3 scripts/serve.py",
+    "check": "node --check app.js && node --check version-check.js && node --check vendor/hanzi-writer.js"
+  }
+}

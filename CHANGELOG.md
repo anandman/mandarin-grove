@@ -7,3 +7,7 @@ The original deployed HTML SHA-256 is `66061dd94928b6b0b2dd9d9a33daafd48ea0480ef
 ## Recover original deployed application
 
 Exact downloaded single-page HTML plus recovered static assets. This is the comparison baseline, not the original author repository.
+
+## Split recovered source and enable LAN serving
+
+Separate unchanged inline scripts/styles into editable files and add an app-only static server plus local run commands. Serving/tooling is reconstructed from available files.
