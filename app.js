@@ -39,7 +39,7 @@ function catAll(){const set=CARDS.map(c=>c.c),add=ALL.filter(c=>(!catG||(c.g||''
 function undoT(prev,msg){document.querySelectorAll('.undo').forEach(e=>e.remove());const e=document.createElement('div');e.className='undo';e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1F2937;color:#fff;padding:12px 18px;border-radius:999px;font-size:18px;font-weight:700;z-index:50;display:flex;gap:14px;align-items:center';e.innerHTML=msg+' <button style="background:#fff;color:#1F2937;border:0;border-radius:999px;padding:6px 14px;font-weight:800;font-size:17px">Undo</button>';e.querySelector('button').onclick=()=>{S.cfg.set=prev;save();setCards();lq=[];mq=[];e.remove();const y=scrollY;cat();scrollTo(0,y)};document.body.appendChild(e);setTimeout(()=>e.remove(),5000)}
 function catNone(){const set=CARDS.map(c=>c.c);let keep=set.filter(x=>{const c=ALL.find(a=>a.c===x);return catG&&!(c.g||'').includes(catG)});const n=set.length-keep.length;if(!n){alert('None of these are in practice.');return}const st=keep.length<4;if(st)keep=[];if(!confirm((catG?'Remove '+n+' '+GN[catG]+' characters from practice?':'Remove all '+n+' characters from practice?')+' Stars and progress stay.'+(st?' Practice goes back to the first '+GLB()+' set.':'')))return;S.cfg.set=keep;save();setCards();lq=[];mq=[];const y=scrollY;cat();scrollTo(0,y);undoT(set,'Removed '+(set.length-keep.length))}
 function catT(ch){let set=CARDS.map(c=>c.c);if(set.includes(ch)){if(set.length<=4){alert('Keep at least 4 characters in practice.');return}set=set.filter(x=>x!==ch)}else set.push(ch);S.cfg.set=set;save();setCards();lq=[];mq=[];const y=scrollY;cat();scrollTo(0,y)}
-function zooScreen(){screen();const m=mastered(),bd=S.bad||{};A.innerHTML=`<h1>My Zoo</h1><p class="mean">${m} friend${m===1?'':'s'} · master a character to meet the next one</p>
+function zooScreen(){screen();const m=mastered(),bd=S.bad||{};A.innerHTML=`<h1>My Zoo</h1><p class="mean">${m} friend${m===1?'':'s'} · earn character stars to meet the next one</p>
  <div class="zoo">${ANIMALS.map((a,i)=>`<div class="z ${i<m?'':'lock'}"><div class="a">${i<m?a:'❔'}</div></div>`).join('')}</div>
  <h2 style="margin-top:24px">Badges</h2><div class="zoo">${BADGES.map(b=>`<div class="z ${bd[b[0]]?'':'lock'}" title="${b[3]}"><div class="a">${b[1]}</div><div style="font-size:14px;font-weight:700">${b[2]}</div></div>`).join('')}<div class="z lock"><div class="a">🎓</div><div style="font-size:14px;font-weight:700">Finish a grade</div><div style="font-size:12px">Coming soon</div></div></div>
  <button class="btn" onclick="home()">🏠 Home</button>`}
@@ -60,15 +60,15 @@ function TESTD(){if(!S.cfg.test)return null;const [y,m,d]=S.cfg.test.split('-').
 function daysLeft(){const t=TESTD();if(!t)return null;const n=new Date();n.setHours(0,0,0,0);return Math.round((t-n)/864e5)}
 function archQ(){const d=daysLeft();if(d!==null&&d<0&&S.cfg.quiz){S.cfg.past=(S.cfg.past||[]).filter(p=>p.q!==S.cfg.quiz);S.cfg.past.unshift({q:S.cfg.quiz,d:S.cfg.test});S.cfg.quiz=NXT(S.cfg.quiz);;S.cfg.test='';save()}}
 function pastQ(){screen();A.innerHTML=`<h1>Past quizzes</h1><p class="mean">Tap one to try it again.</p>${(S.cfg.past||[]).map((p,i)=>`<button class="today" style="background:#1F2937" onclick="dictStart(S.cfg.past[${i}].q)"><span><b>${QZ(p.q).join(' ')}</b><small>Test on ${p.d||'—'}</small></span><span class="go">▶ Start</span></button>`).join('')}`}
-function PF(){try{batch().forEach(c=>{if(!STROKES[c.c])SL(c.c,()=>{});fetch('audio/'+encodeURIComponent(c.c)+'.mp3').catch(()=>{})})}catch(e){}}function home(){NAV++;stopSpeech();CRAM=null;archQ();setTimeout(PF,1200);window._scr='';window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));SESS=null;window._lp=window._fp=window._ts=0;TH=[];TF=[];if(GR()!=='2'&&!S.cfg.quiz&&CARDS.length&&batch().every(c=>(S.pts[c.c]||0)>=MASTER)&&next10(true)){setTimeout(()=>{pop(`🎉 ${batch().length} new characters!`);if(KG())say('en_new')},300)}$('home').style.display='none';$('ttl').style.display='';if(writer){writer=null}
+function PF(){try{batch().forEach(c=>{if(!STROKES[c.c])SL(c.c,()=>{});fetch('audio/'+encodeURIComponent(c.c)+'.mp3').catch(()=>{})})}catch(e){}}function home(){ACTIVE_REVIEW=null;NAV++;stopSpeech();CRAM=null;archQ();setTimeout(PF,1200);window._scr='';window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));SESS=null;window._lp=window._fp=window._ts=0;TH=[];TF=[];if(GR()!=='2'&&!S.cfg.quiz&&CARDS.length&&batch().every(c=>characterStage(S,c.c)==='Mastered')&&next10(true)){setTimeout(()=>{pop(`🎉 ${batch().length} new characters!`);if(KG())say('en_new')},300)}$('home').style.display='none';$('ttl').style.display='';if(writer){writer=null}
  const d=daysLeft(),dl=d===null?'Keep it up':d>1?`Test in <b>${d} days</b>`:d===1?'Test is <b>tomorrow</b>':d===0?'Test is <b>today</b> — you got this!':'Test done 🎉';
-  A.innerHTML=`<h1 class="hello">你好 ${prof()?prof().name:''}! 👋</h1>
+  A.innerHTML=`${S.cfg.cramDict?'<button class="btn" onclick="resumeCramDict()">Resume cram pinyin quiz</button>':''}${S.cfg.cram&&S.cfg.cram.i<S.cfg.cram.q.length?'<button class="btn" onclick="resumeCram()">Resume cram</button>':''}<h1 class="hello">你好 ${prof()?prof().name:''}! 👋</h1>
  ${RS()?(()=>{const r=RS();return `<button class="today" onclick="resume()"><span><b>${r.t||"Today's practice"}</b><small>Step ${r.i+1} of ${r.q.length}<span class="rbar" aria-hidden="true"><i style="width:${r.i/r.q.length*100}%"></i></span></small></span><span class="go gw">▶ Keep going</span></button>`})():`<button class="today" onclick="startSession()"><span><b>Today's practice</b><small>About 10 minutes · ${(()=>{const {o,cur}=HSETS();return cur>=0&&GR()!=='2'?o[cur].s+' + a few to review':'your trickiest characters'})()}</small></span><span class="go">▶ Start</span></button>`}
- ${!QZ().length&&GR()!=='2'?'':`<div class="count">${dl} · <b>${QZ().length?QZ().filter(x=>(S.pts[x]||0)>=MASTER).length+' of '+QZ().length:GR()!=='2'?batch().filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+batch().length:mastered()+' of '+CARDS.length}</b> mastered${!QZ().length&&GR()!=='2'?(NCH()?` · next ${NCH().c.length} unlock soon`:''):''}</div>`}
+ ${!QZ().length&&GR()!=='2'?'':`<div class="count">${dl} · <b>${QZ().length?QZ().filter(x=>(S.pts[x]||0)>=MASTER).length+' of '+QZ().length:GR()!=='2'?batch().filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+batch().length:mastered()+' of '+CARDS.length}</b> reward milestones${!QZ().length&&GR()!=='2'?(NCH()?` · next ${NCH().c.length} unlock soon`:''):''}</div>`}
  ${QZ().length?`<button class="today" style="background:#1F2937" onclick="dictStart(null)"><span><b>📝 ${UN()?'Next quiz · Unit '+UN():"This week's quiz"}</b><small>${QZ().join(' ')} · hear it, write it</small></span><span class="go">▶ Start</span></button>`:''}
  <button class="btn gray" style="width:100%;margin:8px 0" onclick="qList()">📚 All unit quizzes</button>
- <button class="today" style="background:#1D4ED8" onclick="showCram()"><span><b>Cram mode</b><small>Choose units or sets · all four modes together</small></span><span class="go">Open ›</span></button>
- <div class="modes"><button onclick="trace(0)"><span class="ic" style="background:#E0F2FE">✏️</span><span>Trace<small>Follow the strokes</small></span></button>
+ <button class="today" style="background:#1D4ED8" onclick="showCram()"><span><b>Cram mode</b><small>Choose units or sets · ${Number(GR())>=2?'five':'four'} modes together</small></span><span class="go">Open ›</span></button>
+ <div class="modes"><button onclick="trace(practiceCards().indexOf(reviewPick(S,practiceCards(),'trace')))"><span class="ic" style="background:#E0F2FE">✏️</span><span>Trace<small>Follow the strokes</small></span></button>
  <button onclick="listen()"><span class="ic" style="background:#DCFCE7">👂</span><span>Listen &amp; Tap<small>Hear it, find it</small></span></button>
  <button onclick="flip()"><span class="ic" style="background:#FEF3C7">🃏</span><span>Flip Cards<small>Do you know it?</small></span></button>
  <button onclick="memory()" ${KG()?'style="display:none"':''}><span class="ic" style="background:#FCE7F3">🧠</span><span>Draw from Memory<small>Write it yourself</small></span></button></div>
@@ -116,60 +116,58 @@ let HO={};function homeSets(){const e=$('sets');if(!e)return;const {o,cur,ix}=HS
 function PSET(j){const h=HS[j];if(!h)return;const set=[...SET()],add=h.c.filter(x=>!set.includes(x));if(add.length){S.cfg.set=set.concat(add);save();setCards();lq=[];mq=[]}const pool=CARDS.filter(c=>h.c.includes(c.c));if(pool.length)startSession(pool,h.f)}
 function HTG(t){const op=HO[(prof()||{}).id||'_'];op.has(t)?op.delete(t):op.add(t);homeSets()}
 addEventListener('scroll',()=>{const b=$('totop');b&&b.classList.toggle('show',scrollY>innerHeight*1.5)},{passive:true});
-function startSession(pool,t){pool=pool&&pool.length?pool:CARDS;const zz=shuffle(pool.filter(asleep)).slice(0,2);const w=zz.concat(pool.filter(c=>!zz.includes(c)).sort((a,b)=>(S.pts[a.c]||0)-(S.pts[b.c]||0)||Math.random()-.5)).slice(0,5);
- const M=KG()?['listen','trace','flip','trace']:['listen','trace','flip','memory'];const q=[];w.forEach((c,k)=>{q.push([M[k%2===0?0:2],c]);q.push([M[k%2===0?1:3],c])});
- SESS={q:shuffle(q.slice(0,4)).concat(q.slice(4)),i:0,t:t||'',pool:pool};nextItem()}
-function nextItem(){if(!SESS)return;if(SESS.i>=SESS.q.length){if(!SESS.cram&&S.cfg.rs){delete S.cfg.rs;save()}const n=SESS.q.length,st=SESS.t,sp=SESS.pool;window.SESS_P=sp;SESS=null;screen();A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:40px">${st?st+' round done!':'Great practice, '+(prof()?prof().name:'')+'!'}</h1><p class="mean">You finished ${n} activities. ${st?sp.filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+sp.length+' in this set':mastered()+' of '+CARDS.length} mastered.</p>${CRAM?`<button class="btn" onclick="startCram(CRAM.mode)">Practice again</button><button class="btn gray" onclick="showCram()">Choose units / mode</button>`:st?`<button class="btn" onclick="startSession(SESS_P,'${st}')" id="again">🔁 Practice again</button>`:''}<button class="btn" onclick="home()">🏠 Back home</button>`;say('太棒了');return}
- if(!SESS.cram){S.cfg.rs={q:SESS.q.map(x=>[x[0],x[1].c]),i:SESS.i,t:SESS.t,p:SESS.pool.map(c=>c.c)};save();}const [m,c]=SESS.q[SESS.i++];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory})[m](c)}
+function startSession(pool,t){pool=pool&&pool.length?pool:CARDS;SESS={q:progressiveQueue(S,pool,10,KG(),Date.now(),shuffle,Number(GR())>=2),i:0,t:t||'',pool};nextItem()}
+function nextItem(){if(!SESS)return;if(SESS.i>=SESS.q.length){delete S.cfg[SESS.cram?'cram':'rs'];save();const n=SESS.q.length,st=SESS.t,sp=SESS.pool;window.SESS_P=sp;SESS=null;screen();A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:40px">${st?st+' round done!':'Great practice, '+(prof()?prof().name:'')+'!'}</h1><p class="mean">You finished ${n} activities. ${st?sp.filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+sp.length+' in this set':mastered()+' of '+CARDS.length} reward milestones. See Grown-ups → Parent dashboard for learning mastery.</p>${CRAM?`<button class="btn" onclick="startCram(CRAM.mode,true)">Practice again</button><button class="btn gray" onclick="showCram()">Choose units / mode</button>`:st?`<button class="btn" onclick="startSession(SESS_P,'${st}')" id="again">🔁 Practice again</button>`:''}<button class="btn" onclick="home()">🏠 Back home</button>`;say('太棒了');return}
+ saveRound();const [m,c]=SESS.q[SESS.i++];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion})[m](c)}
 function RS(){const r=S.cfg.rs;if(!r||!r.q||r.i>=r.q.length)return null;const f=x=>CARDS.find(c=>c.c===x);if(!r.q.every(x=>f(x[1])))return null;return r}
 function resume(){const r=RS();if(!r)return startSession();SESS={q:r.q.map(x=>[x[0],CARDS.find(c=>c.c===x[1])]),i:r.i,t:r.t||'',pool:r.p.map(x=>CARDS.find(c=>c.c===x)).filter(Boolean)};nextItem()}
-function go(f){SESS?nextItem():f()}
+function go(f){skipReview();SESS?nextItem():f()}
 function sessBar(){return SESS?`<div class="sess">${SESS.i} / ${SESS.q.length}<div class="bar"><i style="width:${SESS.i/SESS.q.length*100}%"></i></div></div>`:''}
 let NAV=0;function after(ms,f){const k=NAV;setTimeout(()=>{if(k===NAV)f()},ms)}
-function screen(){NAV++;stopSpeech();$('home').style.display='inline-block';$('ttl').style.display='none';const pv=window._scr;requestAnimationFrame(()=>{const h=(A.querySelector('h1')||{}).textContent||'';if(h!==pv)window.scrollTo(0,0);window._scr=h})}
+function screen(){ACTIVE_REVIEW=null;NAV++;stopSpeech();$('home').style.display='inline-block';$('ttl').style.display='none';const pv=window._scr;requestAnimationFrame(()=>{const h=(A.querySelector('h1')||{}).textContent||'';if(h!==pv)window.scrollTo(0,0);window._scr=h})}
 // TRACE
 let TH=[],TF=[],TLK=0;
-function trNav(d,i){if(TLK)return;if(SESS){if(d>0)nextItem();return}if(d<0){if(!TH.length)return;TF.push(i);trace(TH.pop())}else{TH.push(i);if(TF.length)trace(TF.pop());else go(()=>trace(i+1))}}
-function trace(i){screen();i=(i+practiceCards().length)%practiceCards().length;const c=practiceCards()[i];TLK=1;setTimeout(()=>{TLK=0},700);
+function trNav(d,i){if(TLK)return;if(d>0)skipReview();if(SESS){if(d>0)nextItem();return}if(d<0){if(!TH.length)return;TF.push(i);trace(TH.pop())}else{TH.push(i);if(TF.length)trace(TF.pop());else go(()=>trace(practiceCards().indexOf(reviewPick(S,practiceCards(),'trace'))))}}
+function trace(i){screen();i=(i+practiceCards().length)%practiceCards().length;const c=practiceCards()[i];beginReview(c,'trace');TLK=1;setTimeout(()=>{TLK=0},700);
  A.innerHTML=`${sessBar()||`<div class="prog">${i+1} / ${practiceCards().length}</div>`}<div class="pin">${c.p} <span class="mean">${c.m}</span></div>${wordLine(c)}
  <div id="hw"></div><div class="msg" id="m"></div>
  ${SESS?'':`<button class="btn gray" id="tb" aria-label="Back" ${TH.length?'':'disabled style="opacity:.35;cursor:default"'} onclick="trNav(-1,${i})">◀</button>`}<button class="btn" onclick="say('${c.c}')">🔊</button>
- <button class="btn b5" style="background:#8e6cc8" onclick="writer.cancelQuiz();writer.animateCharacter({onComplete:()=>startQ()})">👀 Show me</button>
+ <button class="btn b5" style="background:#8e6cc8" onclick="ACTIVE_REVIEW.help=true;writer.cancelQuiz();writer.animateCharacter({onComplete:()=>startQ()})">👀 Show me</button>
  <button class="btn gray" id="tn" aria-label="Next" onclick="trNav(1,${i})">▶</button>`;
  mkWriter(c,true);if(KG()&&!window._ts){window._ts=1;sayThen('en_trace',c.c)}else say(c.c);
  window.startQ=()=>{writer.hideCharacter();writer.quiz({showHintAfterMisses:2,leniency:1.3,
   onMistake:()=>{$('m').style.color='#e07b00';$('m').textContent='Try again — follow the glow ✨'},
   onCorrectStroke:()=>{$('m').textContent=''},
-  onComplete:r=>{$('m').style.color='#4a9c2d';$('m').textContent=r.totalMistakes<=1?'Perfect! 🎉':'Nice work! 👍';win(c);say(c.c);const n=$('tn');if(n){n.textContent='Next ▶';n.style.background='#2E9E57';n.style.color='#fff';n.classList.add('pulse')}}})};
+  onComplete:r=>{$('m').style.color='#4a9c2d';$('m').textContent=r.totalMistakes<=2?'Perfect! 🎉':'Nice work! 👍';if(finishReview(traceOutcome(r.totalMistakes,ACTIVE_REVIEW.help)))win(c);say(c.c);const n=$('tn');if(n){n.textContent='Next ▶';n.style.background='#2E9E57';n.style.color='#fff';n.classList.add('pulse')}}})};
  startQ()}
 // LISTEN
-let lq=[];function listen(c0){screen();if(!lq.length)lq=shuffle(practiceCards());const c=c0&&c0.c?c0:lq.pop();let tries=0;
+let lq=[];function listen(c0){screen();if(!lq.length)lq=shuffle(practiceCards());const c=c0&&c0.c?c0:reviewPick(S,practiceCards(),'listen');beginReview(c,'listen');let tries=0;
  const opts=shuffle([c,...shuffle(practiceCards().filter(x=>x.c!==c.c&&!samePronunciation(x,c))).slice(0,KG()?2:3)]);
  A.innerHTML=`${sessBar()}<h2>Which one do you hear? <button id="rp" aria-label="Hear the instructions again" onclick="say('en_listen')" style="font-size:30px;min-width:56px;min-height:56px;border:0;border-radius:16px;background:#DCFCE7;vertical-align:middle;cursor:pointer">🔊</button></h2><button class="btn" style="font-size:40px" onclick="say('${c.c}')">🔊 Play again</button>
  <div class="pin" id="pp" style="visibility:hidden">${c.p}</div>
  <div class="choices">${opts.map(o=>`<button data-c="${o.c}">${o.c}</button>`).join('')}</div><div class="msg" id="m"></div>`;
- A.querySelectorAll('.choices button').forEach(b=>b.onclick=()=>{if(b.dataset.c===c.c){b.classList.add('ok');$('pp').style.visibility='visible';$('m').textContent=KG()?(EMO[c.c]||'').replace('<br>',' ')+' 🎉':`${c.c} = ${c.m} 🎉`;if(tries===0)win(c);after(1500,()=>go(listen))}else{tries++;b.classList.add('no');$('pp').style.visibility='visible';say(c.c)}});
+ A.querySelectorAll('.choices button').forEach(b=>b.onclick=()=>{if(ACTIVE_REVIEW.done)return;if(b.dataset.c===c.c){b.classList.add('ok');$('pp').style.visibility='visible';$('m').textContent=KG()?(EMO[c.c]||'').replace('<br>',' ')+' 🎉':`${c.c} = ${c.m} 🎉`;finishReview(tries===0?'correct':'miss');if(tries===0)win(c);after(1500,()=>go(listen))}else{tries++;ACTIVE_REVIEW.missed=true;b.classList.add('no');$('pp').style.visibility='visible';say(c.c)}});
  if(KG()&&!SESS&&!window._lp){window._lp=1;sayThen('en_listen',c.c)}else after(300,()=>say(c.c))}
 // FLIP (Leitner spaced review)
 const GAP=[0,1,2,4,7];function dayNum(){return Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)}
-function nextCard(){const d=dayNum();const due=practiceCards().filter(c=>(S.due[c.c]||0)<=d);if(!due.length)return null;due.sort((a,b)=>(S.box[a.c]||0)-(S.box[b.c]||0));return shuffle(due.slice(0,Math.min(5,due.length)))[0]}
+function nextCard(){return reviewPick(S,practiceCards(),'flip')}
 function flip(c0){screen();const c=c0&&c0.c?c0:nextCard();
- if(!c){A.innerHTML=`<h1>All done for today! 🎉</h1><p class="mean">Come back tomorrow for more cards.</p><button class="btn" onclick="S.due={};save();flip()">Practice all again</button>`;return}
- const left=practiceCards().filter(x=>(S.due[x.c]||0)<=dayNum()).length;
+ if(!c){A.innerHTML=`<h1>All done for today! 🎉</h1><p class="mean">Come back tomorrow for more cards.</p><button class="btn" onclick="flip()">Practice all again</button>`;return}
+ beginReview(c,'flip');const left=practiceCards().filter(x=>skillState(S,x.c,'flip').due<=Date.now()).length;
  A.innerHTML=`${sessBar()||`<div class="prog">${left} cards left today</div>`}<div class="card" id="cd"><div class="big">${c.c}</div><div class="prog">Tap to flip</div></div><div id="ans"></div>`;
  if(KG()&&!SESS&&!window._fp){window._fp=1;say('en_flip')}$('cd').onclick=()=>{$('cd').innerHTML=`<div class="big" style="font-size:110px">${c.c}</div>${KG()?(EMO[c.c]?emoV(EMO[c.c]):''):`<div class="pin">${c.p}</div><div class="mean">${c.m}</div>${wordLine(c)}`}`;say(c.c);
   $('ans').innerHTML=`<button class="btn r" id="no">😕 Again</button><button class="btn g" id="yes">😀 I knew it!</button>`;
-  $('no').onclick=()=>{if(!CRAM){S.box[c.c]=0;S.due[c.c]=dayNum();save()}go(flip)};
-  $('yes').onclick=()=>{if(!CRAM){const b=Math.min((S.box[c.c]||0)+1,4);S.box[c.c]=b;S.due[c.c]=dayNum()+GAP[b]}win(c);go(flip)}}}
+  $('no').onclick=()=>{if(!finishReview('miss'))return;if(!CRAM){S.box[c.c]=0;S.due[c.c]=dayNum();save()}go(flip)};
+  $('yes').onclick=()=>{if(!finishReview('correct'))return;if(!CRAM){const b=Math.min((S.box[c.c]||0)+1,4);S.box[c.c]=b;S.due[c.c]=dayNum()+GAP[b]}win(c);go(flip)}}}
 // MEMORY
-let mq=[];function memory(c0){screen();if(!mq.length)mq=shuffle(practiceCards());const c=c0&&c0.c?c0:mq.pop();let peek=false;
+let mq=[];function memory(c0){screen();if(!mq.length)mq=shuffle(practiceCards());const c=c0&&c0.c?c0:reviewPick(S,practiceCards(),'memory');beginReview(c,'memory');let peek=false;
  A.innerHTML=`${sessBar()}<h2>Write this from memory</h2><div class="pin">${c.p}</div><div class="mean">${c.m}</div>${wordLine(c,1)}
  <div id="hw"></div><div class="msg" id="m"></div>
  <button class="btn" onclick="say('${c.c}')">🔊</button><button class="btn" style="background:#8e6cc8" id="pk">💡 Peek</button><button class="btn gray" id="sk" onclick="go(memory)">Skip ▶</button>`;
  mkWriter(c,false);say(c.c);
  $('pk').onclick=()=>{peek=true;writer.showOutline();setTimeout(()=>writer.hideOutline(),1500)};
  writer.quiz({showHintAfterMisses:3,leniency:1.2,onMistake:()=>{$('m').style.color='#e07b00';$('m').textContent='Hmm, not that stroke'},onCorrectStroke:()=>{$('m').textContent=''},
-  onComplete:r=>{writer.showCharacter();$('m').style.color='#4a9c2d';const good=!peek&&r.totalMistakes<=2;$('m').textContent=good?'You remembered it! 🎉':'Got it! Keep practicing 👍';if(good)win(c,2);say(c.c);const n=$('sk');if(n){n.textContent='Next ▶';n.style.background='#2E9E57';n.style.color='#fff';n.classList.add('pulse')}}})}
+  onComplete:r=>{writer.showCharacter();$('m').style.color='#4a9c2d';const good=!peek&&r.totalMistakes<=2;$('m').textContent=good?'You remembered it! 🎉':'Got it! Keep practicing 👍';if(finishReview(good?'correct':'assisted')&&good)win(c,2);say(c.c);const n=$('sk');if(n){n.textContent='Next ▶';n.style.background='#2E9E57';n.style.color='#fff';n.classList.add('pulse')}}})}
 
 // DICTATION QUIZ
 function QOPT(g){return '<option value="">Custom (type below)</option>'+QU(g).map(([n,u])=>`<option value="${u}" ${u===S.cfg.quiz?'selected':''}>Unit ${n} · ${u}</option>`).join('')}
@@ -185,11 +183,12 @@ const TM=['\u0304','\u0301','\u030C','\u0300'];
 function pyBase(p){return pinyinBase(p)}
 function pyTone(p){const d=p.normalize('NFD');for(let i=0;i<4;i++)if(d.includes(TM[i]))return i+1;return 0}
 function pyMark(b,t){b=b.replace(/v/g,'ü');if(!t)return b;const v=/a/.test(b)?b.indexOf('a'):/e/.test(b)?b.indexOf('e'):/ou/.test(b)?b.indexOf('o'):Math.max(...[...'iouü'].map(x=>b.lastIndexOf(x)));if(v<0)return b;return (b.slice(0,v+1)+TM[t-1]+b.slice(v+1)).normalize('NFC')}
-function dictStart(l){if(l!==undefined)DQL=l;ALL.forEach(c=>delete c._re);DQ={bad:0,q:shuffle(QZ(DQL).map(x=>ALL.find(c=>c.c===x)).filter(Boolean)),i:0,score:0,n:0};dictItem()}
-function dictItem(){screen();if(DQ.i>=DQ.q.length){A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:36px">Quiz done!</h1>${DQ.bad||!DQ.q.length?'':(award('pq'),'')}<p class="mean">${DQ.score} of ${DQ.n} answers right.</p><button class="btn" onclick="dictStart()">Again</button><button class="btn gray" onclick="home()">Home</button>${CRAM?'<button class="btn gray" onclick="showCram()">Choose units / mode</button>':''}`;return}
+function dictQuestion(c){DQ={session:true,bad:0,q:[c],i:0,score:0,n:0};dictItem()}
+function dictStart(l){SESS=null;if(l!==undefined)DQL=l;ALL.forEach(c=>delete c._re);DQ={bad:0,q:shuffle(QZ(DQL).map(x=>ALL.find(c=>c.c===x)).filter(Boolean)),i:0,score:0,n:0};if(CRAM)DQ.q=DQ.q.slice(0,30);else DQ.q.sort((a,b)=>Math.min(reviewPriority(S,a.c,'pinyin'),reviewPriority(S,a.c,'writing'))-Math.min(reviewPriority(S,b.c,'pinyin'),reviewPriority(S,b.c,'writing')));dictItem()}
+function dictItem(){screen();if(CRAM&&!DQ.session){if(DQ.i>=DQ.q.length)delete S.cfg.cramDict;else S.cfg.cramDict={...DQ,q:DQ.q.map(c=>c.c),pool:CRAM.pool.map(c=>c.c)};save()}if(DQ.i>=DQ.q.length){A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:36px">Quiz done!</h1>${DQ.bad||!DQ.q.length?'':(award('pq'),'')}<p class="mean">${DQ.score} of ${DQ.n} answers right.</p><button class="btn" onclick="dictStart()">Again</button><button class="btn gray" onclick="home()">Home</button>${CRAM?'<button class="btn gray" onclick="showCram()">Choose units / mode</button>':''}`;return}
  const c=DQ.q[DQ.i];const letters=pinyinLetters(c),base=letters.join('');const dec=shuffle([...'abcdeghijklmnoprstuwxyz'].filter(x=>!base.includes(x))).slice(0,3);
  const tiles=shuffle([...letters,...dec]);let mine='',mt=0,drawn=false;
- A.innerHTML=`<div class="prog">${DQ.i+1} / ${DQ.q.length}</div><h2>Listen, then write it</h2>
+ A.innerHTML=`<div class="prog">${DQ.session?SESS.i:DQ.i+1} / ${DQ.session?SESS.q.length:DQ.q.length}</div><h2>Listen, then write it</h2>
  <button class="btn" style="font-size:44px;padding:18px 40px" onclick="say('${c.c}')" aria-label="Play the word">🔊</button>
  <div style="position:relative;width:min(300px,80vw);aspect-ratio:1;margin:14px auto;background:#fff;border:3px solid #e5e7eb;border-radius:18px;background-image:linear-gradient(#eee 1px,transparent 1px),linear-gradient(90deg,#eee 1px,transparent 1px);background-size:50% 50%;background-position:center"><canvas id="dc" style="width:100%;height:100%;touch-action:none"></canvas></div>
  <button class="btn gray" id="dclr">Clear</button>
@@ -207,7 +206,7 @@ function dictItem(){screen();if(DQ.i>=DQ.q.length){A.innerHTML=`<div class="big"
  say(c.c);
  $('dchk').onclick=()=>{const img=cv.toDataURL();const pyOk=pinyinMatches(c,mine,mt);const mineTxt=mine?pyMark(mine,mt):'—';
   const pair=(c.c==='买'||c.c==='卖')?`<div style="margin:14px auto;max-width:420px;background:#FEF3C7;border-radius:16px;padding:12px"><b>Don't mix them up!</b><div style="display:flex;justify-content:space-around;font-size:56px"><div>买<div style="font-size:22px">mǎi ˇ · buy</div></div><div>卖<div style="font-size:22px">mài ˋ · sell</div></div></div><div class="mean">卖 (sell) has an extra <b style="color:#E4572E">十</b> on top. You sell what you bought!</div></div>`:'';
-  A.innerHTML=`<div class="prog">${DQ.i+1} / ${DQ.q.length}</div><h2>How did you do?</h2>
+  A.innerHTML=`<div class="prog">${DQ.session?SESS.i:DQ.i+1} / ${DQ.session?SESS.q.length:DQ.q.length}</div><h2>How did you do?</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:440px;margin:0 auto;align-items:center">
    <div class="mean">You wrote</div><div class="mean">${readings(c).length>1?'Accepted readings':'Correct'}</div>
    <img src="${img}" style="width:100%;background:#fff;border-radius:14px;border:2px solid #e5e7eb" alt="Your character"><div style="font-size:110px;line-height:1">${c.c}</div>
@@ -215,7 +214,7 @@ function dictItem(){screen();if(DQ.i>=DQ.q.length){A.innerHTML=`<div class="big"
   ${pair}<p class="mean">Does your character match?</p>
   <button class="btn r" id="cn">❌ Not yet</button><button class="btn g" id="cy">✅ Yes!</button>`;
   say(c.c);
-  const fin=chOk=>{if(!pyOk)DQ.bad=1;DQ.n+=2;DQ.score+=(chOk?1:0)+(pyOk?1:0);DQ.i++;if(chOk&&pyOk)win(c,2);else if(!DQ.q.slice(DQ.i).includes(c)&&!c._re){c._re=1;DQ.q.push(c)}dictItem()};
+  let graded=false;const fin=chOk=>{if(graded)return;graded=true;recordSkill(S,c.c,'pinyin',pyOk?'correct':'miss');recordSkill(S,c.c,'writing',chOk?'correct':'miss');if(DQ.session){const key=SESS.cram?'cram':'rs';S.cfg[key].i=SESS.i;save();if(chOk&&pyOk)win(c,2);nextItem();return}save();if(!pyOk)DQ.bad=1;DQ.n+=2;DQ.score+=(chOk?1:0)+(pyOk?1:0);DQ.i++;if(chOk&&pyOk)win(c,2);else if(!CRAM&&!DQ.q.slice(DQ.i).includes(c)&&!c._re){c._re=1;DQ.q.push(c)}dictItem()};
   $('cn').onclick=()=>fin(false);$('cy').onclick=()=>fin(true)}}
 
 // DETAIL CARD
@@ -287,7 +286,7 @@ function grown(){const p=prof();let o=document.createElement('div');o.id='gov';o
   <label id="gul" style="${lb};font-weight:400;margin-top:8px;${QU(GR()).length?'':'display:none'}">Next quiz<select id="gu" style="${inp}" onchange="if(this.value)$('gq').value=this.value">${QOPT(GR())}</select></label>${S.cfg.quiz?`<button style="${bt};text-align:center" id="gtook">✓ ${p.name} took this quiz. Move to the next one.</button>`:''}
   <label style="${lb};font-weight:400;margin-top:8px">Quiz characters<input id="gq" style="${inp}" value="${S.cfg.quiz||''}" placeholder="e.g. 买卖进常出"></label>
   <button style="${bt};background:#E4572E;color:#fff;text-align:center" id="gsave">Save</button></div>`:''}
- <div style="${sec}" id="voice-settings">${voiceSettingsMarkup()}</div>
+ <button class="btn" onclick="parentDashboard()">Parent dashboard</button><div style="${sec}" id="voice-settings">${voiceSettingsMarkup()}</div>
  <div style="${sec}" id="gkids"><span style="${lb}">👧 Kids</span>${PR.list.map(k=>{const d=JSON.parse(localStorage.getItem('zh_p_'+k.id)||'null'),n=d&&d.pts?Object.values(d.pts).filter(v=>v>=MASTER).length:0;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f3f4f6"><span style="font-size:34px">${k.av}</span><span><b style="font-size:18px">${esc(k.name)}</b>${k.id===PR.cur?' <span style="background:#dcfce7;color:#166534;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:800">Playing now</span>':''}<br><small style="font-size:14px;color:#6B7280">${GN[k.gr||'2']} · ⭐ ${n} mastered</small></span>${PR.list.length>1?`<button onclick="KASK('${k.id}')" aria-label="Delete ${esc(k.name)}" style="margin-left:auto;height:44px;padding:0 16px;border-radius:22px;border:2px solid #fecaca;background:#fff;color:#b91c1c;font-weight:800;font-size:15px">Delete</button>`:''}</div>`}).join('')}${PR.list.length===1?'<p style="margin:6px 0 0;font-size:15px;color:#6B7280">There has to be at least one kid.</p>':''}</div>
  <div style="${sec}"><span style="${lb}">💾 Backup</span><p style="margin:0;font-size:15px;color:#6B7280">Progress lives only on this device. Save this code somewhere safe to restore it later or on another device.</p><p style="margin:6px 0 0;font-size:15px;font-weight:700;color:#374151" id="glast">Last copied: ${BKA()}</p>
   <button style="${bt}" id="gcopy" aria-live="polite"><span id="gcl">📋 Copy backup code<br><small style="font-size:15px;color:#6B7280">Copies every kid's progress as text. Includes kids' names, so keep it private.</small></span></button><div id="gcf"></div><button style="${bt};color:#b45309" id="grest">📥 Restore from a backup code<br><small style="font-size:15px;color:#6B7280">Paste a code to bring progress back. Replaces what's on this device.</small></button><div id="grx"></div></div>

@@ -15,3 +15,7 @@ Separate unchanged inline scripts/styles into editable files and add an app-only
 ## Align curriculum and add voices and mixed cross-grade cram
 
 Use the saved pre-learning app/cram snapshots for PDF-aligned units, pinyin grading, device voices, My Characters grouping and shuffled cross-grade cram. Companion helpers/tests reconstructed from compatible later files.
+
+## Add spaced learning, mastery, saved sessions and mixed pinyin
+
+Reconstruct learning records, per-skill review scheduling, parent dashboard, capped30-question cram, unit-selection persistence and Grade2+ mixed pinyin from saved snapshots. Existing reward rules are preserved at this stage.
