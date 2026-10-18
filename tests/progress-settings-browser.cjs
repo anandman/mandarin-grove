@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
  await page.screenshot({path:'/tmp/hanzi-kid-progress.png'});
  for(const grade of ['K','1','2','3','4','5']){
   await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
-  assert.equal(await page.getByRole('button',{name:'My progress ›',exact:true}).count(),Number(grade)>=3?1:0);
+  assert.equal(await page.getByRole('button',{name:'My progress ›',exact:true}).count(),Number(grade)>=2?1:0);
  }
  await page.evaluate(()=>{PR.list[0].gr='4';savePR();home();grown()});await page.getByRole('button',{name:'Parent dashboard',exact:true}).click();assert.ok(await page.locator('#dash-child').isVisible());
  // Open stale tab before selection; its routine saves must preserve the fresh choice.

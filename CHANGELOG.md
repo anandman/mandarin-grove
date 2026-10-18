@@ -23,3 +23,7 @@ Reconstruct learning records, per-skill review scheduling, parent dashboard, cap
 ## Add child progress, robust settings persistence and static feedback
 
 Exact public application snapshot saved before the current reward work, including child dashboard, stale-tab selection fix, versioned assets, voice corrections and local-only feedback reports. Companion browser tests are included.
+
+## Add everyday practice rewards (new development)
+
+Persistent ribbon progress for every child, same-day practice challenges and permanent character badges, with later memory upgrades. Existing detailed records receive retroactive credit; skips are excluded. Mastery scheduling remains separate. The child dashboard is now available from Grade2. This is a new feature commit after the reconstructed history.

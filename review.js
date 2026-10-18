@@ -1,5 +1,5 @@
 let ACTIVE_REVIEW=null;
-function beginReview(c,mode){feedbackQuestion={card:c,mode};ACTIVE_REVIEW={c,mode,done:false,help:false};}
+function beginReview(c,mode){feedbackQuestion={card:c,mode};renderRewards();ACTIVE_REVIEW={c,mode,done:false,help:false};}
 function finishReview(outcome){
  const r=ACTIVE_REVIEW;if(!r||r.done)return false;r.done=true;
  recordSkill(S,r.c.c,r.mode,outcome);
@@ -18,7 +18,7 @@ function resumeCram(){
  const pool=r.p.map(c=>by.get(c)).filter(Boolean);CRAM={mode:r.mode||'mixed',pool};
  SESS={cram:true,q:r.q.map(([m,c])=>[m,by.get(c)]),i:r.i,t:r.t,pool};nextItem();
 }
-function kidProgress(){if(Number(GR())>=3)parentDashboard(PR.cur,GR(),'',true)}
+function kidProgress(){if(Number(GR())>=2)parentDashboard(PR.cur,GR(),'',true)}
 function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false){
  if(childView)id=PR.cur;
  $('gov')?.remove();screen();ACTIVE_REVIEW=null;
@@ -49,4 +49,34 @@ function resumeCramDict(){
  const by=new Map(ALL.map(c=>[c.c,c]));
  CRAM={mode:'dictation',pool:r.pool.map(c=>by.get(c)).filter(Boolean)};
  DQL=CRAM.pool.map(c=>c.c).join('');SESS=null;DQ={...r,q:r.q.map(c=>by.get(c)).filter(Boolean)};dictItem();
+}
+
+const REWARD_NAMES=['','Character badge','Remembered again','Strong memory'];
+const REWARD_ICONS=['🌱','🥉','🥈','🥇'];
+function rewardTargets(char){
+ return rewardSkills(GR(),char).map(skill=>{
+  const n=Math.min(2,rewardEvidence(S,char,skill).correct||0);
+  return `${({listen:'👂 Listen',recall:'✍️ Write',pinyin:'拼 Pinyin'})[skill]} ${n}/2`;
+ }).join(' · ');
+}
+function renderRewards(){
+ const strip=$('reward-strip');if(!strip)return;
+ strip.hidden=!prof();if(!prof())return;
+ const steps=practiceSteps(S),ribbons=S.rewards?.ribbons||0,count=Object.keys(S.rewards?.characters||{}).length;
+ const char=feedbackQuestion?.card?.c;
+ const tier=char?S.rewards?.characters?.[char]?.tier||0:0;
+ strip.innerHTML=`<button class="reward-collection-link" onclick="rewardCollection()" aria-label="My badges"><b>🎗️ ${ribbons} · 🏅 ${count}</b><span>My badges ›</span></button><div class="reward-meter"><span>${steps%10}/10 steps to your next ribbon</span><progress max="10" value="${steps%10}" aria-label="Practice steps toward next ribbon"></progress></div>${char?`<div class="reward-character"><b>${char} ${REWARD_ICONS[tier]} ${tier?REWARD_NAMES[tier]:'Build your badge'}</b><small>${tier?'Your badge stays yours. Reviews can earn upgrades!':rewardTargets(char)}</small></div>`:''}`;
+}
+let rewardNoticeTimer;
+function announceRewards(earned){
+ if(!earned.length)return;
+ let notice=$('reward-notice');if(!notice){notice=document.createElement('div');notice.id='reward-notice';notice.setAttribute('role','status');document.body.append(notice);}
+ notice.textContent=earned.map(e=>e.kind==='ribbon'?'🎗️ New practice ribbon!':e.kind==='challenge'?`${e.icon} ${e.name} earned!`:`${REWARD_ICONS[e.tier]} ${e.char} — ${REWARD_NAMES[e.tier]} earned!`).join(' ');
+ notice.hidden=false;clearTimeout(rewardNoticeTimer);rewardNoticeTimer=setTimeout(()=>notice.hidden=true,4000);
+}
+function rewardCollection(){
+ screen();SESS=null;CRAM=null;renderRewards();
+ const entries=Object.entries(S.rewards?.characters||{}).sort((a,b)=>b[1].earnedAt-a[1].earnedAt);
+ const steps=practiceSteps(S),ribbons=S.rewards?.ribbons||0;
+ A.innerHTML=`<h1>My badges</h1><div class="reward-total">🎗️ ${ribbons}</div><p class="mean">${steps} practice steps · a ribbon every 10!</p><p class="reading-note">Each graded skill is a step, even when you need another try. Hear/Write/Pinyin counts two skills. Skips don’t count.</p><h2>Practice challenges</h2><p class="reading-note">Every challenge below can be earned through practice—no waiting for tomorrow.</p><div class="reward-grid">${rewardChallenges(S,GR()).map(c=>{const done=!!S.rewards?.achievements?.[c.id];return `<div class="reward-card"><span>${c.icon}</span><b style="font-size:20px">${c.name}</b><small>${c.description}</small><strong>${done?'✅ Earned':Math.min(c.value,c.target)+' / '+c.target}</strong><progress aria-label="${c.name} progress" max="${c.target}" value="${done?c.target:Math.min(c.value,c.target)}"></progress></div>`}).join('')}</div><h2>Character collection · ${entries.length}</h2><p class="reading-note">🥉 Two successes in each badge skill earn a character badge. 🥈 Remember it on a later scheduled review. 🥇 Keep remembering on spaced reviews. Your earned badges stay yours!</p>${GR()==='K'?'<p class="reading-note">Your first badges come from listening. Tracing also earns practice steps!</p>':''}<div class="reward-grid">${entries.map(([c,r])=>`<div class="reward-card"><span>${REWARD_ICONS[r.tier]}</span><b>${c}</b><small>${REWARD_NAMES[r.tier]}</small></div>`).join('')||'<p>Keep practicing to add your first character!</p>'}</div><h2>Growing next</h2><div class="reward-grid">${CARDS.filter(c=>!S.rewards?.characters?.[c.c]).slice(0,12).map(c=>`<div class="reward-card"><b>${c.c}</b><small>${rewardTargets(c.c)}</small></div>`).join('')||'<p>You earned a badge for every character in this practice set!</p>'}</div><button class="btn" onclick="home()">Back home</button>`;
 }
