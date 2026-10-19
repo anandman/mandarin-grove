@@ -189,6 +189,7 @@ function dictItem(){screen();if(CRAM&&!DQ.session){if(DQ.i>=DQ.q.length)delete S
  const c=DQ.q[DQ.i];feedbackQuestion={card:c,mode:'dictation'};renderRewards();const letters=pinyinLetters(c),base=letters.join('');const dec=shuffle([...'abcdeghijklmnoprstuwxyz'].filter(x=>!base.includes(x))).slice(0,3);
  const tiles=shuffle([...letters,...dec]);let mine='',mt=0,drawn=false;
  A.innerHTML=`<div class="prog">${DQ.session?SESS.i:DQ.i+1} / ${DQ.session?SESS.q.length:DQ.q.length}</div><h2>Listen, then write it</h2>
+ <p class="mean" id="dictation-clue">Meaning: ${voiceEscape(c.m)}</p>
  <button class="btn" style="font-size:44px;padding:18px 40px" onclick="say('${c.c}')" aria-label="Play the word">🔊</button>
  <div style="position:relative;width:min(300px,80vw);aspect-ratio:1;margin:14px auto;background:#fff;border:3px solid #e5e7eb;border-radius:18px;background-image:linear-gradient(#eee 1px,transparent 1px),linear-gradient(90deg,#eee 1px,transparent 1px);background-size:50% 50%;background-position:center"><canvas id="dc" style="width:100%;height:100%;touch-action:none"></canvas></div>
  <button class="btn gray" id="dclr">Clear</button>

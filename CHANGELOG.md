@@ -27,3 +27,7 @@ Exact public application snapshot saved before the current reward work, includin
 ## Add everyday practice rewards (new development)
 
 Persistent ribbon progress for every child, same-day practice challenges and permanent character badges, with later memory upgrades. Existing detailed records receive retroactive credit; skips are excluded. Mastery scheduling remains separate. The child dashboard is now available from Grade2. This is a new feature commit after the reconstructed history.
+
+## Disambiguate dictation homophones
+
+Show the target meaning before writing in every dictation flow, so identical pronunciations do not require guessing the intended character. Keep curriculum, pronunciation requests and tone grading unchanged.
