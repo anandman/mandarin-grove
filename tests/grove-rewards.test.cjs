@@ -31,3 +31,35 @@ test('unit trees recognize original character progress without inventing skill e
  assert.equal(growth.practiced,3);assert.equal(growth.badges,0);assert.equal(growth.stage,1);
  assert.equal(JSON.stringify(c.S),before);
 });
+test('original stars receive one-time recognition without changing character progress',()=>{
+ const s={stars:149,pts:{祖:9},box:{祖:2},due:{祖:20000},bad:{pq:100},cfg:{set:['祖']}};
+ const original=JSON.stringify(s);assert.equal(c.creditLegacyStars(s,100),14);
+ assert.equal(s.groveRewards.balance,14);assert.equal(s.groveRewards.legacyCredit.stars,149);
+ assert.equal(JSON.stringify(Object.fromEntries(Object.entries(s).filter(([key])=>key!=='groveRewards'))),original);
+ assert.equal(c.creditLegacyStars(s,101),0);s.stars=999;assert.equal(c.creditLegacyStars(s,102),0);
+ assert.equal(s.groveRewards.balance,14);assert.equal(s.learning,undefined);
+});
+test('recognition subtracts previously earned ribbon fruit even after spending',()=>{
+ const s=state(12);c.refreshGroveWallet(s,100);c.redeemGroveReward(s,'violet-leaves',101);
+ c.completeWritingSentence(s,'sentence-1',102);
+ assert.equal(c.creditLegacyStars(s,103),2);assert.equal(s.groveRewards.balance,12);
+ assert.equal(s.groveRewards.legacyCredit.ribbonFruit,12);assert.equal(s.groveRewards.owned[0],'violet-leaves');
+ s.rewards.ribbons=13;assert.equal(c.refreshGroveWallet(s,104),1,'Future practice still earns immediately');
+ assert.equal(c.creditLegacyStars(s,105),0);
+});
+test('recognition never deducts earned fruit or rewards newly earned stars later',()=>{
+ const s=state(20);c.refreshGroveWallet(s,100);assert.equal(c.creditLegacyStars(s,101),0);assert.equal(s.groveRewards.balance,20);
+ const fresh={stars:0};assert.equal(c.creditLegacyStars(fresh,100),0);fresh.stars=100;
+ assert.equal(c.creditLegacyStars(fresh,101),0);assert.equal(fresh.groveRewards.balance,0);
+});
+test('recognition survives backup, policy changes, and old wallet upgrades',()=>{
+ const s=state(12);c.refreshGroveWallet(s,100);delete s.groveRewards.ribbonFruitTotal;
+ assert.equal(c.creditLegacyStars(s,101),2);c.redeemGroveReward(s,'butterfly',102);
+ const restored=JSON.parse(JSON.stringify(s)),balance=restored.groveRewards.balance;
+ assert.equal(c.creditLegacyStars(restored,103,{version:4,legacyStarsPerFruit:5}),0);assert.equal(restored.groveRewards.balance,balance);
+});
+test('legacy overlap uses actual ribbon earnings across earning-policy changes',()=>{
+ const s=state(4);c.refreshGroveWallet(s,100);s.rewards.ribbons=5;
+ c.refreshGroveWallet(s,101,{version:5,fruitPerRibbon:2});
+ assert.equal(s.groveRewards.ribbonFruitTotal,6);assert.equal(c.creditLegacyStars(s,102),8);
+});

@@ -1,5 +1,11 @@
 # Change history
 
+## Complete Grove reskin and original-star credit — 20261020-grove-21
+
+Replace the inherited Home composition with an orchard scene, daily practice card, practice paths, writing/cram cards and unit trees. Carry shared colors, type, surfaces and controls through practice, rewards, character details, dashboards, feedback and settings. Add a header Appearance control and Grown-ups setting for System (default), Light and Dark; follow OS changes, save the browser preference and preserve active answers. Keep opaque cream handwriting paper for readable ink in either mode.
+
+Recognize earlier work once: one orange per ten existing stars, rounded down, less fruit already credited from ribbons. Preserve all stars, character progress and earned rewards; store the credit in backups without inventing skill evidence. Show the calculation and orange history. Future practice continues earning normally.
+
 ## Preserve visible progress from original backups — 20261020-compatibility-20
 
 Make backward compatibility for earned progress an explicit product principle. Add an import/export regression using the original app's exact backup format and two synthetic profiles. Retain character counts, stars, zoo friends, badges, review fields and settings. Unit trees now include original character practice in their growth display, without inventing separate skill evidence or spaced mastery.

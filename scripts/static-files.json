@@ -15,6 +15,8 @@
   "rewards.js",
   "speech.js",
   "styles.css",
+  "theme.css",
+  "theme.js",
   "vendor/hanzi-writer.js",
   "vendor/writing-spark/LICENSE",
   "vendor/writing-spark/character-ideas.js",

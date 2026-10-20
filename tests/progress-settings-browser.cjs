@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
  page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:4173');
  await page.evaluate(()=>{localStorage.setItem('zh_profiles',JSON.stringify({cur:'test',list:[{id:'test',name:'Older',gr:'4',av:'🐳'},{id:'younger',name:'Younger',gr:'1',av:'🐻'}]}));localStorage.setItem('zh_p_test',JSON.stringify({stars:10,streak:0,last:'',pts:{},box:{},due:{},cfg:{}}));});
  await page.reload();await page.evaluate(()=>home());
- await page.getByRole('button',{name:'My progress ›',exact:true}).click();
+ await page.getByRole('button',{name:'My progress',exact:true}).click();
  assert.ok(await page.getByRole('heading',{name:'My progress',exact:true}).isVisible());assert.equal(await page.locator('#dash-child').count(),0);
  await page.locator('#dash-grade').selectOption('2');await page.locator('#dash-unit').selectOption({index:1});
  assert.ok(await page.getByRole('heading',{name:'My progress',exact:true}).isVisible());assert.equal(await page.locator('#dash-child').count(),0);
@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
  await page.screenshot({path:'/tmp/hanzi-kid-progress.png'});
  for(const grade of ['K','1','2','3','4','5']){
   await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
-  assert.equal(await page.getByRole('button',{name:'My progress ›',exact:true}).count(),Number(grade)>=2?1:0);
+  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),Number(grade)>=2?1:0);
  }
  await page.evaluate(()=>{PR.list[0].gr='4';savePR();home();grown()});await page.getByRole('button',{name:'Parent dashboard',exact:true}).click();assert.ok(await page.locator('#dash-child').isVisible());
  // Open stale tab before selection; its routine saves must preserve the fresh choice.

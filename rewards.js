@@ -1,5 +1,5 @@
 // Pure reward policy and state. Quiz/SRS code supplies evidence; UI consumes events.
-const REWARD_POLICY=Object.freeze({version:2,stepsPerRibbon:10,successesPerBadge:2,fruitPerRibbon:1,fruitPerSentence:1});
+const REWARD_POLICY=Object.freeze({version:3,stepsPerRibbon:10,successesPerBadge:2,fruitPerRibbon:1,fruitPerSentence:1,legacyStarsPerFruit:10});
 const GROVE_REWARD_CATALOG=Object.freeze([
  {id:'violet-leaves',icon:'🍃',name:'Violet leaves',description:'Give your unit trees violet leaves.',cost:3},
  {id:'butterfly',icon:'🦋',name:'Butterfly visitor',description:'Invite a butterfly into your grove.',cost:4},
@@ -62,12 +62,29 @@ function refreshRewardState(s,grade,now=Date.now()){
 function groveWallet(s){return s.groveRewards||{version:1,creditedRibbons:0,balance:0,owned:[],transactions:[],selected:null};}
 function refreshGroveWallet(s,now=Date.now(),policy=REWARD_POLICY){
  const wallet=s.groveRewards ||= {...groveWallet(s)};
+ // All published wallets before this counter earned exactly one orange per ribbon.
+ wallet.ribbonFruitTotal ??= wallet.creditedRibbons;
  const ribbons=s.rewards?.ribbons||0,newRibbons=Math.max(0,ribbons-wallet.creditedRibbons);
  if(!newRibbons)return 0;
  const amount=newRibbons*policy.fruitPerRibbon;
- wallet.balance+=amount;wallet.creditedRibbons=ribbons;
+ wallet.balance+=amount;wallet.creditedRibbons=ribbons;wallet.ribbonFruitTotal+=amount;
  wallet.transactions.push({id:'ribbons:'+ribbons,type:'earn',amount,at:now,policy:policy.version});
  wallet.transactions=wallet.transactions.slice(-100);return amount;
+}
+function creditLegacyStars(s,now=Date.now(),policy=REWARD_POLICY){
+ const wallet=s.groveRewards ||= {...groveWallet(s)};
+ if(wallet.legacyCredit)return 0;
+ const stars=Number.isFinite(s.stars)?Math.max(0,Math.floor(s.stars)):0;
+ const ribbonFruit=wallet.ribbonFruitTotal??wallet.creditedRibbons;
+ const amount=Math.max(0,Math.floor(stars/policy.legacyStarsPerFruit)-ribbonFruit);
+ // Record even a zero credit, so future stars cannot trigger another migration.
+ wallet.legacyCredit={version:1,stars,rate:policy.legacyStarsPerFruit,ribbonFruit,amount,at:now};
+ if(amount){
+  wallet.balance+=amount;
+  wallet.transactions.push({id:'legacy-stars:v1',type:'earn',source:'legacy-stars',amount,at:now,policy:policy.version});
+  wallet.transactions=wallet.transactions.slice(-100);
+ }
+ return amount;
 }
 function redeemGroveReward(s,id,now=Date.now(),catalog=GROVE_REWARD_CATALOG){
  const reward=catalog.find(x=>x.id===id),wallet=s.groveRewards;

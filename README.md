@@ -34,6 +34,7 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 - `icon*.png`: Mandarin Grove orchard/book identity at browser, installation, and native source sizes.
 - `manifest.webmanifest`: standalone installation name, colors, and icons.
 - `writing.js` and `vendor/writing-spark/`: Writing ideas interface, local idea collection, source attribution, and MIT license.
+- `theme.js` and `theme.css`: appearance preference, shared colors/components, and the complete Grove presentation.
 
 Scripts remain classic scripts because the existing UI uses inline event handlers and shared globals. This preserves behavior while providing separate editable files. The initial recovery was verified to reproduce the downloaded HTML exactly; subsequent feature changes are described below. Original authoring files, repository history, and deployment configuration are not available from the website.
 
@@ -134,8 +135,14 @@ See [the ordered roadmap](https://github.com/anandman/mandarin-grove/issues/19).
 
 ## Grove experience and rewards
 
+The whole app uses the Grove palette, orchard Home scene, practice paths, tree cards, violet books, and matching practice, reward, dashboard and settings surfaces. Choose **Appearance** (◐) in the header or Grown-ups → Appearance: **System** follows the device automatically; **Light** and **Dark** override it. System is the default. The choice survives refresh and updates across tabs without interrupting a question, drawing, or pinyin answer. This is a browser/device preference, separate from per-child backup data. Handwriting paper stays cream in both modes so existing ink remains readable.
+
+On first upgrade or restore, earlier work receives a **one-time credit of one orange per 10 existing stars**, rounded down, less oranges already credited from practice ribbons. For example, 149 old stars earn 14 oranges; if 12 ribbon oranges were already credited, the additional credit is 2. Stars are never spent or reduced. The credit and calculation are stored in the wallet, survive backups, and never become assessed skill evidence. Children who already upgraded receive it automatically, without restoring an old backup. New practice keeps earning oranges normally after the credit.
+
 Practice modes have distinct tree visuals. My Characters offers a Grove view with growing unit trees and a compact List view; the preference saves per child. Every unit remains accessible in any order, including added-grade units. Tree growth reflects characters practiced and permanent badges; it does not impose curriculum locks or redefine spaced mastery.
 
 Oranges are local reward currency: each earned practice ribbon credits one orange. Existing detailed practice/ribbons receive credit once; stars, zoo friends, badges, and learning records stay intact. The first reward catalog offers cosmetic violet leaves, a butterfly visitor, and sunrise scenery. Unlocking spends oranges, and Undo last unlock refunds the actual cost. One decoration is active at a time; owned decorations can be switched freely.
 
 Reward code is deliberately separate for alpha feedback: `rewards.js` owns `REWARD_POLICY`, `GROVE_REWARD_CATALOG`, evidence-to-achievement rules, the versioned local wallet, and transactions. `grove.js` owns tree/reward presentation, while `learning.js` owns SRS evidence and timing. Earning-rate changes affect new ribbons, not previously credited ribbons; price changes do not alter past refund amounts. Backup/restore includes the wallet. There is no server balance, purchase, or real-money redemption.
+
+`tests/theme-browser.cjs` checks System/Light/Dark, OS changes, persistence, active-answer preservation, contrast, handwriting paper and phone layout. The original-backup regression also checks the one-time credit and a spent wallet's export/re-import.

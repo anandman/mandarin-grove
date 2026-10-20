@@ -41,7 +41,7 @@ function writingBook(){
  return '<svg viewBox="0 0 100 70" aria-hidden="true"><path d="M9 12Q29 5 50 18Q71 5 91 12V57Q70 50 50 63Q30 50 9 57Z" fill="#AD96DC" stroke="#583C85" stroke-width="3" stroke-linejoin="round"/><path d="M50 18V63M19 25Q32 23 41 29M19 36Q32 34 41 40M59 29Q72 23 82 25M59 40Q72 34 82 36" fill="none" stroke="#F4F1EA" stroke-width="3" stroke-linecap="round"/></svg>';
 }
 function writingIdeasHomeEntry(){
- return `<button class="today grove-writing-entry" onclick="showWritingIdeas()"><span class="writing-tree">${groveTree('writing')}</span><span class="writing-entry-copy"><b>Writing ideas</b><small>A seed for your next sentence</small></span><span class="go">Open ›</span></button>`;
+ return `<button class="grove-explore-card grove-writing-entry" onclick="showWritingIdeas()"><span class="grove-eyebrow">A SEED FOR A SENTENCE</span><b>Writing ideas</b><small>A character, an idea, and a page of your own.</small><span class="grove-explore-bottom"><span class="grove-entry-book">${writingBook()}</span><span aria-hidden="true">↗</span></span></button>`;
 }
 function showWritingIdeas(){
  screen();SESS=null;CRAM=null;

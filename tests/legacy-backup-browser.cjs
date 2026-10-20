@@ -29,14 +29,19 @@ const assert=require('node:assert/strict');
    for(const [key,value]of Object.entries(fixture.states[id]))assert.deepEqual(actual[key],value,id+' preserved '+key);
    assert.equal(await page.evaluate(()=>mastered()),id==='legacy-a'?2:1,'Original earned zoo friends stay unlocked');
    assert.equal(await page.evaluate(()=>characterStage(S,Object.keys(S.pts)[0])),'Previously practiced');
+   assert.equal(actual.groveRewards.balance,Math.floor(fixture.states[id].stars/10));
    assert.equal(Object.keys(actual.learning?.chars||{}).length,0,'Old stars do not prove separate listening/pinyin mastery');
    assert.equal(await page.evaluate(()=>unitGroveGrowth(S.cfg.set).practiced),fixture.states[id].cfg.set.length);
   }
+  await page.evaluate(()=>{redeemGroveReward(S,'violet-leaves',1700000001000);save();});
+  const balances=await page.evaluate(()=>Object.fromEntries(PR.list.map(p=>[p.id,JSON.parse(localStorage.getItem('zh_p_'+p.id)).groveRewards.balance])));
   const code=await page.evaluate(()=>backup());await page.reload();await restore(code);
   for(const id of ['legacy-a','legacy-b']){
    await page.evaluate(id=>{PR.cur=id;savePR();loadS();home();},id);
    const actual=await page.evaluate(()=>JSON.parse(JSON.stringify(S)));
-   for(const [key,value]of Object.entries(fixture.states[id]))assert.deepEqual(actual[key],value,id+' round-trip preserved '+key);
+   for(const [key,value]of Object.entries(fixture.states[id])){if(key==='cfg'){for(const [setting,old]of Object.entries(value))assert.deepEqual(actual.cfg[setting],old,id+' preserved setting '+setting);}else assert.deepEqual(actual[key],value,id+' round-trip preserved '+key);}
+   assert.equal(actual.groveRewards.balance,balances[id]);
+   assert.equal(actual.groveRewards.legacyCredit.amount,Math.floor(fixture.states[id].stars/10));
   }
   assert.deepEqual(errors,[]);
   console.log('PASS: original-format UI restore preserves both profiles, exact character progress, zoo, stars, badges, review fields/settings, visible practiced trees and export/re-import.');

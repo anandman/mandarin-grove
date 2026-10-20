@@ -33,7 +33,7 @@ const assert=require('node:assert/strict');
  for(const grade of ['K','1','2','3','4','5']){
   await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
   assert.ok(await page.locator('#reward-strip').isVisible());
-  assert.equal(await page.getByRole('button',{name:'My progress ›',exact:true}).count(),Number(grade)>=2?1:0);
+  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),Number(grade)>=2?1:0);
  }
  await page.evaluate(()=>{PR.cur='sibling';savePR();loadS();home()});
  assert.equal(await page.evaluate(()=>S.rewards.ribbons),0);
