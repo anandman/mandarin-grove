@@ -33,10 +33,21 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 - `audio/` and `strokes/`: recovered curriculum assets.
 - `icon*.png`: Mandarin Grove orchard/book identity at browser, installation, and native source sizes.
 - `manifest.webmanifest`: standalone installation name, colors, and icons.
+- `writing.js` and `vendor/writing-spark/`: Writing ideas interface, local idea collection, source attribution, and MIT license.
 
 Scripts remain classic scripts because the existing UI uses inline event handlers and shared globals. This preserves behavior while providing separate editable files. The initial recovery was verified to reproduce the downloaded HTML exactly; subsequent feature changes are described below. Original authoring files, repository history, and deployment configuration are not available from the website.
 
 Progress is stored in browser localStorage. Localhost has separate storage from the deployed site. Use Grown-ups → Copy backup code on the original, then restore it in the local app to transfer progress. Backups contain children's names; do not commit them.
+
+## Writing ideas
+
+Choose **Writing ideas** on Home and type a Chinese character or whole word. A character can suggest related words; a compound must match a listed word as a whole. Traditional input aliases are accepted and suggestions display simplified Chinese. Browse available words by meaning or choose a character if you need a starting point. Ideas vary without repeating until that input's collection has been used.
+
+The orange tree and violet book frame each “writing seed”: a suggested word, its meaning, and a situation for the child to write about on paper. The collection reuses 969 curated ideas from [Writing Spark](vendor/writing-spark/README.md); it does not generate or grade a sentence. It runs locally without model calls or a writing server.
+
+**I wrote my sentence** awards one orange on the honor system, once per displayed idea. There is no timer. This celebrates effort separately from assessed character skills: it does not advance mastery, change quiz scores, or count as a practice ribbon. Sentence counts and oranges are saved per child and included in backups; the app does not collect the child's sentence. Typed inputs and displayed ideas stay in memory unless the user explicitly saves a feedback report. Reward amounts live in `REWARD_POLICY` in `rewards.js` so they can be adjusted independently of the interface and SRS.
+
+`tests/writing-ideas.test.cjs` checks matching and deck behavior. `tests/writing-ideas-browser.cjs` checks IME event handling, keyboard browsing, reward deduplication, progress preservation, backups, profile isolation, and responsive layout in an isolated browser. Chinese keyboard behavior on actual iPads still needs family testing.
 
 The original credits and license links remain in the Grown-ups screen. They cover Hanzi Writer (MIT), Make Me a Hanzi stroke data and Arphic font licensing, and Google Cloud Text-to-Speech recordings. Preserve those credits and check applicable licenses before redistribution.
 

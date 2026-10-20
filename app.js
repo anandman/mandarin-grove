@@ -72,6 +72,7 @@ function PF(){try{batch().forEach(c=>{if(!STROKES[c.c])SL(c.c,()=>{});fetch('aud
  <button onclick="listen()"><span class="ic grove-mode-tree">${groveTree('listen')}</span><span>Listen &amp; Tap<small>Hear it, find it</small></span></button>
  <button onclick="flip()"><span class="ic grove-mode-tree">${groveTree('flip')}</span><span>Flip Cards<small>Do you know it?</small></span></button>
  <button onclick="memory()" ${KG()?'style="display:none"':''}><span class="ic grove-mode-tree">${groveTree('memory')}</span><span>Draw from Memory<small>Write it yourself</small></span></button></div>
+ ${writingIdeasHomeEntry()}
  <input id="srch" ${KG()?'hidden style="display:none"':''} type="search" placeholder="🔍 Search pinyin, like mai or chang" autocomplete="off" autocapitalize="off" aria-label="Search by pinyin" oninput="srch(this.value)" style="margin-bottom:16px;width:100%;box-sizing:border-box;font-size:20px;padding:14px 16px;border:2px solid #e5e7eb;border-radius:16px;margin:18px 0 0;background:#fff"><div id="sres" class="zoo" style="margin-top:10px"></div>
  <button class="today grove-orchard" onclick="zooScreen()"><span><b>🦁 My Zoo</b><small>${mastered()} friends · ${Object.keys(S.bad||{}).length} badges</small></span><span class="go">Open ›</span></button>
  <button class="today grove-secondary" onclick="catG=GR();cat()"><span><b>📚 All characters</b><small>K–5 list · ${ALL.length} characters · pick what to practice</small></span><span class="go">Open ›</span></button>

@@ -1,5 +1,11 @@
 # Change history
 
+## Writing ideas and sentence rewards — 20261020-writing-19
+
+Add the reviewed Writing ideas flow, with an orange-tree Home entry and violet-book “writing seed” cards. Reuse Writing Spark's local collection under its MIT license, preserving single-character lookup, exact whole-word matching, traditional aliases, simplified display, and per-input variety. Include searchable character/word browsing and Chinese IME handling.
+
+Children can declare a sentence finished to earn one orange per displayed idea, without a timer. Keep this self-reported effort separate from assessed skill evidence and mastery; persist rewards per child in existing backups. Writing feedback remains local and manually shared. No model service or backend was added.
+
 This Git history was reconstructed on 2026-10-18 from a downloaded deployed page, saved source snapshots, and the current application. It is grouped for review; these are not original development commits or timestamps. No original author Git history was available. Original source and third-party notices are preserved. Agent notes and local development handoffs are excluded.
 
 The original deployed HTML SHA-256 is `66061dd94928b6b0b2dd9d9a33daafd48ea0480efe05fe90de0094887c13358a`. The recovered app JavaScript and Hanzi Writer match the inline originals byte-for-byte. Later groups are functional reconstructions; some companion tooling/tests are taken from later snapshots where exact earlier copies were unavailable. They should not be represented as exact historical releases.

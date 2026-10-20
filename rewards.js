@@ -1,5 +1,5 @@
 // Pure reward policy and state. Quiz/SRS code supplies evidence; UI consumes events.
-const REWARD_POLICY=Object.freeze({version:1,stepsPerRibbon:10,successesPerBadge:2,fruitPerRibbon:1});
+const REWARD_POLICY=Object.freeze({version:2,stepsPerRibbon:10,successesPerBadge:2,fruitPerRibbon:1,fruitPerSentence:1});
 const GROVE_REWARD_CATALOG=Object.freeze([
  {id:'violet-leaves',icon:'🍃',name:'Violet leaves',description:'Give your unit trees violet leaves.',cost:3},
  {id:'butterfly',icon:'🦋',name:'Butterfly visitor',description:'Invite a butterfly into your grove.',cost:4},
@@ -88,4 +88,17 @@ function selectGroveDecoration(s,id){
  if(!s.groveRewards)return false;
  if(id!==null&&!s.groveRewards.owned.includes(id))return false;
  s.groveRewards.selected=id;return true;
+}
+// Self-reported writing celebrates effort; it does not supply assessed skill evidence.
+function completeWritingSentence(s,ideaId,now=Date.now(),policy=REWARD_POLICY){
+ if(typeof ideaId!=='string'||!ideaId)return 0;
+ const wallet=s.groveRewards ||= {...groveWallet(s)};
+ wallet.sentenceClaims ||= [];
+ if(wallet.sentenceClaims.includes(ideaId))return 0;
+ wallet.sentenceClaims.push(ideaId);wallet.sentenceClaims=wallet.sentenceClaims.slice(-100);
+ wallet.writingSentences=(wallet.writingSentences||0)+1;
+ const amount=policy.fruitPerSentence;
+ wallet.balance+=amount;
+ wallet.transactions.push({id:'sentence:'+ideaId,type:'earn',source:'writing-sentence',amount,at:now,policy:policy.version});
+ wallet.transactions=wallet.transactions.slice(-100);return amount;
 }

@@ -4,12 +4,14 @@ const FEEDBACK_KEY='zh_feedback_v1';
 function feedbackReports(){try{const rows=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');return Array.isArray(rows)?rows.slice(-50):[]}catch{return []}}
 function feedbackSnapshot(){
  const c=feedbackQuestion?.card;
+ const writing=feedbackQuestion?.writing;
  const voice=selectedMandarinVoice();
  const request=window.lastSpeechRequest?.character===c?.c?window.lastSpeechRequest:null;
  return {version:typeof VER==='undefined'?'unknown':VER,time:new Date().toISOString(),grade:GR(),
   question:c?{character:c.c,pinyin:c.p,meaning:c.m,mode:feedbackQuestion.mode}:null,
+  ...(writing?{writing:{...writing}}:{}),
   session:SESS?{kind:SESS.cram?'cram':'daily',question:SESS.i,total:SESS.q.length}:null,
-  speech:request||{preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,prompt:c?speechText(c):null},
+  speech:writing?null:request||{preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,prompt:c?speechText(c):null},
   browser:navigator.userAgent,app:location.origin};
 }
 function feedbackText(reports){return 'Mandarin Grove feedback\nNothing was sent automatically.\n\n'+reports.map(r=>JSON.stringify(r,null,2)).join('\n\n---\n\n')}
@@ -21,7 +23,7 @@ function showFeedback(){
  dialog.innerHTML=`<form method="dialog"><button class="feedback-close" aria-label="Close feedback">✕</button></form>
  <h2 id="feedback-title">Report a problem</h2>
  <p>What sounded wrong or didn’t work?</p><label>Your note<textarea id="feedback-note" maxlength="2000" placeholder="For example: I heard màn, but the answer says mǎn."></textarea></label>
- <p class="reading-note">Question and voice details are included. Saved only in this browser—not sent to anyone. You can share the report with a parent to paste into ChatGPT.</p>
+ <p class="reading-note">Activity details are included. Saved only in this browser—not sent to anyone. You can share the report with a parent to paste into ChatGPT.</p>
  <button class="btn" id="feedback-save">Save on this device</button><p id="feedback-status" role="status"></p>
  <details><summary>Report details</summary><textarea id="feedback-output" aria-label="Feedback report" readonly></textarea></details>
  <div class="feedback-actions"><button class="btn gray" id="feedback-copy">Copy report</button><button class="btn gray" id="feedback-share">Share report</button><button class="btn gray" id="feedback-download">Download report</button></div>

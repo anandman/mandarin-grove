@@ -16,6 +16,10 @@
   "speech.js",
   "styles.css",
   "vendor/hanzi-writer.js",
+  "vendor/writing-spark/LICENSE",
+  "vendor/writing-spark/character-ideas.js",
+  "vendor/writing-spark/curriculum-ideas.js",
   "version-check.js",
-  "version.txt"
+  "version.txt",
+  "writing.js"
 ]
