@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
  assert.match(await page.locator('#feedback-output').inputValue(),/màn/);
  assert.equal(await page.evaluate(()=>document.querySelector('#feedback-dialog').scrollWidth<=document.querySelector('#feedback-dialog').clientWidth),true);
  await page.screenshot({path:'/tmp/hanzi-feedback.png'});
- const downloadPromise=page.waitForEvent('download');await page.locator('#feedback-download').click();const download=await downloadPromise;assert.equal(download.suggestedFilename(),'chinese-practice-feedback.txt');
+ const downloadPromise=page.waitForEvent('download');await page.locator('#feedback-download').click();const download=await downloadPromise;assert.equal(download.suggestedFilename(),'mandarin-grove-feedback.txt');
  await page.getByRole('button',{name:'Close feedback',exact:true}).click();
  assert.ok(await page.locator('.choices').isVisible());
  await page.reload();await page.getByRole('button',{name:'Report a problem',exact:true}).click();await page.locator('#feedback-all').click();assert.match(await page.locator('#feedback-output').inputValue(),/màn/);assert.match(await page.locator('#feedback-status').innerText(),/1 saved reports/);

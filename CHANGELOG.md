@@ -31,3 +31,7 @@ Persistent ribbon progress for every child, same-day practice challenges and per
 ## Disambiguate dictation homophones
 
 Show the target meaning before writing in every dictation flow, so identical pronunciations do not require guessing the intended character. Keep curriculum, pronunciation requests and tone grading unchanged.
+
+## Rename the app Mandarin Grove
+
+Introduce dark and light orchard/book icons with 中文 lettering, and a charcoal, cream, orange, and violet identity. Update page, install, feedback, and package branding. Keep original-source provenance, existing progress keys, quizzes, and earned rewards. Tree progression and redeemable fruit remain future design ideas.

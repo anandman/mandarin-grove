@@ -27,7 +27,7 @@ header button{background:#fff;color:#e07b00;border:0;border-radius:14px;padding:
 .pulse{animation:pls 1s ease-in-out infinite}@keyframes pls{50%{transform:scale(1.08)}}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
 
-:root{--ac:#E4572E;--tx:#1F2937;--mut:#6B7280;--bg:#FAF7F2;--ln:#ECE7DF}
+:root{--ac:#F97316;--ac-ink:#A83C08;--tx:#14161C;--mut:#625E59;--bg:#F4F1EA;--ln:#E2DDD4;--violet:#AD96DC;--violet-ink:#583C85}
 body{background:var(--bg);color:var(--tx)}
 header{background:#fff;color:var(--tx);border-bottom:1px solid var(--ln);padding:12px 20px;min-height:72px}
 header .ttl{font-size:20px;font-weight:800;color:var(--ac)}
@@ -99,3 +99,13 @@ body.kg #A .pin{display:none}body.kg .choices button{font-size:96px;min-width:13
 #reward-strip{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px;border-bottom:1px solid #e5e7eb}#reward-strip[hidden]{display:none}.reward-collection-link{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:48px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:12px;padding:8px 12px;cursor:pointer;color:#78350F;font:16px system-ui}.reward-collection-link b{font-size:22px}.reward-meter{flex:1;min-width:150px;font-size:14px;color:#4B5563}.reward-meter progress{display:block;width:100%;height:14px;accent-color:#E4572E}.reward-character{width:100%;font-size:18px}.reward-character small{display:block;margin-top:4px;font-size:15px;color:#4B5563}.reward-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}.reward-card{display:flex;flex-direction:column;gap:6px;background:white;border:2px solid #FDE68A;border-radius:18px;padding:14px}.reward-card b,.reward-card>span{font-size:40px}.reward-card small{font-size:15px}#reward-notice{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:max-content;max-width:90vw;padding:14px 20px;border-radius:16px;background:#FEF3C7;color:#78350F;font:700 19px system-ui;box-shadow:0 3px 12px #0002;z-index:100;pointer-events:none}
 
 .reward-card progress{width:100%;min-width:0;accent-color:#E4572E}.reward-total{font-size:64px;font-weight:800;margin:20px 0}
+
+/* Mandarin Grove identity: orchard orange, paper cream, charcoal, and violet. */
+header .ttl{color:var(--tx)}
+.grove-welcome{text-align:left;color:var(--ac-ink);font-size:17px;font-weight:800;margin:10px 0 0}.grove-welcome span{display:block;color:var(--mut);font-size:15px;font-weight:500;margin-top:3px}
+.today{box-shadow:0 6px 20px #14161c12}.today:not([style]){color:var(--tx)}.today .go{color:var(--ac-ink)}
+.today.grove-secondary{background:var(--tx);color:var(--bg)}.today.grove-secondary .go{background:#EDE5F8;color:var(--violet-ink)}
+.today.grove-orchard{background:#E5EBD9;color:#24351D}.today.grove-orchard .go{color:#344B28}
+.btn:not([style]):not(.g):not(.r){color:var(--tx)}.pin{color:var(--ac-ink)}
+.zh2 button,.progress-link{color:var(--ac-ink)}.gb{background:#EDE5F8;color:var(--violet-ink)}
+.reward-collection-link{background:#FFF0DE;border-color:#F9BE83;color:#7C320D}.reward-card{border-color:#E8D8BD}#reward-notice{background:#FFF0DE;color:#7C320D}

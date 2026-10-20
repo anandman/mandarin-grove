@@ -1,4 +1,6 @@
-# Chinese Practice
+# Mandarin Grove
+
+Grow your Mandarin through reading, writing, listening, and pinyin practice.
 
 Editable recovery of https://hanzi-practice-9uq.pages.dev, fetched October 18, 2026. The deployed app delivers its frontend directly, so its HTML, styles, scripts, and referenced assets were recovered rather than reimplemented.
 
@@ -21,7 +23,9 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 - `app.js`: curriculum data, embedded stroke data, practice modes, profiles, quizzes, rewards, and backup/restore.
 - `vendor/hanzi-writer.js`: original bundled Hanzi Writer library; retains its license header.
 - `version-check.js` and `version.txt`: original update notification mechanism.
-- `audio/`, `strokes/`, and `icon*.png`: recovered assets from the deployment.
+- `audio/` and `strokes/`: recovered curriculum assets.
+- `icon*.png`: Mandarin Grove orchard/book identity at browser, installation, and native source sizes.
+- `manifest.webmanifest`: standalone installation name, colors, and icons.
 
 Scripts remain classic scripts because the existing UI uses inline event handlers and shared globals. This preserves behavior while providing separate editable files. The initial recovery was verified to reproduce the downloaded HTML exactly; subsequent feature changes are described below. Original authoring files, repository history, and deployment configuration are not available from the website.
 
@@ -82,3 +86,9 @@ Permanent character badges start after two independent correct answers in each r
 See CHANGELOG.md for the reconstructed Git stages and their provenance. The original author’s Git history was unavailable; grouped reconstruction commits are explicitly distinguished from subsequent development.
 
 Dictation shows an English meaning clue before answering, in standalone, daily and cram sessions. This distinguishes homophones such as 祖 (ancestor) and 组 (group) without revealing the character or pinyin. Device speech quality still depends on the selected browser voice; feedback captures requested speech, not recorded audio.
+
+## Mandarin Grove identity
+
+The orange-fruited tree grows from an open violet book marked 中文 (Chinese). The default/dark icon uses charcoal with a cream tree; the light icon uses cream with a charcoal tree. Both source variants are in `assets/brand/`, created with image generation and exported at the required web sizes. The web app currently uses the default/dark variant. Brand colors draw on mdview and Highgain: charcoal `#14161C`, paper cream `#F4F1EA`, orange `#F97316`, and violet `#AD96DC`. The palette is independent of the sports teams' marks. Existing local progress keys, quiz settings, learning records, and rewards remain compatible. The GitHub repository retains its existing address.
+
+Browser and iOS Home Screen names/icons now use Mandarin Grove. An existing iOS Home Screen shortcut may retain its saved label or icon; if it does, back up progress, open the same app address in Safari, and add a fresh Home Screen shortcut. Restore a backup if the standalone shortcut uses a separate storage container. A manifest supplies installation metadata; it does not add offline caching or background sync.

@@ -7,7 +7,7 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parent.parent
 FILES = {
     "index.html", "styles.css", "app.js", "practice.js", "speech.js", "cram.js", "learning.js", "review.js", "feedback.js", "version-check.js", "version.txt",
-    "icon64.png", "icon180.png", "vendor/hanzi-writer.js",
+    "icon64.png", "icon180.png", "icon192.png", "icon512.png", "manifest.webmanifest", "vendor/hanzi-writer.js",
 }
 
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=4173)
     args = parser.parse_args()
     with ThreadingHTTPServer((args.host, args.port), AppHandler) as server:
-        print(f"Serving Chinese Practice on {args.host}:{args.port}", flush=True)
+        print(f"Serving Mandarin Grove on {args.host}:{args.port}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

@@ -12,7 +12,7 @@ function feedbackSnapshot(){
   speech:request||{preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,prompt:c?speechText(c):null},
   browser:navigator.userAgent,app:location.origin};
 }
-function feedbackText(reports){return 'Chinese Practice feedback\nNothing was sent automatically.\n\n'+reports.map(r=>JSON.stringify(r,null,2)).join('\n\n---\n\n')}
+function feedbackText(reports){return 'Mandarin Grove feedback\nNothing was sent automatically.\n\n'+reports.map(r=>JSON.stringify(r,null,2)).join('\n\n---\n\n')}
 function showFeedback(){
  const existing=document.getElementById('feedback-dialog');
  if(existing?.open)return;existing?.remove();
@@ -43,8 +43,8 @@ function showFeedback(){
   catch{dialog.querySelector('details').open=true;output.focus();output.select();status.textContent='Automatic copying is unavailable here. Press and hold the selected report to copy, or use Download report.';}
  };
  const share=dialog.querySelector('#feedback-share');share.hidden=!navigator.share;
- share.onclick=async()=>{refresh();try{await navigator.share({title:'Chinese Practice feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
- dialog.querySelector('#feedback-download').onclick=()=>{refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='chinese-practice-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
+ share.onclick=async()=>{refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
+ dialog.querySelector('#feedback-download').onclick=()=>{refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
  dialog.onclose=()=>{dialog.remove();previous?.focus()};
  note.focus();
 }
