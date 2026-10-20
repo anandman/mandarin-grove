@@ -25,6 +25,16 @@ function characterNeedsPinyin(c){
  return !/[K1]/.test(grades)&&/[2-5]/.test(grades);
 }
 function traceOutcome(mistakes,help){return mistakes<=2&&!help?'correct':'assisted';}
+// Readiness to add material is a same-day milestone, separate from spaced mastery.
+function unitReadiness(s,chars,grade){
+ const unique=[...new Set(chars)],target=2;
+ const completed=unique.filter(c=>{
+  if(skillState(s,c,'listen').correct<target)return false;
+  if(grade!=='K'&&skillState(s,c,'memory').correct+skillState(s,c,'writing').correct<target)return false;
+  return !(Number(grade)>=2&&characterNeedsPinyin(c))||skillState(s,c,'pinyin').correct>=target;
+ }).length;
+ return {ready:unique.length>0&&completed===unique.length,completed,total:unique.length};
+}
 function characterStage(s,c,now=Date.now()){
  const skills=s.learning?.chars?.[c]?.skills;
  if(!skills)return s.pts?.[c]?'Previously practiced':'New';

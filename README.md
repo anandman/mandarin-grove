@@ -46,6 +46,18 @@ Keep the original backup until the restored profiles and progress have been chec
 
 `tests/legacy-backup-browser.cjs` checks the actual restore controls and backup round trip with synthetic original-format profiles, including exact legacy fields, zoo unlocks, and visible practiced trees.
 
+## Grow your grove
+
+Open **Your grove** beside the orange balance. Twenty decorations can be combined across five areas: sky, trees, ground, reading spot and visitors. Start with a one-orange flower patch, save for a larger feature, or build a four-piece reading nook (12 oranges total) or treehouse (14 total). Each purchased piece appears immediately. Swapping owned decorations, putting projects away and inviting already-earned zoo friends are free. A pinned goal shows the next item or project piece and how many oranges remain on Home and in the catalog.
+
+Complete an area's four decorations to earn a permanent collection stamp. Undo the last unlock or project piece for the actual oranges paid, using the balance/Undo bar while browsing. Existing purchases, orange balances, legacy-star credits, sentence rewards and original stars remain intact; wallets, projects, goals and equipped decorations are included in each child's backup. Catalog/prices, earning policy, state changes and presentation stay separate so family feedback can change the rewards without resetting progress.
+
+## Adding units at school or at home
+
+Home shows **Ready for more** once every character in the current practice unit has two independent successes in its grade's badge skills. Kindergarten requires listening; Grade 1 adds writing recall; Grade 2 and up add pinyin for characters first introduced in Grade 2 or later. Recall combines memory and self-rated writing successes. Same-day sessions count toward readiness, while spaced-review mastery keeps its existing elapsed-day requirements.
+
+**Add another unit** opens a picker; nothing advances silently. **Choose units** is also available before readiness, and **My characters → any unit → Practice this unit** still works. Follow the current school week for as long as needed, choose units out of order, or explore ahead. Adding a unit retains earlier characters for review and does not change the assigned quiz or test date.
+
 ## Writing ideas
 
 Choose **Writing ideas** on Home and type a Chinese character or whole word. A character can suggest related words; a compound must match a listed word as a whole. Traditional input aliases are accepted and suggestions display simplified Chinese. Browse available words by meaning or choose a character if you need a starting point. Ideas vary without repeating until that input's collection has been used.

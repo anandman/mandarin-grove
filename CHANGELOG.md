@@ -1,5 +1,11 @@
 # Change history
 
+## Expanded rewards and optional unit progression — 20261020-grove-22
+
+Expand the Grove to twenty decorations across five combinable areas, two four-piece building projects, free visits from earned zoo friends, pinned savings goals and permanent collection stamps. Show each project piece immediately; keep balances and Undo accessible while browsing. Preserve old purchases, legacy credits, stars and progress through additive wallet upgrades and backups.
+
+Separate readiness for new material from spaced mastery at every grade. Two independent successes per character in the grade's badge skills can show “Ready for more” on the same day. Replace automatic mastery-gated expansion with an explicit unit picker, available at any time, supporting school pacing and arbitrary unit order without changing existing reviews or school quiz settings.
+
 ## Complete Grove reskin and original-star credit — 20261020-grove-21
 
 Replace the inherited Home composition with an orchard scene, daily practice card, practice paths, writing/cram cards and unit trees. Carry shared colors, type, surfaces and controls through practice, rewards, character details, dashboards, feedback and settings. Add a header Appearance control and Grown-ups setting for System (default), Light and Dark; follow OS changes, save the browser preference and preserve active answers. Keep opaque cream handwriting paper for readable ink in either mode.

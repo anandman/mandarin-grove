@@ -5,6 +5,26 @@ if(fs.existsSync('learning.js'))vm.runInContext(fs.readFileSync('learning.js','u
 vm.runInContext(fs.readFileSync('rewards.js','utf8'),c);
 const day=864e5, now=new Date(2026,9,18,12).getTime();
 const state=()=>({pts:{},box:{},due:{},cfg:{},stars:40});
+test('readiness for another unit can be earned today without changing spaced mastery',()=>{
+ const s=state();for(const char of ['一','二'])for(let i=0;i<2;i++)c.recordSkill(s,char,'listen','correct',now+i*1000);
+ assert.equal(c.unitReadiness(s,['一','二'],'K').ready,true);
+ assert.notEqual(c.characterStage(s,'一',now),'Mastered');assert.equal(c.skillState(s,'一','listen').level,1);
+ assert.equal(c.unitReadiness(s,[],'K').ready,false);
+});
+test('older grades need listening and recall readiness, plus pinyin where the character requires it',()=>{
+ const s=state();for(let i=0;i<2;i++)c.recordSkill(s,'狗','listen','correct',now+i*1000);
+ assert.equal(c.unitReadiness(s,['狗'],'2').ready,false);
+ c.recordSkill(s,'狗','memory','correct',now);c.recordSkill(s,'狗','writing','correct',now);
+ assert.equal(c.unitReadiness(s,['狗'],'1').ready,true);
+ assert.equal(c.unitReadiness(s,['狗'],'2').ready,false);
+ for(let i=0;i<2;i++)c.recordSkill(s,'狗','pinyin','correct',now+i*1000);
+ assert.equal(c.unitReadiness(s,['狗'],'2').ready,true);
+});
+test('readiness never treats stars, assisted answers or skipped questions as independent successes',()=>{
+ const s=state();s.pts['一']=100;
+ for(let i=0;i<4;i++){c.recordSkill(s,'一','listen','assisted',now);c.recordSkill(s,'一','listen','skip',now);}
+ const result=c.unitReadiness(s,['一'],'K');assert.equal(result.ready,false);assert.equal(result.completed,0);assert.equal(result.total,1);
+});
 test('cram stays under 30 with balanced mixed modes and no duplicate questions',()=>{
  const pool=Array.from({length:100},(_,i)=>({c:String(i)}));
  const q=c.cramQueue(pool,['listen','trace','flip','memory'],30,a=>a.slice().reverse());
