@@ -54,7 +54,7 @@ Complete an area's four decorations to earn a permanent collection stamp. Undo t
 
 ### Compact phone and tablet layout
 
-Home keeps the main practice choices together. Your grove uses **Build**, five decoration areas and **Stamps** tabs; your last category saves per child. Arrow keys, Home and End navigate the tabs. **Arrange your grove** opens the current decorations; **Pieces & prices** opens a project's full plan. Star a goal, or tap its filled star to clear it. Orange history, earlier-star credit and sentence counts live under Stamps.
+Home keeps the main practice choices together. Your grove uses **Build**, five decoration areas and **Stamps** tabs; your last category saves per child. Arrow keys, Home and End navigate the tabs. **Arrange your grove** opens the current decorations; **Pieces & prices** opens a project's full plan. Tap a decoration’s name for its description. Star a goal, or tap its filled star to clear it. Orange history, earlier-star credit and sentence counts live under Stamps.
 
 Cram keeps Start and the selected count above a scrollable multi-unit picker. Writing ideas keeps its prompt and sentence reward together, and iPad dictation places full-size handwriting beside pinyin. Short explanations open when needed. Smaller screens and expanded details can still scroll; handwriting and character targets remain usable.
 

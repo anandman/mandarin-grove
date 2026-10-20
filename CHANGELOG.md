@@ -1,5 +1,9 @@
 # Change history
 
+## Larger grove and smaller reward tiles — 20261020-grove-24
+
+Give the rewards grove a full-width phone preview and more space on tablets. Enlarge the Home illustration too. Use shorter decoration and project tiles while retaining 44px purchase and goal controls; tap a decoration name for its description. Preserve category selection, purchases, goals and learning progress.
+
 ## Compact iPhone and iPad screens — 20261020-compact-23
 
 Bring daily practice, activity choices, school quiz access, progress and unit selection onto the first phone screen. Keep a smaller Grove illustration, numeric reward progress and comfortable touch targets; put explanations behind disclosures and tighten unit cards.
