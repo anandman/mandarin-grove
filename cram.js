@@ -42,15 +42,12 @@ function showCram() {
     if (!groups.has(key)) groups.set(key,[]);
     groups.get(key).push(unit);
   }
-  A.innerHTML = `<h1>Cram mode</h1><p class="mean">${GN[grade]} · Choose units or sets from My Characters, across grades.</p>
-    <p class="reading-note">Up to 30 randomly selected questions, balanced across all ${mixedCramModes().length===5?'five':'four'} modes. Progress saves after each answer. Your normal practice selection stays the same.</p>
-    ${grade==='K'?'<p class="reading-note">Starter Unit 1 teaches basic strokes and has no character quiz.</p>':''}
-    <div class="cram-actions"><button class="btn" onclick="selectCramUnits(true)">All units / sets</button><button class="btn gray" onclick="selectCramUnits(false)">Clear</button></div>
-    ${[...groups.values()].map(group=>`<section class="cram-group"><h2>${GN[group[0].grade]||'Other'} · ${group[0].supplemental?'Supplemental practice':group[0].added?'Added units':'Units'}</h2><div class="cram-units">${group.map(({id:n,label,chars,grade:g})=>`<label class="cram-unit"><input type="checkbox" data-unit="${n}" aria-label="${GN[g]||'Other'} · ${label}" ${cramSelection[grade].has(n)?'checked':''}><span><b>${label}</b><small>${[...chars].join(' ')}</small></span></label>`).join('')}</div></section>`).join('')}
-    <p id="cram-count" class="mean" aria-live="polite"></p>
-    <button class="today" data-cram-mode="mixed" onclick="startCram('mixed')"><span><b>Start all ${mixedCramModes().length===5?'five':'four'} modes</b><small>All ${mixedCramModes().length===5?'five':'four'} modes mixed question by question</small></span><span class="go">▶ Start</span></button>
-    <details><summary class="reading-note">Practice just one mode or take a pinyin quiz</summary>
-    <div class="modes cram-modes">${CRAM_MODES.map(([mode,name,description])=>`<button data-cram-mode="${mode}" onclick="startCram('${mode}')"><span>${name}<small>${description}</small></span></button>`).join('')}</div></details>`;
+  A.innerHTML = `<section class="cram-page"><div class="grove-compact-title"><h1>Cram mode</h1><small>${GN[grade]} · Mix ${mixedCramModes().length} modes</small></div>
+    <div class="cram-startbar"><p id="cram-count" aria-live="polite"></p><button class="btn" data-cram-mode="mixed" onclick="startCram('mixed')">Start all ${mixedCramModes().length===5?'five':'four'} modes ▶</button></div>
+    <div class="cram-picker-heading"><h2>Choose units</h2><div class="cram-actions"><button class="btn gray" onclick="selectCramUnits(true)">All units / sets</button><button class="btn gray" onclick="selectCramUnits(false)">Clear</button></div></div>
+    <div class="cram-picker" tabindex="0" role="region" aria-label="Units and sets">${[...groups.values()].map(group=>`<section class="cram-group"><h2>${GN[group[0].grade]||'Other'} · ${group[0].supplemental?'Supplemental practice':group[0].added?'Added units':'Units'}</h2><div class="cram-units">${group.map(({id:n,label,chars,grade:g})=>`<label class="cram-unit"><input type="checkbox" data-unit="${n}" aria-label="${GN[g]||'Other'} · ${label}" ${cramSelection[grade].has(n)?'checked':''}><span><b>${label}</b><small>${[...chars].join(' ')}</small></span></label>`).join('')}</div></section>`).join('')}</div>
+    <details class="compact-help"><summary>About this practice mix</summary><p class="reading-note">Up to 30 random questions balanced across ${mixedCramModes().length===5?'five':'four'} modes. Progress saves after each answer. Choose any units from My Characters, including added grades. Your normal practice selection stays the same.${grade==='K'?' Unit 1 teaches basic strokes and has no character quiz.':''}</p></details>
+    <details class="compact-help"><summary>Practice just one mode or take a pinyin quiz</summary><div class="modes cram-modes">${CRAM_MODES.map(([mode,name,description])=>`<button data-cram-mode="${mode}" onclick="startCram('${mode}')"><span>${name}<small>${description}</small></span></button>`).join('')}</div></details></section>`;
   A.querySelectorAll('[data-unit]').forEach(input => input.onchange = () => {
     const selected = cramSelection[grade], id=units.find(h=>String(h.id)===input.dataset.unit).id; input.checked ? selected.add(id) : selected.delete(id); saveCramSelection(); updateCramCount();
   });

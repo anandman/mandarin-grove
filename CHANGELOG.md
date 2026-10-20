@@ -1,5 +1,11 @@
 # Change history
 
+## Compact iPhone and iPad screens — 20261020-compact-23
+
+Bring daily practice, activity choices, school quiz access, progress and unit selection onto the first phone screen. Keep a smaller Grove illustration, numeric reward progress and comfortable touch targets; put explanations behind disclosures and tighten unit cards.
+
+Show one rewards category at a time with saved, keyboard-accessible tabs, a live preview, goal controls and optional arrangement/project details. Move Cram's count and Start button above its compact, scrollable unit picker. Tighten Writing ideas and listening controls, and place handwriting and pinyin side by side on iPad without shrinking the writing paper. Preserve all learning, rewards, saved sessions and backups.
+
 ## Expanded rewards and optional unit progression — 20261020-grove-22
 
 Expand the Grove to twenty decorations across five combinable areas, two four-piece building projects, free visits from earned zoo friends, pinned savings goals and permanent collection stamps. Show each project piece immediately; keep balances and Undo accessible while browsing. Preserve old purchases, legacy credits, stars and progress through additive wallet upgrades and backups.

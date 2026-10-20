@@ -52,6 +52,12 @@ Open **Your grove** beside the orange balance. Twenty decorations can be combine
 
 Complete an area's four decorations to earn a permanent collection stamp. Undo the last unlock or project piece for the actual oranges paid, using the balance/Undo bar while browsing. Existing purchases, orange balances, legacy-star credits, sentence rewards and original stars remain intact; wallets, projects, goals and equipped decorations are included in each child's backup. Catalog/prices, earning policy, state changes and presentation stay separate so family feedback can change the rewards without resetting progress.
 
+### Compact phone and tablet layout
+
+Home keeps the main practice choices together. Your grove uses **Build**, five decoration areas and **Stamps** tabs; your last category saves per child. Arrow keys, Home and End navigate the tabs. **Arrange your grove** opens the current decorations; **Pieces & prices** opens a project's full plan. Star a goal, or tap its filled star to clear it. Orange history, earlier-star credit and sentence counts live under Stamps.
+
+Cram keeps Start and the selected count above a scrollable multi-unit picker. Writing ideas keeps its prompt and sentence reward together, and iPad dictation places full-size handwriting beside pinyin. Short explanations open when needed. Smaller screens and expanded details can still scroll; handwriting and character targets remain usable.
+
 ## Adding units at school or at home
 
 Home shows **Ready for more** once every character in the current practice unit has two independent successes in its grade's badge skills. Kindergarten requires listening; Grade 1 adds writing recall; Grade 2 and up add pinyin for characters first introduced in Grade 2 or later. Recall combines memory and self-rated writing successes. Same-day sessions count toward readiness, while spaced-review mastery keeps its existing elapsed-day requirements.

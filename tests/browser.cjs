@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
  assert.equal(await page.evaluate(()=>SESS.q.length),30);
  await page.evaluate(()=>showCram());
  for(const mode of ['trace','listen','flip','memory','dictation']){
-  await page.locator('details > summary').click();
+  await page.getByText('Practice just one mode or take a pinyin quiz',{exact:true}).click();
   await page.locator(`[data-cram-mode="${mode}"]`).click();
   assert.equal(await page.evaluate(()=>CRAM.pool.length),27);
   if(mode==='dictation'){
