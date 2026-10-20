@@ -6,7 +6,7 @@ function groveTree(mode='unit',growth=3){
  return '<svg viewBox="0 0 90 90" aria-hidden="true"><path d="M18 78H72" stroke="#9C8063" stroke-width="3" stroke-linecap="round"/><path d="M46 76V34M46 59L27 45M46 49L63 33" fill="none" stroke="#514438" stroke-width="5" stroke-linecap="round"/><path d="M24 51C4 49 10 26 20 24C12 7 40 3 46 16C65 3 82 21 73 34C89 47 67 64 55 54C43 67 28 61 24 51Z" fill="'+color+'"/><path d="M46 75V42M46 60L29 48M46 52L62 38" fill="none" stroke="#514438" stroke-width="4" stroke-linecap="round"/>'+(growth>1?'<circle cx="25" cy="34" r="7" fill="#F97316"/><circle cx="62" cy="31" r="7" fill="#F97316"/>':'')+(growth>2?'<circle cx="61" cy="51" r="7" fill="#F97316"/>':'')+'</svg>';
 }
 function unitGroveGrowth(chars){
- const practiced=chars.filter(char=>Object.values(S.learning?.chars?.[char]?.skills||{}).some(r=>(r.attempts||0)>(r.skips||0))).length;
+ const practiced=chars.filter(char=>(S.pts?.[char]||0)>0||Object.values(S.learning?.chars?.[char]?.skills||{}).some(r=>(r.attempts||0)>(r.skips||0))).length;
  const badges=chars.filter(char=>!!S.rewards?.characters?.[char]).length;
  return {practiced,badges,stage:!practiced?0:practiced<chars.length?1:badges<chars.length?2:3};
 }

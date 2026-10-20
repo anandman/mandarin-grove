@@ -24,3 +24,10 @@ test('writing reward amounts are policy controlled and existing fruit is preserv
  assert.equal(s.groveRewards.balance,3);assert.equal(c.completeWritingSentence(s,'',102),0);
  assert.equal(s.groveRewards.transactions.at(-1).source,'writing-sentence');
 });
+test('unit trees recognize original character progress without inventing skill evidence',()=>{
+ vm.runInContext(fs.readFileSync('grove.js','utf8'),c);
+ c.S={pts:{祖:6,止:2},learning:{chars:{离:{skills:{listen:{attempts:2,skips:1}}},子:{skills:{listen:{attempts:1,skips:1}}}}}};
+ const before=JSON.stringify(c.S),growth=c.unitGroveGrowth(['祖','止','离','子']);
+ assert.equal(growth.practiced,3);assert.equal(growth.badges,0);assert.equal(growth.stage,1);
+ assert.equal(JSON.stringify(c.S),before);
+});

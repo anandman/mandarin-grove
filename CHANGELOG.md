@@ -1,5 +1,9 @@
 # Change history
 
+## Preserve visible progress from original backups — 20261020-compatibility-20
+
+Make backward compatibility for earned progress an explicit product principle. Add an import/export regression using the original app's exact backup format and two synthetic profiles. Retain character counts, stars, zoo friends, badges, review fields and settings. Unit trees now include original character practice in their growth display, without inventing separate skill evidence or spaced mastery.
+
 ## Writing ideas and sentence rewards — 20261020-writing-19
 
 Add the reviewed Writing ideas flow, with an orange-tree Home entry and violet-book “writing seed” cards. Reuse Writing Spark's local collection under its MIT license, preserving single-character lookup, exact whole-word matching, traditional aliases, simplified display, and per-input variety. Include searchable character/word browsing and Chinese IME handling.

@@ -39,6 +39,12 @@ Scripts remain classic scripts because the existing UI uses inline event handler
 
 Progress is stored in browser localStorage. Localhost has separate storage from the deployed site. Use Grown-ups → Copy backup code on the original, then restore it in the local app to transfer progress. Backups contain children's names; do not commit them.
 
+**Compatibility principle: earned progress must survive app updates and supported backup migrations.** Original-app backups retain per-character star counts (including counts beyond five), total stars, earned zoo friends and badges, review fields, profiles and saved settings. New learning and reward systems add to that history. Unit trees recognize original character practice. An older backup cannot prove the separate listening, writing and pinyin results that the original app never recorded; those characters are labeled “Previously practiced” rather than losing their historical progress or receiving invented mastery evidence.
+
+Keep the original backup until the restored profiles and progress have been checked. Restore replaces the saved snapshot; it does not merge an older backup with more recent practice on the destination device. Export the destination's current backup before replacing it.
+
+`tests/legacy-backup-browser.cjs` checks the actual restore controls and backup round trip with synthetic original-format profiles, including exact legacy fields, zoo unlocks, and visible practiced trees.
+
 ## Writing ideas
 
 Choose **Writing ideas** on Home and type a Chinese character or whole word. A character can suggest related words; a compound must match a listed word as a whole. Traditional input aliases are accepted and suggestions display simplified Chinese. Browse available words by meaning or choose a character if you need a starting point. Ideas vary without repeating until that input's collection has been used.
