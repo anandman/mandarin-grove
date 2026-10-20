@@ -12,6 +12,17 @@ const assert=require('node:assert/strict');
  await page.locator('#grove-view-list').click();assert.equal(await page.locator('#sets').evaluate(e=>e.classList.contains('grove-trees')),false);
  await page.reload();await page.evaluate(()=>home());assert.equal(await page.locator('#grove-view-list').getAttribute('aria-pressed'),'true');
  await page.locator('#grove-view-trees').click();
+ // Unit character tiles must work with keyboard activation in both layouts.
+ await page.evaluate(()=>new Promise(resolve=>SL('祖',resolve)));
+ for(const view of ['list','trees']){
+  await page.locator('#grove-view-'+view).click();
+  for(const key of ['Enter','Space']){
+   await page.getByRole('button',{name:'祖, 0 of 5 stars',exact:true}).focus();
+   await page.keyboard.press(key);
+   assert.equal(await page.locator('#dov').count(),1,'Character tile must activate with '+key+' in '+view+' view');
+   await page.evaluate(()=>dclose());
+  }
+ }
  await page.getByRole('button',{name:'4th grade · Unit 7, 0 of 9 reward milestones',exact:true}).click();assert.ok(await page.getByRole('button',{name:'▶ Practice this unit',exact:true}).count()>0);
  await page.screenshot({path:'/tmp/mandarin-grove-trees-ipad.png',fullPage:true});
  await page.getByRole('button',{name:'Grove rewards',exact:true}).click();

@@ -119,3 +119,6 @@ header .ttl{color:var(--tx)}
 @media(prefers-reduced-motion:reduce){.pop,.bdg,.medal,.medal i,.pulse{animation:none!important}}
 
 .grove-visitor{grid-column:1/-1;color:var(--violet-ink);font-weight:700}.grove-preview.grove-sunrise{background:linear-gradient(#FDE2B7,#F7EDD8 45%,#E8ECDD)}
+
+/* Real buttons preserve pointer, keyboard and assistive activation for characters. */
+.zoo .character-tile{font:inherit;color:var(--tx);background:#fff;border:1px solid var(--ln);border-radius:18px;padding:10px 8px;text-align:center;cursor:pointer;min-height:100px}.character-tile .ch,.character-tile .py{display:block}.character-tile:focus-visible{outline:3px solid var(--violet-ink);outline-offset:2px}

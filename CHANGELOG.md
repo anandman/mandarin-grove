@@ -39,3 +39,7 @@ Introduce dark and light orchard/book icons with 中文 lettering, and a charcoa
 ## Host the app and grow the Grove experience
 
 Deploy an explicit app-only static export to Vercel; keep the repository private and publish the README icon and live-app link. Add mode trees, growing unit cards, a persistent Grove/List choice and arbitrary unit access. Extract reward policy/state from learning/UI code, retro-credit one orange per existing ribbon once, and add reversible local cosmetic unlocks. Existing stars, badges, curriculum, saved quizzes and spaced mastery remain compatible. Writing ideas UX is pending owner review.
+
+## Keyboard access to Grove characters
+
+Use native buttons for unit character tiles so Enter and Space open character details in both Grove and List views, with a visible focus indicator. Pointer and touch behavior is preserved.
