@@ -1,5 +1,9 @@
 # Change history
 
+## Complete practice paths for every grade — 20261020-grove-25
+
+Show Draw from Memory on kindergarten Home, matching the four base modes already available in daily practice and mixed Cram. Fill the phone's two-by-two grid and the wider screen's four-column row. Keep kindergarten Home cards compact without shrinking listening answer choices. Preserve learning, rewards and saved progress. Grade 2 and up still add Hear, Write & Pinyin to mixed practice.
+
 ## Larger grove and smaller reward tiles — 20261020-grove-24
 
 Give the rewards grove a full-width phone preview and more space on tablets. Enlarge the Home illustration too. Use shorter decoration and project tiles while retaining 44px purchase and goal controls; tap a decoration name for its description. Preserve category selection, purchases, goals and learning progress.
