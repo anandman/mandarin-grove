@@ -109,3 +109,13 @@ header .ttl{color:var(--tx)}
 .btn:not([style]):not(.g):not(.r){color:var(--tx)}.pin{color:var(--ac-ink)}
 .zh2 button,.progress-link{color:var(--ac-ink)}.gb{background:#EDE5F8;color:var(--violet-ink)}
 .reward-collection-link{background:#FFF0DE;border-color:#F9BE83;color:#7C320D}.reward-card{border-color:#E8D8BD}#reward-notice{background:#FFF0DE;color:#7C320D}
+
+/* Grove views are presentation; unit access and scheduling remain independent. */
+.grove-mode-tree{background:#F4F1EA}.grove-mode-tree svg{width:64px;height:64px}.modes .grove-mode-tree{width:72px;height:72px}
+.grove-view{display:flex;gap:8px;justify-content:center;margin:18px 0 8px}.grove-view button{font:700 17px system-ui;min-height:44px;padding:8px 18px;border-radius:99px;border:1px solid var(--ln);background:white;color:var(--tx);cursor:pointer}.grove-view button[aria-pressed=true]{background:var(--tx);color:var(--bg)}
+.unit-tree,.grove-growth{display:none}.grove-trees{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px;padding:16px;border-radius:24px;background:#E8ECDD}.grove-trees .gh,.grove-trees>.reading-note,.grove-trees>.hsum{grid-column:1/-1}.grove-trees .set{margin:0}.grove-trees .set.open{grid-column:1/-1}.grove-trees .unit-tree{display:block;width:64px;grid-column:1;grid-row:1/4}.grove-trees .unit-tree svg{width:100%;height:74px}.grove-trees .set>button:not(.pset){display:grid;text-align:left;grid-template-columns:64px 1fr auto;gap:4px 10px;padding:12px}.grove-trees .tt{grid-column:2;grid-row:1}.grove-trees .pv{display:none}.grove-trees .grove-growth{display:block;grid-column:2/4;grid-row:3;font-size:13px;color:var(--mut);font-weight:500}.grove-trees .st{grid-column:2;grid-row:2;margin:0;font-size:14px}.grove-trees .cv{grid-column:3;grid-row:1}
+.grove-trees.grove-sunrise{background:linear-gradient(#FDE2B7,#F7EDD8 45%,#E8ECDD)}.grove-fruit-total{font-size:36px;font-weight:800;margin:16px}.grove-preview{position:relative;max-width:210px;margin:0 auto;border-radius:22px;background:#E8ECDD}.grove-preview svg{width:100%;height:170px}.grove-butterfly{position:absolute;right:5px;top:10px;font-size:36px}.grove-wallet-link{background:#EDE5F8;border-color:#D4C2EF;color:#583C85}.reward-card .btn{font-size:16px;padding:10px;margin:4px 0}.btn:disabled{opacity:.55;cursor:default;box-shadow:none}
+@media(max-width:500px){#reward-strip .reward-meter{flex-basis:100%;order:3}.grove-trees{padding:10px;grid-template-columns:1fr}.modes .grove-mode-tree{width:64px;height:64px}}
+@media(prefers-reduced-motion:reduce){.pop,.bdg,.medal,.medal i,.pulse{animation:none!important}}
+
+.grove-visitor{grid-column:1/-1;color:var(--violet-ink);font-weight:700}.grove-preview.grove-sunrise{background:linear-gradient(#FDE2B7,#F7EDD8 45%,#E8ECDD)}

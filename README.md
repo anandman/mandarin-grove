@@ -5,6 +5,8 @@
   <img src="assets/brand/mandarin-grove-dark.png" alt="Mandarin Grove: an orange-fruited tree above a violet book marked 中文" width="160">
 </picture>
 
+[Open Mandarin Grove](https://mandarin-grove.vercel.app/) · [Roadmap](https://github.com/anandman/mandarin-grove/issues/19)
+
 Grow your Mandarin through reading, writing, listening, and pinyin practice.
 
 Editable recovery of https://hanzi-practice-9uq.pages.dev, fetched October 18, 2026. The deployed app delivers its frontend directly, so its HTML, styles, scripts, and referenced assets were recovered rather than reimplemented.
@@ -105,3 +107,18 @@ See [the ordered roadmap](https://github.com/anandman/mandarin-grove/issues/19).
 ## Static deployment
 
 `npm run build` exports the files listed in `scripts/static-files.json`, plus approved audio/stroke assets, into `dist/`. The local preview and export share that allowlist. Agent notes, tests, backups, exports, source history and project metadata are not published. `vercel.json` builds and serves only `dist/`; no application backend or paid model service is required.
+
+### Move existing progress to the hosted app
+
+1. On each child's device, open the exact old address they used (for example `http://strixhalo:4173` or `http://strixhalo.local:4173`). Hold the gear to open Grown-ups, then copy the backup code. Keep this code private: it includes local profile names.
+2. Open <https://mandarin-grove.vercel.app/>, use Grown-ups to restore the backup, and check each child's stars, selected units and learning progress.
+3. Add the new address to the Home Screen. Check the installed app too and restore the same backup if it starts in a separate storage container.
+4. Keep the old preview available until both children are verified at the new address; the hosted app itself has no Strixhalo dependency. No progress is sent to a server during backup/restore.
+
+## Grove experience and rewards
+
+Practice modes have distinct tree visuals. My Characters offers a Grove view with growing unit trees and a compact List view; the preference saves per child. Every unit remains accessible in any order, including added-grade units. Tree growth reflects characters practiced and permanent badges; it does not impose curriculum locks or redefine spaced mastery.
+
+Oranges are local reward currency: each earned practice ribbon credits one orange. Existing detailed practice/ribbons receive credit once; stars, zoo friends, badges, and learning records stay intact. The first reward catalog offers cosmetic violet leaves, a butterfly visitor, and sunrise scenery. Unlocking spends oranges, and Undo last unlock refunds the actual cost. One decoration is active at a time; owned decorations can be switched freely.
+
+Reward code is deliberately separate for alpha feedback: `rewards.js` owns `REWARD_POLICY`, `GROVE_REWARD_CATALOG`, evidence-to-achievement rules, the versioned local wallet, and transactions. `grove.js` owns tree/reward presentation, while `learning.js` owns SRS evidence and timing. Earning-rate changes affect new ribbons, not previously credited ribbons; price changes do not alter past refund amounts. Backup/restore includes the wallet. There is no server balance, purchase, or real-money redemption.
