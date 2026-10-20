@@ -1,5 +1,10 @@
 # Mandarin Grove
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/brand/mandarin-grove-light.png">
+  <img src="assets/brand/mandarin-grove-dark.png" alt="Mandarin Grove: an orange-fruited tree above a violet book marked 中文" width="160">
+</picture>
+
 Grow your Mandarin through reading, writing, listening, and pinyin practice.
 
 Editable recovery of https://hanzi-practice-9uq.pages.dev, fetched October 18, 2026. The deployed app delivers its frontend directly, so its HTML, styles, scripts, and referenced assets were recovered rather than reimplemented.
@@ -89,6 +94,14 @@ Dictation shows an English meaning clue before answering, in standalone, daily a
 
 ## Mandarin Grove identity
 
-The orange-fruited tree grows from an open violet book marked 中文 (Chinese). The default/dark icon uses charcoal with a cream tree; the light icon uses cream with a charcoal tree. Both source variants are in `assets/brand/`, created with image generation and exported at the required web sizes. The web app currently uses the default/dark variant. Brand colors draw on mdview and Highgain: charcoal `#14161C`, paper cream `#F4F1EA`, orange `#F97316`, and violet `#AD96DC`. The palette is independent of the sports teams' marks. Existing local progress keys, quiz settings, learning records, and rewards remain compatible. The GitHub repository retains its existing address.
+The orange-fruited tree grows from an open violet book marked 中文 (Chinese). The default/dark icon uses charcoal with a cream tree; the light icon uses cream with a charcoal tree. Both source variants are in `assets/brand/`, created with image generation and exported at the required web sizes. The web app currently uses the default/dark variant. Brand colors draw on mdview and Highgain: charcoal `#14161C`, paper cream `#F4F1EA`, orange `#F97316`, and violet `#AD96DC`. The palette is independent of the sports teams' marks. Existing local progress keys, quiz settings, learning records, and rewards remain compatible. The private GitHub repository is [anandman/mandarin-grove](https://github.com/anandman/mandarin-grove).
 
 Browser and iOS Home Screen names/icons now use Mandarin Grove. An existing iOS Home Screen shortcut may retain its saved label or icon; if it does, back up progress, open the same app address in Safari, and add a fresh Home Screen shortcut. Restore a backup if the standalone shortcut uses a separate storage container. A manifest supplies installation metadata; it does not add offline caching or background sync.
+
+## Delivery roadmap
+
+See [the ordered roadmap](https://github.com/anandman/mandarin-grove/issues/19). Static hosting comes first, followed by the staged Grove experience and modular rewards, then an owner-reviewed Writing Spark prompt-ideas UX. Speech and tutoring services follow quality and funding evaluation.
+
+## Static deployment
+
+`npm run build` exports the files listed in `scripts/static-files.json`, plus approved audio/stroke assets, into `dist/`. The local preview and export share that allowlist. Agent notes, tests, backups, exports, source history and project metadata are not published. `vercel.json` builds and serves only `dist/`; no application backend or paid model service is required.

@@ -13,3 +13,8 @@ node_modules/
 
 # Local history exports
 exports/
+
+# Generated deployment output
+dist/
+.vercel/
+__pycache__/

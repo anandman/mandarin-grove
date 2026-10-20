@@ -1,0 +1,19 @@
+[
+  "app.js",
+  "cram.js",
+  "feedback.js",
+  "icon180.png",
+  "icon192.png",
+  "icon512.png",
+  "icon64.png",
+  "index.html",
+  "learning.js",
+  "manifest.webmanifest",
+  "practice.js",
+  "review.js",
+  "speech.js",
+  "styles.css",
+  "vendor/hanzi-writer.js",
+  "version-check.js",
+  "version.txt"
+]
