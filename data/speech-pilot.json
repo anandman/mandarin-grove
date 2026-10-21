@@ -1,0 +1,614 @@
+{
+  "version": 1,
+  "status": "draft-needs-fluent-review",
+  "description": "Independent Mandarin Grove speech pilot: 40 distinct characters, 12 alternate readings, and 15 short connected-speech prompts. Pinyin is lexical; fluent reviewers should allow natural sandhi and regional variants.",
+  "references": [
+    "https://docs.cloud.google.com/text-to-speech/docs/phonemes#chinese_mandarin_simplified_china_cmn-hans-cn",
+    "https://docs.cloud.google.com/text-to-speech/docs/list-voices-and-types"
+  ],
+  "cases": [
+    {
+      "id": "character-01",
+      "kind": "character",
+      "text": "止",
+      "pinyin": "zhǐ",
+      "meaning": "stop",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-02",
+      "kind": "character",
+      "text": "离",
+      "pinyin": "lí",
+      "meaning": "leave; away from",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-03",
+      "kind": "character",
+      "text": "满",
+      "pinyin": "mǎn",
+      "meaning": "full",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-04",
+      "kind": "character",
+      "text": "狗",
+      "pinyin": "gǒu",
+      "meaning": "dog",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-05",
+      "kind": "character",
+      "text": "口",
+      "pinyin": "kǒu",
+      "meaning": "mouth",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-06",
+      "kind": "character",
+      "text": "假",
+      "pinyin": "jià",
+      "meaning": "holiday; leave",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-07",
+      "kind": "character",
+      "text": "子",
+      "pinyin": "zǐ",
+      "meaning": "child",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-08",
+      "kind": "character",
+      "text": "祖",
+      "pinyin": "zǔ",
+      "meaning": "ancestor",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-09",
+      "kind": "character",
+      "text": "组",
+      "pinyin": "zǔ",
+      "meaning": "group",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-10",
+      "kind": "character",
+      "text": "纸",
+      "pinyin": "zhǐ",
+      "meaning": "paper",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-11",
+      "kind": "character",
+      "text": "指",
+      "pinyin": "zhǐ",
+      "meaning": "point; finger",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-12",
+      "kind": "character",
+      "text": "买",
+      "pinyin": "mǎi",
+      "meaning": "buy",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-13",
+      "kind": "character",
+      "text": "卖",
+      "pinyin": "mài",
+      "meaning": "sell",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-14",
+      "kind": "character",
+      "text": "女",
+      "pinyin": "nǚ",
+      "meaning": "female",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-15",
+      "kind": "character",
+      "text": "绿",
+      "pinyin": "lǜ",
+      "meaning": "green",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-16",
+      "kind": "character",
+      "text": "努",
+      "pinyin": "nǔ",
+      "meaning": "strive",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-17",
+      "kind": "character",
+      "text": "旅",
+      "pinyin": "lǚ",
+      "meaning": "travel",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-18",
+      "kind": "character",
+      "text": "长",
+      "pinyin": "cháng",
+      "meaning": "long",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-19",
+      "kind": "character",
+      "text": "行",
+      "pinyin": "xíng",
+      "meaning": "go; okay",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-20",
+      "kind": "character",
+      "text": "的",
+      "pinyin": "de",
+      "meaning": "possessive particle",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-21",
+      "kind": "character",
+      "text": "得",
+      "pinyin": "dé",
+      "meaning": "obtain",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-22",
+      "kind": "character",
+      "text": "地",
+      "pinyin": "dì",
+      "meaning": "ground",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-23",
+      "kind": "character",
+      "text": "着",
+      "pinyin": "zhe",
+      "meaning": "ongoing-action particle",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-24",
+      "kind": "character",
+      "text": "还",
+      "pinyin": "hái",
+      "meaning": "still; also",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-25",
+      "kind": "character",
+      "text": "乐",
+      "pinyin": "lè",
+      "meaning": "happy",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-26",
+      "kind": "character",
+      "text": "数",
+      "pinyin": "shù",
+      "meaning": "number",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-27",
+      "kind": "character",
+      "text": "只",
+      "pinyin": "zhī",
+      "meaning": "measure word for animals",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-28",
+      "kind": "character",
+      "text": "重",
+      "pinyin": "zhòng",
+      "meaning": "heavy",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-29",
+      "kind": "character",
+      "text": "觉",
+      "pinyin": "jué",
+      "meaning": "feel; perceive",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-30",
+      "kind": "character",
+      "text": "是",
+      "pinyin": "shì",
+      "meaning": "be",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-31",
+      "kind": "character",
+      "text": "四",
+      "pinyin": "sì",
+      "meaning": "four",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-32",
+      "kind": "character",
+      "text": "十",
+      "pinyin": "shí",
+      "meaning": "ten",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-33",
+      "kind": "character",
+      "text": "西",
+      "pinyin": "xī",
+      "meaning": "west",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-34",
+      "kind": "character",
+      "text": "吃",
+      "pinyin": "chī",
+      "meaning": "eat",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-35",
+      "kind": "character",
+      "text": "次",
+      "pinyin": "cì",
+      "meaning": "time; occurrence",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-36",
+      "kind": "character",
+      "text": "去",
+      "pinyin": "qù",
+      "meaning": "go",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-37",
+      "kind": "character",
+      "text": "书",
+      "pinyin": "shū",
+      "meaning": "book",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-38",
+      "kind": "character",
+      "text": "树",
+      "pinyin": "shù",
+      "meaning": "tree",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-39",
+      "kind": "character",
+      "text": "学",
+      "pinyin": "xué",
+      "meaning": "study",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-40",
+      "kind": "character",
+      "text": "雨",
+      "pinyin": "yǔ",
+      "meaning": "rain",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-41",
+      "kind": "character",
+      "text": "假",
+      "pinyin": "jiǎ",
+      "meaning": "false; pretend",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-42",
+      "kind": "character",
+      "text": "长",
+      "pinyin": "zhǎng",
+      "meaning": "grow",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-43",
+      "kind": "character",
+      "text": "行",
+      "pinyin": "háng",
+      "meaning": "row; line of business",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-44",
+      "kind": "character",
+      "text": "得",
+      "pinyin": "de",
+      "meaning": "complement particle",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-45",
+      "kind": "character",
+      "text": "地",
+      "pinyin": "de",
+      "meaning": "adverbial particle",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-46",
+      "kind": "character",
+      "text": "着",
+      "pinyin": "zháo",
+      "meaning": "reach; fall asleep",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-47",
+      "kind": "character",
+      "text": "还",
+      "pinyin": "huán",
+      "meaning": "return",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-48",
+      "kind": "character",
+      "text": "乐",
+      "pinyin": "yuè",
+      "meaning": "music",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-49",
+      "kind": "character",
+      "text": "数",
+      "pinyin": "shǔ",
+      "meaning": "count",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-50",
+      "kind": "character",
+      "text": "只",
+      "pinyin": "zhǐ",
+      "meaning": "only",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-51",
+      "kind": "character",
+      "text": "重",
+      "pinyin": "chóng",
+      "meaning": "again",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "character-52",
+      "kind": "character",
+      "text": "觉",
+      "pinyin": "jiào",
+      "meaning": "sleep",
+      "readingReview": "pending",
+      "notes": "Isolated character with an explicit intended reading. Check the tone, initial consonant and vowel; this does not test context disambiguation."
+    },
+    {
+      "id": "sentence-01",
+      "kind": "sentence",
+      "text": "小狗在门口。",
+      "pinyin": "xiǎo gǒu zài mén kǒu",
+      "meaning": "The puppy is at the door.",
+      "readingReview": "pending",
+      "notes": "Compare g/k in 狗 and 口; consecutive third tones may change naturally."
+    },
+    {
+      "id": "sentence-02",
+      "kind": "sentence",
+      "text": "请在这里停止。",
+      "pinyin": "qǐng zài zhè lǐ tíng zhǐ",
+      "meaning": "Please stop here.",
+      "readingReview": "pending",
+      "notes": "Listen for the intended third-tone 止; a low or half third tone need not have a full dip."
+    },
+    {
+      "id": "sentence-03",
+      "kind": "sentence",
+      "text": "水杯满了。",
+      "pinyin": "shuǐ bēi mǎn le",
+      "meaning": "The cup is full.",
+      "readingReview": "pending",
+      "notes": "满 is third tone; 了 is neutral."
+    },
+    {
+      "id": "sentence-04",
+      "kind": "sentence",
+      "text": "我离学校很近。",
+      "pinyin": "wǒ lí xué xiào hěn jìn",
+      "meaning": "I am close to the school.",
+      "readingReview": "pending",
+      "notes": "离 should be lí, with a clear l initial."
+    },
+    {
+      "id": "sentence-05",
+      "kind": "sentence",
+      "text": "今天放假。",
+      "pinyin": "jīn tiān fàng jià",
+      "meaning": "Today is a day off.",
+      "readingReview": "pending",
+      "notes": "假 uses jià in this context."
+    },
+    {
+      "id": "sentence-06",
+      "kind": "sentence",
+      "text": "这个故事是假的。",
+      "pinyin": "zhè ge gù shì shì jiǎ de",
+      "meaning": "This story is made up.",
+      "readingReview": "pending",
+      "notes": "假 uses jiǎ; 个 and 的 may be unstressed."
+    },
+    {
+      "id": "sentence-07",
+      "kind": "sentence",
+      "text": "我和祖母走。",
+      "pinyin": "wǒ hé zǔ mǔ zǒu",
+      "meaning": "I walk with my grandmother.",
+      "readingReview": "pending",
+      "notes": "Third-tone sequences need fluent-speaker judgment; lexical tones are shown."
+    },
+    {
+      "id": "sentence-08",
+      "kind": "sentence",
+      "text": "我们分成小组。",
+      "pinyin": "wǒ men fēn chéng xiǎo zǔ",
+      "meaning": "We split into small groups.",
+      "readingReview": "pending",
+      "notes": "组 and 祖 are homophones. Do not treat identical audio as a character error."
+    },
+    {
+      "id": "sentence-09",
+      "kind": "sentence",
+      "text": "这张纸是绿色的。",
+      "pinyin": "zhè zhāng zhǐ shì lǜ sè de",
+      "meaning": "This sheet of paper is green.",
+      "readingReview": "pending",
+      "notes": "Compare zh in 纸 and ü in 绿."
+    },
+    {
+      "id": "sentence-10",
+      "kind": "sentence",
+      "text": "我要买书，不卖书。",
+      "pinyin": "wǒ yào mǎi shū bù mài shū",
+      "meaning": "I want to buy books, not sell them.",
+      "readingReview": "pending",
+      "notes": "Contrast 买/卖; 不 before fourth tone normally changes to second tone."
+    },
+    {
+      "id": "sentence-11",
+      "kind": "sentence",
+      "text": "她是我的女儿。",
+      "pinyin": "tā shì wǒ de nǚ ér",
+      "meaning": "She is my daughter.",
+      "readingReview": "pending",
+      "notes": "Check ü in 女; connected-word timing can differ from isolated 女."
+    },
+    {
+      "id": "sentence-12",
+      "kind": "sentence",
+      "text": "我喜欢音乐。",
+      "pinyin": "wǒ xǐ huān yīn yuè",
+      "meaning": "I like music.",
+      "readingReview": "pending",
+      "notes": "乐 uses yuè in 音乐. Third-tone sandhi in 我喜欢 is acceptable."
+    },
+    {
+      "id": "sentence-13",
+      "kind": "sentence",
+      "text": "这个孩子长高了。",
+      "pinyin": "zhè ge hái zi zhǎng gāo le",
+      "meaning": "This child has grown taller.",
+      "readingReview": "pending",
+      "notes": "长 uses zhǎng; 子 is neutral in 孩子 although its isolated reading is zǐ."
+    },
+    {
+      "id": "sentence-14",
+      "kind": "sentence",
+      "text": "我把书还给你。",
+      "pinyin": "wǒ bǎ shū huán gěi nǐ",
+      "meaning": "I return the book to you.",
+      "readingReview": "pending",
+      "notes": "还 uses huán. Third-tone changes are natural."
+    },
+    {
+      "id": "sentence-15",
+      "kind": "sentence",
+      "text": "你好，我们一起读书吧。",
+      "pinyin": "nǐ hǎo wǒ men yī qǐ dú shū ba",
+      "meaning": "Hello, let us read together.",
+      "readingReview": "pending",
+      "notes": "你好 usually has second/third tone; 一 in 一起 normally changes to fourth tone. Shown pinyin is lexical."
+    }
+  ]
+}
