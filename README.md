@@ -148,6 +148,8 @@ See [the ordered roadmap](https://github.com/anandman/mandarin-grove/issues/19).
 
 ### Move existing progress to the hosted app
 
+The temporary Strixhalo server and migration service were retired on October 20, 2026, after both children’s progress was migrated. Use <https://mandarin-grove.vercel.app/>. The steps below remain as a reference for future transfers between browser origins.
+
 1. On each child's device, open the exact old address they used (for example `http://strixhalo:4173` or `http://strixhalo.local:4173`). Use the same Safari tab or existing Home Screen app where the child's progress appears. Hold the gear to open Grown-ups, then Download backup file and save the .txt file in Files/Downloads. Copy backup code remains available too. Keep the file/code private: it includes local profile names.
 2. Open <https://mandarin-grove.vercel.app/>, use Grown-ups → Restore from backup file (or paste the code), check the preview, choose Replace, and check each child's stars, selected units and learning progress.
 3. Add the new address to the Home Screen. Check the installed app too and restore the same backup if it starts in a separate storage container.
