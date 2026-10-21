@@ -1,5 +1,9 @@
 # Change history
 
+## Clear practice and review choices — 20261020-review-27
+
+Rename Cram mode to Unit review and Hear, Write & Pinyin to Listen & Write throughout current controls, resumes, headings and help. Add a direct Grade 2+ Listen & Write Home path using active practice characters; retain school quizzes separately. Label the guided session Daily practice and explain its due-first learning mix versus unit review’s random selection. Fit five paths across desktop or use a short full-width fifth path on phones/tablets. Preserve saved selections, existing sessions, backup compatibility, question selection, rewards and spaced-review scheduling.
+
 ## Reliable backup transfer without the clipboard — 20261020-backup-26
 
 Add Download backup file and Restore from backup file in Grown-ups, using the existing backup-code format and the same profile preview and explicit Replace confirmation. Provide a user-activated Select backup code control with selectable text when automatic copying is unavailable or denied. File export leaves saved progress unchanged; invalid files cannot replace it. Existing code backups remain supported.

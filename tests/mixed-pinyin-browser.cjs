@@ -21,7 +21,7 @@ const assert=require('node:assert/strict');
   assert.ok(await page.locator('#dc').isVisible());
   const before=await page.evaluate(()=>({ch:DQ.q[0].c,p:skillState(S,DQ.q[0].c,'pinyin').attempts,w:skillState(S,DQ.q[0].c,'writing').attempts}));
   await page.reload();
-  if(cram)await page.getByRole('button',{name:'Resume cram',exact:true}).click();else await page.evaluate(()=>resume());
+  if(cram)await page.getByRole('button',{name:'Resume unit review',exact:true}).click();else await page.evaluate(()=>resume());
   assert.ok(await page.locator('#dc').isVisible());
   assert.deepEqual(await page.evaluate(()=>SESS.q.map(([m,c])=>[m,c.c])),queue);
   // A blank pinyin answer is a miss; child self-rates writing as successful.
@@ -30,7 +30,7 @@ const assert=require('node:assert/strict');
   const after=await page.evaluate(ch=>({p:skillState(S,ch,'pinyin'),w:skillState(S,ch,'writing'),standalone:S.cfg.cramDict}),before.ch);
   assert.equal(after.p.attempts,before.p+1);assert.equal(after.w.attempts,before.w+1);
   assert.ok(after.p.misses>=1);assert.ok(after.w.correct>=1);assert.equal(after.standalone,undefined);
-  await page.reload();if(cram)await page.getByRole('button',{name:'Resume cram',exact:true}).click();else await page.evaluate(()=>resume());
+  await page.reload();if(cram)await page.getByRole('button',{name:'Resume unit review',exact:true}).click();else await page.evaluate(()=>resume());
   assert.equal(await page.evaluate(()=>SESS.i),2);
   await page.evaluate(()=>{SESS.i=SESS.q.length-1;SESS.q[SESS.i]=['dictation',ALL.find(c=>c.c==='狗')];nextItem()});
   for(const letter of 'gou')await page.locator(`[data-t="${letter}"]`).first().click();

@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
   localStorage.setItem('zh_profiles',JSON.stringify({list:[{id:'test4',name:'Test student',av:'🐳',gr:'4'}],cur:'test4'}));
   localStorage.setItem('zh_p_test4',JSON.stringify({stars:149,streak:1,last:'',pts:{'假':3,'子':4},box:{'假':2},due:{'假':99999},cfg:{set:['查','族','裔','行','本','确','办','祖','正'],quiz:'游假旁停谈访止判程',rs:{q:[['listen','查']],i:0,t:'Saved daily session',p:['查']}}}));
  });await page.reload();
- await page.getByRole('button',{name:/Cram mode/}).click();
+ await page.getByRole('button',{name:/Unit review/}).click();
  await page.locator('[data-unit="2"]').check();await page.locator('[data-unit="6"]').check();await page.locator('[data-unit="11"]').check();
  assert.match(await page.locator('#cram-count').innerText(),/3 units \/ sets · 27 characters · 30 activities/);
  await page.screenshot({path:'/tmp/hanzi-cram-desktop.png',fullPage:true});
@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
  assert.equal(await page.evaluate(()=>SESS.q.length),30);
  await page.evaluate(()=>showCram());
  for(const mode of ['trace','listen','flip','memory','dictation']){
-  await page.getByText('Practice just one mode or take a pinyin quiz',{exact:true}).click();
+  await page.getByText('Review in just one mode',{exact:true}).click();
   await page.locator(`[data-cram-mode="${mode}"]`).click();
   assert.equal(await page.evaluate(()=>CRAM.pool.length),27);
   if(mode==='dictation'){

@@ -13,7 +13,12 @@ const assert=require('node:assert/strict');
     await page.evaluate(mode=>{setAppearance(mode);home()},mode);await page.evaluate(()=>new Promise(requestAnimationFrame));
     await fits(page.locator('.grove-daily'),device+' daily practice');
     const core=page.locator('.grove-paths button,.grove-explore button');
-    assert.equal(await core.count(),6);
+    assert.equal(await core.count(),7);
+    assert.ok(await page.locator('.grove-path-dictation').isVisible(),'Grade 2+ gets a direct Listen & Write path');
+    if(width<680){
+     const pinyin=await page.locator('.grove-path-dictation').boundingBox(),grid=await page.locator('.grove-paths').boundingBox();
+     assert.ok(Math.abs(pinyin.width-grid.width)<2,'The fifth path fills its phone row');
+    }
     for(let i=0;i<await core.count();i++){await fits(core.nth(i),device+' activity '+i);const r=await core.nth(i).boundingBox();assert.ok(r.height>=44&&r.width>=44);}
     await fits(page.getByRole('button',{name:'Choose units',exact:true}),device+' unit choice');
     await fits(page.getByRole('button',{name:'My progress',exact:true}),device+' progress');
@@ -48,8 +53,8 @@ const assert=require('node:assert/strict');
     assert.equal(await page.getByRole('tab',{name:'Reading spot',exact:true}).getAttribute('aria-selected'),'true');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     await page.evaluate(()=>{S.cfg.groveRewardTab='build';showCram()});
-    await fits(page.locator('[data-cram-mode="mixed"]'),device+' mixed cram start');
-    await fits(page.locator('.cram-actions'),device+' cram selection controls');
+    await fits(page.locator('[data-cram-mode="mixed"]'),device+' mixed review start');
+    await fits(page.locator('.cram-actions'),device+' review selection controls');
     await page.locator('[data-unit="2"]').check();await page.locator('[data-unit="7"]').check();
     assert.ok(await page.locator('[data-cram-mode="mixed"]').isEnabled());
     await page.screenshot({path:`/tmp/grove-compact-${device}-cram-${mode}.png`});
@@ -92,7 +97,7 @@ const assert=require('node:assert/strict');
      assert.ok(Math.abs(bounds[0].top-bounds[width<680?1:3].top)<2,'Paths share their expected row');
      if(width<680)assert.ok(Math.abs(bounds[2].top-bounds[3].top)<2,'Phone has two complete rows');
      for(const r of bounds)assert.ok(r.height>=44&&r.height<=100,grade+' Home paths stay compact and tappable');
-     await fits(page.locator('.grove-explore').getByRole('button',{name:/Cram mode/}),grade+' '+device+' Cram entry');
+     await fits(page.locator('.grove-explore').getByRole('button',{name:/Unit review/}),grade+' '+device+' review entry');
      await page.screenshot({path:`/tmp/grove-paths-${grade}-${device}-${mode}.png`});
     }
    }
@@ -102,6 +107,6 @@ const assert=require('node:assert/strict');
    assert.equal(await page.evaluate(()=>JSON.stringify([S.pts,S.stars,S.learning])),progress,'Opening paths leaves earned progress intact');
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: complete, compact K/Grade1 path grids and direct Memory access; first-screen daily/six activities/unit choice/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
+  console.log('PASS: complete, compact K/Grade1 path grids and direct Memory access; first-screen daily/seven activities/unit choice/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
