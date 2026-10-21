@@ -38,7 +38,7 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 
 Scripts remain classic scripts because the existing UI uses inline event handlers and shared globals. This preserves behavior while providing separate editable files. The initial recovery was verified to reproduce the downloaded HTML exactly; subsequent feature changes are described below. Original authoring files, repository history, and deployment configuration are not available from the website.
 
-Progress is stored in browser localStorage. Localhost has separate storage from the deployed site. Use Grown-ups → Copy backup code on the original, then restore it in the local app to transfer progress. Backups contain children's names; do not commit them.
+Progress is stored in browser localStorage. Localhost has separate storage from the deployed site. Use Grown-ups → Download backup file (or Copy backup code) on the original, then restore that file or code in the local app to transfer progress. Backups contain children's names; do not commit them.
 
 **Compatibility principle: earned progress must survive app updates and supported backup migrations.** Original-app backups retain per-character star counts (including counts beyond five), total stars, earned zoo friends and badges, review fields, profiles and saved settings. New learning and reward systems add to that history. Unit trees recognize original character practice. An older backup cannot prove the separate listening, writing and pinyin results that the original app never recorded; those characters are labeled “Previously practiced” rather than losing their historical progress or receiving invented mastery evidence.
 
@@ -89,7 +89,7 @@ LAN addresses may change with DHCP. Tailnet access follows existing Tailscale ac
 
 For loopback-only access, use `npm run dev -- --host 127.0.0.1`. To change the port, use `npm run dev -- --port 4174`.
 
-Each URL has separate browser progress storage. Use backup/restore to transfer progress. Over plain HTTP, automatic clipboard copying may be unavailable; the app provides a manual-copy fallback.
+Each URL has separate browser progress storage. Use backup/restore to transfer progress. Over plain HTTP, automatic clipboard copying may be unavailable. Grown-ups → Download backup file exports the same code as a .txt file; Restore from backup file previews its profiles before you choose Replace. The manual-copy fallback has an explicit Select backup code button and selectable text.
 
 ## Curriculum and practice updates
 
@@ -146,10 +146,10 @@ See [the ordered roadmap](https://github.com/anandman/mandarin-grove/issues/19).
 
 ### Move existing progress to the hosted app
 
-1. On each child's device, open the exact old address they used (for example `http://strixhalo:4173` or `http://strixhalo.local:4173`). Hold the gear to open Grown-ups, then copy the backup code. Keep this code private: it includes local profile names.
-2. Open <https://mandarin-grove.vercel.app/>, use Grown-ups to restore the backup, and check each child's stars, selected units and learning progress.
+1. On each child's device, open the exact old address they used (for example `http://strixhalo:4173` or `http://strixhalo.local:4173`). Use the same Safari tab or existing Home Screen app where the child's progress appears. Hold the gear to open Grown-ups, then Download backup file and save the .txt file in Files/Downloads. Copy backup code remains available too. Keep the file/code private: it includes local profile names.
+2. Open <https://mandarin-grove.vercel.app/>, use Grown-ups → Restore from backup file (or paste the code), check the preview, choose Replace, and check each child's stars, selected units and learning progress.
 3. Add the new address to the Home Screen. Check the installed app too and restore the same backup if it starts in a separate storage container.
-4. Keep the old preview available until both children are verified at the new address; the hosted app itself has no Strixhalo dependency. No progress is sent to a server during backup/restore.
+4. Keep the old preview available until both children are verified at the new address; the hosted app itself has no Strixhalo dependency. No progress is sent to a server during backup/restore. If the local preview is needed for recovery, a temporary `mandarin-grove-migration.service` user service can keep it running independently of a terminal; stop it only after the actual child migrations are confirmed.
 
 ## Grove experience and rewards
 

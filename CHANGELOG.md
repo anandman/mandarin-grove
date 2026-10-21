@@ -1,5 +1,9 @@
 # Change history
 
+## Reliable backup transfer without the clipboard — 20261020-backup-26
+
+Add Download backup file and Restore from backup file in Grown-ups, using the existing backup-code format and the same profile preview and explicit Replace confirmation. Provide a user-activated Select backup code control with selectable text when automatic copying is unavailable or denied. File export leaves saved progress unchanged; invalid files cannot replace it. Existing code backups remain supported.
+
 ## Complete practice paths for every grade — 20261020-grove-25
 
 Show Draw from Memory on kindergarten Home, matching the four base modes already available in daily practice and mixed Cram. Fill the phone's two-by-two grid and the wider screen's four-column row. Keep kindergarten Home cards compact without shrinking listening answer choices. Preserve learning, rewards and saved progress. Grade 2 and up still add Hear, Write & Pinyin to mixed practice.

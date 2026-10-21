@@ -1,5 +1,6 @@
 [
   "app.js",
+  "backups.js",
   "cram.js",
   "feedback.js",
   "grove.js",
