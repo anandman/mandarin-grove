@@ -13,7 +13,7 @@ const assert=require('node:assert/strict');
     await page.evaluate(mode=>{setAppearance(mode);home()},mode);await page.evaluate(()=>new Promise(requestAnimationFrame));
     await fits(page.locator('.grove-daily'),device+' daily practice');
     const core=page.locator('.grove-paths button,.grove-explore button');
-    assert.equal(await core.count(),7);
+    assert.equal(await core.count(),8);
     assert.ok(await page.locator('.grove-path-dictation').isVisible(),'Grade 2+ gets a direct Listen & Write path');
     if(width<680){
      const pinyin=await page.locator('.grove-path-dictation').boundingBox(),grid=await page.locator('.grove-paths').boundingBox();
@@ -107,6 +107,6 @@ const assert=require('node:assert/strict');
    assert.equal(await page.evaluate(()=>JSON.stringify([S.pts,S.stars,S.learning])),progress,'Opening paths leaves earned progress intact');
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: complete, compact K/Grade1 path grids and direct Memory access; first-screen daily/seven activities/unit choice/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
+  console.log('PASS: complete, compact K/Grade1 path grids and direct Memory access; first-screen daily/eight activities/unit choice/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

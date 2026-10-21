@@ -1,0 +1,11 @@
+{
+  "name": "CC-CEDICT",
+  "publisher": "MDBG and CC-CEDICT contributors",
+  "url": "https://www.mdbg.net/chinese/dictionary?page=cc-cedict",
+  "download": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
+  "license": "CC-BY-SA-4.0",
+  "licenseURL": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "retrieved": "2026-10-20",
+  "sha256": "3681b52f0f733e0caada3fa2fbe2236bfa1234333397f35f10f285ac292abec9",
+  "changes": "Keep 2–8 Han-character headwords; retain simplified and traditional forms, pinyin and up to two non-classifier definitions (160 characters). Exact duplicate rows removed. Single-character traditional aliases kept for target recognition. Not a teacher-reviewed vocabulary list."
+}

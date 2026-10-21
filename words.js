@@ -1,0 +1,66 @@
+// Local 组词 practice. Dictionary recognition is separate from assessed character mastery.
+function createWordIndex(bank){
+ const index=new Map();index.characterForms=bank.aliases||{};
+ for(const row of bank.entries){for(const form of [row[0],row[1]].filter(Boolean)){if(!index.has(form))index.set(form,[]);index.get(form).push(row);}}
+ return index;
+}
+function checkWordAnswer(character,value,index,collected=[]){
+ const input=value.trim();
+ if(!/^\p{Script=Han}{2,12}$/u.test(input))return {status:'input-help',input};
+ const entries=(index.get(input)||[]).filter(row=>row[0].includes(character));
+ if(!entries.length)return {status:[character,...(index.characterForms[character]||[])].some(form=>input.includes(form))?'unverified':'missing-target',input};
+ const word=entries[0][0];
+ return {status:collected.includes(word)?'duplicate':'recognized',input,word,entries};
+}
+function collectWord(state,character,result){
+ if(result.status!=='recognized')return false;
+ const known=state.wordPractice?.words?.[character]||[];if(known.includes(result.word))return false;
+ state.wordPractice??={version:1,words:{}};state.wordPractice.words??={};state.wordPractice.words[character]=[...known,result.word];return true;
+}
+function pinyinWithMarks(value){
+ return value.replace(/([a-zü:]+)([1-5])/gi,(_,raw,digit)=>{
+  const base=raw.replace(/u:/gi,'ü').replace(/v/gi,'ü'),tone=Number(digit);if(tone===5)return base;
+  const lower=base.toLowerCase();let position=lower.indexOf('a');if(position<0)position=lower.indexOf('e');if(position<0&&lower.includes('ou'))position=lower.indexOf('o');if(position<0)for(let i=lower.length-1;i>=0;i--)if('aeiouü'.includes(lower[i])){position=i;break;}
+  if(position<0)return base;
+  const mark=['\u0304','\u0301','\u030c','\u0300'][tone-1];return (base.slice(0,position+1)+mark+base.slice(position+1)).normalize('NFC');
+ });
+}
+let WORD_BANK_PROMISE=null,WORD_SESSION=null;
+function loadWordBank(){
+ if(!WORD_BANK_PROMISE)WORD_BANK_PROMISE=fetch('vendor/cc-cedict/words.json?v=1').then(response=>{if(!response.ok)throw Error('Word bank unavailable');return response.json();}).then(createWordIndex).catch(error=>{WORD_BANK_PROMISE=null;throw error;});
+ return WORD_BANK_PROMISE;
+}
+function wordPracticeEntry(){return `<button class="grove-explore-card grove-word-entry" onclick="showWordPractice()"><span class="grove-explore-icon" aria-hidden="true">${groveTree('writing')}</span><b>Word practice</b><small>组词 · Build words</small></button>`;}
+function showWordPractice(cards=CARDS,source='Your practice characters'){
+ screen();SESS=null;CRAM=null;
+ const pool=[...new Map(cards.map(c=>[c.c,c])).values()];
+ if(!pool.length){A.innerHTML='<h1>Word practice</h1><p>Choose some characters to get started.</p><button class="btn" onclick="showCram()">Choose units</button>';return;}
+ const owner=PR.cur,session={owner,pool:shuffle(pool.slice()),index:null,result:null,source};WORD_SESSION=session;
+ A.innerHTML=`<section class="word-practice" id="word-practice" aria-labelledby="word-title"><div class="writing-heading"><span class="writing-tree">${groveTree('writing')}</span><div><h1 id="word-title">Word practice <span lang="zh-Hans">组词</span></h1><p>Let one character grow into words.</p></div></div>
+ <div class="word-tools"><label>Character <select id="word-character" aria-label="Practice character">${session.pool.map(c=>`<option value="${esc(c.c)}">${esc(c.c)}</option>`).join('')}</select></label><button class="btn gray" id="word-next">Next character ↗</button><button class="progress-link" onclick="showCram(true)" aria-label="Choose other units">Units</button></div><p class="reading-note">${esc(source)} · ${pool.length} character${pool.length===1?'':'s'}</p>
+ <article class="word-seed"><div class="word-target" id="word-target" lang="zh-Hans"></div><label for="word-input" id="word-label"></label><form id="word-form"><input id="word-input" type="text" lang="zh-Hans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type a word" aria-describedby="word-status"><button class="btn" id="word-check" disabled>Check word</button></form><p id="word-status" role="status">Loading the local word bank…</p><div id="word-result" aria-live="polite"></div><button class="progress-link" id="word-retry" hidden>Try loading again</button></article>
+ <section class="word-collection"><h2 id="word-count"></h2><div id="word-collected"></div></section>
+ <details class="compact-help"><summary>How word practice works</summary><p>Type a word or short expression that uses the character. For 学, try 学校 or 学生. A dictionary match checks a listed word, rather than judging a whole sentence. Unfamiliar expressions stay unverified and never count as mistakes. Word collections save on this device with your backup. This activity keeps character mastery and orange rewards unchanged.</p><p>Dictionary: CC-CEDICT · MDBG and contributors · <a href="vendor/cc-cedict/LICENSE" target="_blank" rel="noopener">CC BY-SA 4.0</a>. The word bank is a dictionary, not a teacher-reviewed curriculum.</p></details><button class="progress-link" onclick="home()">Back to your grove</button></section>`;
+ const root=$('word-practice'),input=$('word-input');let composing=false;
+ const current=()=>session.pool.find(c=>c.c===$('word-character').value);
+ function renderCharacter(){const card=current();session.result=null;input.value='';$('word-target').textContent=card.c;$('word-label').textContent='Use '+card.c+' in a word or short expression.';$('word-result').replaceChildren();$('word-status').textContent=session.index?'Ready for your word.':'Loading the local word bank…';renderWordCollection(card.c);feedbackQuestion={c:card.c,p:card.p,m:card.m,mode:'word-practice'};}
+ function submit(event){event.preventDefault();if(composing||!session.index)return;const card=current(),result=checkWordAnswer(card.c,input.value,session.index,S.wordPractice?.words?.[card.c]||[]);session.result=result;
+  const messages={'input-help':'Type at least two Chinese characters, without spaces or punctuation.','missing-target':'Use '+card.c+' somewhere in your word.','unverified':'Not in our word bank yet. Your expression may still be right—ask someone or report it.','duplicate':'You already collected this word. Try another one.','recognized':'A word for your collection!'};
+  $('word-status').textContent=messages[result.status];$('word-result').replaceChildren();
+  for(const entry of (result.entries||[]).slice(0,3)){const p=document.createElement('p');p.className='word-definition';const strong=document.createElement('strong');strong.lang='zh-Hans';strong.textContent=entry[0];const pronunciation=document.createElement('span');pronunciation.textContent=pinyinWithMarks(entry[2]);const meaning=document.createElement('small');meaning.textContent=entry[3];p.append(strong,pronunciation,meaning);$('word-result').append(p);}
+  if(result.status==='unverified'){const button=document.createElement('button');button.className='progress-link';button.textContent='Report this expression';button.onclick=()=>{feedbackQuestion={c:card.c,p:card.p,m:card.m,mode:'word-practice',writing:{input:input.value}};showFeedback();};$('word-result').append(button);}
+  if(collectWord(S,card.c,result)){save();renderWordCollection(card.c);input.select();}
+ }
+ input.addEventListener('compositionstart',()=>{composing=true;});input.addEventListener('compositionend',()=>{composing=false;});input.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.isComposing||composing||event.keyCode===229))event.preventDefault();});$('word-form').onsubmit=submit;
+ $('word-character').onchange=renderCharacter;
+ $('word-next').onclick=()=>{const at=session.pool.findIndex(c=>c.c===$('word-character').value);$('word-character').value=session.pool[(at+1)%session.pool.length].c;renderCharacter();input.focus();};
+ async function load(){ $('word-retry').hidden=true;try{const index=await loadWordBank();if($('word-practice')!==root||PR.cur!==owner)return;session.index=index;$('word-check').disabled=false;$('word-status').textContent='Ready for your word.';}catch{if($('word-practice')!==root||PR.cur!==owner)return;$('word-status').textContent='Could not load the word bank. Check your connection and try again.';$('word-retry').hidden=false;}}
+ $('word-retry').onclick=load;renderCharacter();load();
+}
+function renderWordCollection(character){
+ const words=S.wordPractice?.words?.[character]||[];$('word-count').textContent=words.length+' word'+(words.length===1?'':'s')+' collected for '+character;
+ const list=$('word-collected');list.replaceChildren();
+ for(const word of words){const chip=document.createElement('span');chip.className='word-leaf';chip.lang='zh-Hans';chip.textContent=word;list.append(chip);}
+ if(!words.length){const text=document.createElement('p');text.className='reading-note';text.textContent='Your words will grow here.';list.append(text);}
+}
+if(typeof module!=='undefined')module.exports={createWordIndex,checkWordAnswer,collectWord,pinyinWithMarks};

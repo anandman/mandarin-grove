@@ -18,11 +18,15 @@
   "styles.css",
   "theme.css",
   "theme.js",
+  "vendor/cc-cedict/LICENSE",
+  "vendor/cc-cedict/SOURCE.json",
+  "vendor/cc-cedict/words.json",
   "vendor/hanzi-writer.js",
   "vendor/writing-spark/LICENSE",
   "vendor/writing-spark/character-ideas.js",
   "vendor/writing-spark/curriculum-ideas.js",
   "version-check.js",
   "version.txt",
+  "words.js",
   "writing.js"
 ]

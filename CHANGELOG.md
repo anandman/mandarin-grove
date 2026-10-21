@@ -1,5 +1,11 @@
 # Change history
 
+## Local word practice and audio-review preparation — 20261020-words-28
+
+Add a separate 组词 activity: select a character, enter words or short expressions, and collect recognized dictionary words with pinyin and meaning. Support traditional forms, Chinese IME input, arbitrary cross-grade units, per-child collections and existing backups. Treat unknown expressions as unverified rather than incorrect. Keep mastery, spaced review, stars and orange rules unchanged. Lazy-load an attributed CC-CEDICT snapshot from the static app; send no typed answers to a service. Fit the new Home entry alongside Unit review and Writing ideas.
+
+Prepare an independent speech pilot with 40 distinct characters, alternate readings, 15 sentences, budgeted release-time generation and a local listening-review/export workflow. Require matching human approval and exact audio digests before staging clips. This release generates no audio and changes no default recordings; the reading set and candidate voices still need fluent-speaker review.
+
 ## Clear practice and review choices — 20261020-review-27
 
 Rename Cram mode to Unit review and Hear, Write & Pinyin to Listen & Write throughout current controls, resumes, headings and help. Add a direct Grade 2+ Listen & Write Home path using active practice characters; retain school quizzes separately. Label the guided session Daily practice and explain its due-first learning mix versus unit review’s random selection. Fit five paths across desktop or use a short full-width fifth path on phones/tablets. Preserve saved selections, existing sessions, backup compatibility, question selection, rewards and spaced-review scheduling.
