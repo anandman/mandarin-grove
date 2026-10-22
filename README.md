@@ -183,6 +183,8 @@ Reward code is deliberately separate for alpha feedback: `rewards.js` owns `REWA
 
 ## Reviewed audio pilot
 
+**Automated evaluation:** [Audio tooling and current findings](docs/AUDIO.md) describe the offline signal audit, a tested-and-rejected small phonetic model, physical pitch controls and a bounded specialist-assessment trial. Preparing an audit requires no fluent reviewer. Provider setup and actual acoustic calibration remain necessary before using automated judgments to select replacements; no replacement audio has shipped.
+
 `npm run audio:plan` prepares an independently written, draft speech review set: 40 distinct characters, 12 alternate readings, and 15 short sentences, compared across two Mandarin WaveNet voices. It writes generation requests and a local listening-review page into ignored `exports/audio-pilot/`. Planning makes no service requests and changes no practice audio. The printed estimate includes SSML characters and assumes no remaining free allowance; confirm the provider rate and project billing before generating.
 
 After configuring `GOOGLE_TTS_API_KEY` or `GOOGLE_TTS_ACCESS_TOKEN` in your local environment, run `node scripts/audio-pilot.cjs generate --max-characters 20000`. Credentials stay outside the repository and app. Generation checkpoints completed files; matching audio is reused on resume. Open `exports/audio-pilot/review.html`, have a fluent speaker check the intended readings and actual audio, and download the review. Isolated-character candidates use explicit pinyin; sentence candidates use natural synthesis to expose contextual readings and tone changes. The initial reading data is **not yet fluent-speaker reviewed**.

@@ -1,5 +1,11 @@
 # Change history
 
+## Automated audio evaluation tooling — 2026-10-22
+
+Add release-only audio diagnostics, contradictory-reading controls, physical pitch interventions and a bounded TonePerfect assessment adapter. Preserve exact file hashes, provider/model provenance, separate consonant/vowel/tone evidence and resumable response caches. Reject fixed test responses, incompatible model contexts and stale bytes; keep uncertainty explicit. No keys, models, local reports or child recordings are published, and no app audio or progress changes.
+
+Run a real offline phonetic-model experiment and reject it for approval after systematic third-tone failures, including physically controlled pitch variants. Prepare specialist evaluation without requiring an available fluent reviewer; this tooling does not claim that API scores certify Mandarin or that replacement recordings have shipped.
+
 ## Local homework lookup and summary planning — 20261022-help-33
 
 Add Find a character or word under Help: search all school grades and the bundled dictionary using Chinese/traditional aliases, meanings, marked or numbered pinyin, and ü/u:/v spellings. Keep alternate word readings visible. Offer existing voice playback, available stroke guides and a few curricular/prompt example words. Choose known characters and open shared Practice setup without recording lookup as learning evidence or changing active units. Load dictionary data lazily, retain school-character search if it fails, and keep typed queries on-device.
