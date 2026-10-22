@@ -31,6 +31,46 @@ The upstream code is MIT, but a model/tokenizer weight license was not found;
 weights are not redistributed. Model posteriors are not calibrated correctness
 probabilities. This experiment does not test Apple Tingting playback.
 
+### Live specialist trial
+
+The authorized 44-check trial completed on October 22 using 43 distinct requests
+and **43 free credits**, with **7 free credits remaining**. One identical
+recording/reference request reused its cached response. No paid credits were used.
+The returned model was `mandarin-hubert-baseline-85741cdf3967+fallback`, using
+pinyin-only isolated-word assessment. These findings describe that configuration.
+
+| Controlled target | Imposed tone | Heard tone | Confidence | Display score |
+|---|---:|---:|---|---:|
+| shi1 | 1 | 1 | high | 97.3 |
+| shi2 | 2 | 2 | high | 96.2 |
+| shi3 | 3 | 2 | medium | 75.5 |
+| shi4 | 4 | 4 | high | 76.8 |
+| yi1 | 1 | 3 | medium | 75.9 |
+| yi2 | 2 | 2 | medium | 77.0 |
+| yi3 | 3 | 3 | high | 98.2 |
+| yi4 | 4 | 4 | medium | 76.0 |
+
+Six of eight heard tone labels match the imposed contours. Three pass the
+unchanged high-confidence / score-at-least-90 diagnostic gate. This is a small
+physical-contour check, not a native-speaker accuracy benchmark. The two label
+errors and remaining uncertainty prevent using this judge to approve recordings
+automatically.
+
+Of 13 existing candidate readings, 12 remain uncertain and 假 jià is flagged;
+none passes the entire diagnostic gate. This does **not** establish that those
+recordings are wrong. Seven of 23 deliberately altered references pass the strict
+whole-control gate; 20 are rejected in the specifically changed component.
+Heard labels remain consistent across all 12 repeated-audio groups, providing
+evidence that the assessor is responding to audio rather than just echoing the
+supplied reading.
+
+The live response also exposed a legitimate absent initial consonant in yi
+syllables. The adapter now reports that component as `not-applicable` while
+retaining measured final/tone evidence. Reports were regenerated from retained
+responses without additional calls; the diagnostic threshold was not relaxed.
+No replacement audio was promoted. Evaluate another independent assessor or
+validated reference source before enabling unattended acceptance.
+
 ## Local tools
 
 Use Node 18+ and Python 3.11 with NumPy and system libsndfile. Pitch-control

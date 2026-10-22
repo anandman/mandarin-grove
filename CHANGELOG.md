@@ -1,5 +1,9 @@
 # Change history
 
+## Live pronunciation assessment trial — 2026-10-22
+
+Complete the 44-check specialist pilot using 43 free trial credits, leaving seven. The returned model agrees with six of eight controlled pitch labels and fails the calibration required for automatic approval; keep existing audio unchanged. Preserve the actual responses and local findings without publishing keys or raw reports. Fix legitimate zero-onset handling so a syllable with no initial consonant retains its measured final and tone evidence; reclassify saved responses without additional calls or relaxed thresholds.
+
 ## Automated audio evaluation tooling — 2026-10-22
 
 Add release-only audio diagnostics, contradictory-reading controls, physical pitch interventions and a bounded TonePerfect assessment adapter. Preserve exact file hashes, provider/model provenance, separate consonant/vowel/tone evidence and resumable response caches. Reject fixed test responses, incompatible model contexts and stale bytes; keep uncertainty explicit. No keys, models, local reports or child recordings are published, and no app audio or progress changes.

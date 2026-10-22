@@ -85,3 +85,14 @@ test('physical controls retain their intervention evidence, require exact bytes,
   delete physical.clips[0].calibration.measuredF0Hz;assert.throws(()=>withToneControls(plan,physical),/control/);
  }finally{fs.rmSync(dir,{recursive:true,force:true})}
 });
+test('valid zero onset stays not-applicable while measured final and tone can establish diagnostic agreement',()=>{
+ const dir=setup();try{
+  fs.writeFileSync(path.join(dir,'衣.mp3'),'zero-onset unit fixture');
+  const plan=createBundledAudit({version:1,cases:[{id:'yi',kind:'character',text:'衣',pinyin:'yī'}]},{audioDir:dir,characters:['衣']}),raw=evidence(plan);
+  for(const result of raw.results){const syllable=result.response.syllables[0];syllable.expected.initial=null;syllable.components.initial={applicable:false,score:null,decision:'unassessable'};}
+  const report=summarizeAudit(plan,raw);
+  assert.equal(report.candidates[0].components.initial,'not-applicable');
+  assert.equal(report.candidates[0].status,'candidate-matches');
+  assert.equal(report.canPromote,false);
+ }finally{fs.rmSync(dir,{recursive:true,force:true})}
+});

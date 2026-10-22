@@ -77,7 +77,7 @@ function summarizeAudit(manifest,report){
   if(report.provider!=='TonePerfect'||report.protocol!==PROTOCOL||p?.endpoint!==ENDPOINT||p?.protocol!==PROTOCOL||p?.realProviderCall!==true||p?.transport!=='native-fetch'||p?.referenceMode!==(c.kind==='character'?'pinyin-only':'characters-and-pinyin')||!p?.modelVersion||p.modelVersion!==response?.model_version||!Number.isFinite(Date.parse(p.retrievedAt))||response?.test===true)return{status:'uncertain',reasons:['Missing real provider evidence or incompatible provenance']};
   // Recompute from retained acoustic evidence; never trust a cached verdict or transcript.
   const a=classifyAssessment(response,{pinyin:c.pinyin,kind:c.kind}),components=a.components;
-  if(!components||!['initial','final','tone'].every(k=>['matches','mismatch','uncertain'].includes(components[k])))return{status:'uncertain'};
+  if(!components||!['initial','final','tone'].every(k=>['matches','mismatch','uncertain'].includes(components[k])||k==='initial'&&components[k]==='not-applicable'))return{status:'uncertain'};
   if(!['matches','mismatch','uncertain'].includes(a.status))return{status:'uncertain'};
   return{status:a.status,components,reasons:a.reasons||[],modelVersion:p.modelVersion,referenceMode:p.referenceMode,retrievedAt:p.retrievedAt};
  }
@@ -86,7 +86,7 @@ function summarizeAudit(manifest,report){
  const candidates=manifest.clips.filter(c=>c.role==='candidate').map(c=>{
   const e=evidence(c),checks=controls.filter(k=>k.sourceId===c.id);
   let status=e.status;
-  if(status==='matches')status=['initial','final','tone'].every(k=>e.components[k]==='matches')&&checks.length&&checks.every(k=>k.passed)?'candidate-matches':'uncertain';
+  if(status==='matches')status=['initial','final','tone'].every(k=>e.components[k]==='matches'||k==='initial'&&e.components[k]==='not-applicable')&&checks.length&&checks.every(k=>k.passed)?'candidate-matches':'uncertain';
   return{id:c.id,text:c.text,pinyin:c.pinyin,sha256:c.sha256,status,components:e.components,reasons:e.reasons,modelVersion:e.modelVersion,retrievedAt:e.retrievedAt,controls:{passed:checks.filter(k=>k.passed).length,total:checks.length}};
  });
  const calibration=manifest.clips.filter(c=>c.role==='calibration').map(c=>({id:c.id,imposedTone:c.calibration?.imposedTone,...evidence(c)}));

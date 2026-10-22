@@ -133,3 +133,23 @@ test('alias normalization never merges ü with u, g with k, or the two apical-vo
  const alias=componentFixture('lü4','l','ü');alias.syllables[0].components.final.heard='v';
  assert.equal(classifyAssessment(alias,{pinyin:'lü4',kind:'character'}).components.final,'matches');
 });
+function zeroOnsetFixture(){
+ const response=componentFixture('yi3','y','i');response.syllables[0].expected.initial=null;
+ // Shape observed in the live provider response, with no expected/heard initial keys.
+ response.syllables[0].components.initial={applicable:false,note:'This syllable has no initial consonant.',acceptance_probability:null,score:null,decision:'unassessable',advice:null};
+ return response;
+}
+test('an explicitly inapplicable zero onset leaves valid final and tone evidence measurable',()=>{
+ const result=classifyAssessment(zeroOnsetFixture(),{pinyin:'yi3',kind:'character'});
+ assert.equal(result.status,'matches');assert.deepEqual(result.components,{initial:'not-applicable',final:'matches',tone:'matches'});
+ const onset=result.syllables[0].components.initial;assert.equal(onset.applicable,false);assert.equal(onset.score,null);assert.equal(onset.confidence,null);assert.ok(onset.reasons.some(r=>/no initial|not measured/i.test(r)));
+ const medium=zeroOnsetFixture();medium.syllables[0].components.tone.confidence='medium';medium.syllables[0].components.tone.score=77;
+ const uncertain=classifyAssessment(medium,{pinyin:'yi3',kind:'character'});assert.equal(uncertain.status,'uncertain');assert.equal(uncertain.components.final,'matches');assert.equal(uncertain.components.tone,'uncertain');
+});
+test('an unmeasured initial cannot excuse consonant targets or contradictory zero-onset evidence',()=>{
+ const consonant=zeroOnsetFixture();consonant.syllables[0].expected.pinyin='li3';
+ assert.equal(classifyAssessment(consonant,{pinyin:'li3',kind:'character'}).status,'uncertain');
+ for(const mutation of [r=>delete r.syllables[0].components.initial.applicable,r=>r.syllables[0].components.initial.applicable=true,r=>r.syllables[0].components.initial.heard='l',r=>r.syllables[0].components.initial.expected='l',r=>r.syllables[0].components.initial.score=99,r=>r.syllables[0].components.initial.decision='unknown']){
+  const response=zeroOnsetFixture();mutation(response);assert.equal(classifyAssessment(response,{pinyin:'yi3',kind:'character'}).status,'uncertain');
+ }
+});

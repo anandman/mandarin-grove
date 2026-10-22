@@ -51,7 +51,10 @@ function canonicalInitial(value,target){
  const initial=sound(value);if(!INITIALS.has(initial))return null;
  return target?.initial===''&&['y','w'].includes(target.spellingInitial)&&['',target.spellingInitial].includes(initial)?'':initial;
 }
-function combine(statuses){return !statuses.length||statuses.includes('uncertain')?'uncertain':statuses.includes('mismatch')?'mismatch':statuses.every(s=>s==='matches')?'matches':'uncertain';}
+function combine(statuses){
+ const measured=statuses.filter(s=>s!=='not-applicable');
+ return !measured.length?(statuses.length?'not-applicable':'uncertain'):measured.includes('uncertain')?'uncertain':measured.includes('mismatch')?'mismatch':measured.every(s=>s==='matches')?'matches':'uncertain';
+}
 function classifyAssessment(response,{pinyin,kind,diagnosticMinScore=90}={}){
  if(typeof diagnosticMinScore!=='number'||!Number.isFinite(diagnosticMinScore)||diagnosticMinScore<0||diagnosticMinScore>100)throw Error('Invalid diagnostic score threshold');
  const reference=normalizePinyin(pinyin).split(' ');
@@ -66,14 +69,19 @@ function classifyAssessment(response,{pinyin,kind,diagnosticMinScore=90}={}){
   const row=response.syllables[index],entry={index,pinyin:reference[index],components:{},reasons:[]};
   let expectedPinyin;
   try{expectedPinyin=normalizePinyin(row?.expected?.pinyin);}catch{}
-  const target=canonicalSyllable(reference[index]),providerPair=canonicalPair(row?.expected?.initial,row?.expected?.final);
+  const target=canonicalSyllable(reference[index]),onset=row?.components?.initial;
+  // Observed zero-onset schema omits expected/heard on an inapplicable initial.
+  // Absence is legitimate only when the independent Pinyin parse also has no onset.
+  const unmeasuredOnset=target?.initial===''&&row?.expected?.initial===null&&onset?.applicable===false&&onset.expected==null&&onset.heard==null&&onset.score==null&&onset.confidence==null&&onset.decision==='unassessable';
+  const providerInitial=unmeasuredOnset?'':row?.expected?.initial,providerPair=canonicalPair(providerInitial,row?.expected?.final);
   const decompositionOK=target&&providerPair&&target.initial===providerPair.initial&&target.final===providerPair.final;
   const alignmentOK=decompositionOK&&expectedPinyin===reference[index]&&row?.index===index&&Array.isArray(row.span_ms)&&row.span_ms.length===2&&row.span_ms.every(Number.isFinite)&&row.span_ms[0]>=0&&row.span_ms[1]>row.span_ms[0];
   if(!alignmentOK)entry.reasons.push('Expected pinyin or syllable alignment contradicts the supplied reference');
   for(const dimension of DIMENSIONS){
    const evidence=row?.components?.[dimension],expected=row?.expected?.[dimension];
-   const unit={status:'uncertain',expected:evidence?.expected??null,heard:evidence?.heard??null,score:evidence?.score??null,confidence:evidence?.confidence??null,decision:evidence?.decision??null,reasons:[]};
-   const label=value=>dimension==='tone'?String(value):dimension==='initial'?canonicalInitial(value,target):canonicalPair(row?.expected?.initial,value)?.final??null;
+   const unit={status:'uncertain',applicable:evidence?.applicable??null,expected:evidence?.expected??null,heard:evidence?.heard??null,score:evidence?.score??null,confidence:evidence?.confidence??null,decision:evidence?.decision??null,reasons:[]};
+   if(dimension==='initial'&&unmeasuredOnset&&alignmentOK){unit.status='not-applicable';unit.reasons.push('This Pinyin syllable has no initial consonant; no initial was measured');entry.components[dimension]=unit;continue;}
+   const label=value=>dimension==='tone'?String(value):dimension==='initial'?canonicalInitial(value,target):canonicalPair(providerInitial,value)?.final??null;
    const expectedLabel=label(expected),referenceTone=reference[index].slice(-1);
    const labelsValid=dimension==='tone'?/^[1-5]$/.test(expectedLabel||'')&&expectedLabel===referenceTone&&/^[1-5]$/.test(label(evidence?.heard)||''):expectedLabel!==null&&label(evidence?.heard)!==null;
    const scoreOK=typeof evidence?.score==='number'&&Number.isFinite(evidence.score)&&evidence.score>=0&&evidence.score<=100;
