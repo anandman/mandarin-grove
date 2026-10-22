@@ -1,0 +1,46 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict');
+const {createHandler}=require('../api/feedback.js');
+(async()=>{
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],posts=[];page.on('pageerror',e=>errors.push(e.message));
+  let mode='fail';
+  const actualApi=createHandler({env:{GH_FEEDBACK_TOKEN:'github_pat_test_scoped_token',FEEDBACK_ALLOWED_ORIGINS:new URL(process.env.APP_URL||'http://127.0.0.1:4181').origin},fetch:async(url,opts)=>({ok:true,status:opts.method==='POST'?201:200,json:async()=>url.endsWith('/mandarin-grove')?{private:true}:opts.method==='GET'?[]:{number:124}})});
+  await page.route('**/api/feedback',async route=>{const report=route.request().postDataJSON();posts.push(report);if(mode==='network')return route.abort();if(mode==='api'){const req={headers:route.request().headers(),method:'POST',body:report},res={setHeader(){},status(n){this.statusCode=n;return this},json(data){this.data=data;return this}};await actualApi(req,res);return route.fulfill({status:res.statusCode,contentType:'application/json',body:JSON.stringify(res.data)});}if(mode==='fake')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({sent:true,id:'wrong-id',receipt:123})});return route.fulfill({status:mode==='fail'?503:201,contentType:'application/json',body:JSON.stringify(mode==='fail'?{sent:false,error:'feedback-not-configured'}:{sent:true,id:report.id,receipt:123})});});
+  await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
+  await page.evaluate(()=>{PR={cur:'feedback',list:[{id:'feedback',name:'PRIVATE CHILD NAME',gr:'4',av:'🐳'}]};savePR();S=blank();localStorage.setItem('zh_p_feedback',JSON.stringify(S));loadS();listen(ALL.find(c=>c.c==='满'));});
+  const before=await page.evaluate(()=>JSON.stringify(S));
+  await page.getByRole('button',{name:'Report a problem',exact:true}).click();
+  assert.equal(posts.length,0);assert.ok(await page.locator('#feedback-send').isDisabled());
+  await page.getByRole('button',{name:'Sound seems wrong',exact:true}).click();
+  assert.equal(posts.length,0,'category selection never sends automatically');
+  await page.locator('#feedback-send').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Not sent'));
+  assert.equal(posts.length,1);assert.equal(posts[0].note,'');assert.equal(posts[0].category,'sound');assert.equal(posts[0].question.character,'满');assert.equal(posts[0].question.pinyin,'mǎn');assert.ok(posts[0].speech);assert.ok(!JSON.stringify(posts[0]).includes('PRIVATE CHILD NAME'));assert.equal(posts[0].delivery,undefined);
+  let rows=await page.evaluate(()=>feedbackReports());assert.equal(rows.length,1);assert.equal(rows[0].delivery.state,'failed');const originalId=rows[0].id;
+  assert.match(await page.locator('#feedback-status').innerText(),/saved on this device/i);
+  await page.getByRole('button',{name:'Close feedback',exact:true}).click();await page.reload();await page.evaluate(()=>showFeedback());
+  assert.match(await page.locator('#feedback-pending').innerText(),/1 report not sent/);assert.equal(posts.length,1,'reload does not upload');
+  mode='success';await page.locator('#feedback-retry').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Sent to the app maker'));
+  assert.equal(posts[1].id,originalId);rows=await page.evaluate(()=>feedbackReports());assert.equal(rows.length,1);assert.equal(rows[0].delivery.state,'sent');assert.equal(rows[0].delivery.receipt,123);
+  assert.equal(await page.evaluate(()=>JSON.stringify(S)),before,'reporting never changes learning state');
+  await page.getByRole('button',{name:'Close feedback',exact:true}).click();await page.evaluate(()=>{dictStart('狗');showFeedback()});
+  await page.getByRole('button',{name:'Meaning is confusing',exact:true}).click();await page.locator('#feedback-note').fill('The clue was confusing.');mode='fake';await page.locator('#feedback-send').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Not sent'));
+  assert.equal(posts[2].question.mode,'dictation');assert.match(await page.locator('#feedback-status').innerText(),/Not sent/);assert.equal((await page.evaluate(()=>feedbackReports()))[1].delivery.state,'failed','success requires a matching server receipt');
+  mode='network';await page.locator('#feedback-send').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Not sent'));assert.equal(posts[3].id,posts[2].id);
+  await page.locator('#feedback-manual').click();await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{value:undefined,configurable:true}));await page.locator('#feedback-copy').click();assert.match(await page.locator('#feedback-status').innerText(),/Automatic copying is unavailable/);
+  assert.match(await page.locator('#feedback-output').inputValue(),/confusing/);
+  const downloadPromise=page.waitForEvent('download');await page.locator('#feedback-download').click();assert.equal((await downloadPromise).suggestedFilename(),'mandarin-grove-feedback.txt');
+  for(const width of [320,390,820])for(const theme of ['light','dark']){await page.setViewportSize({width,height:844});await page.evaluate(t=>setAppearance(t),theme);assert.equal(await page.evaluate(()=>document.querySelector('#feedback-dialog').scrollWidth<=document.querySelector('#feedback-dialog').clientWidth),true);}
+  await page.setViewportSize({width:390,height:844});await page.locator('#feedback-manual').click();await page.screenshot({path:'/tmp/grove-direct-feedback.png'});
+  assert.deepEqual(errors,[]);
+  await page.getByRole('button',{name:'Close feedback',exact:true}).click();await page.evaluate(()=>showFeedback());await page.getByRole('button',{name:'Something did not work',exact:true}).click();mode='api';await page.locator('#feedback-send').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Sent to the app maker'));
+  assert.equal((await page.evaluate(()=>feedbackReports())).at(-1).delivery.receipt,124,'real browser snapshot passes real API validation');
+  assert.ok(await page.locator('#feedback-send').isDisabled());
+  await page.locator('#feedback-retry').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Sent to the app maker'));
+  assert.ok(await page.locator('#feedback-send').isDisabled(),'retrying an older report must not re-enable sending the already-sent current report');
+  assert.equal(await page.evaluate(()=>{SESS={study:true,cram:true,kind:'review',q:[{}],i:0};return feedbackSnapshot().session.kind;}),'review','feedback identifies the new selected session kind');
+  await page.screenshot({path:'/tmp/grove-direct-feedback-primary.png'});
+  console.log('PASS: explicit category/send, optional note, private question/voice metadata, configuration/network failure retention, reload/retry stable ID, matching server receipt, actual API validation, no progress changes, manual fallback and responsive themes.');
+ }finally{await browser.close()}
+})().catch(e=>{console.error(e);process.exit(1)});

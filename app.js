@@ -60,7 +60,7 @@ function TESTD(){if(!S.cfg.test)return null;const [y,m,d]=S.cfg.test.split('-').
 function daysLeft(){const t=TESTD();if(!t)return null;const n=new Date();n.setHours(0,0,0,0);return Math.round((t-n)/864e5)}
 function archQ(){const d=daysLeft();if(d!==null&&d<0&&S.cfg.quiz){S.cfg.past=(S.cfg.past||[]).filter(p=>p.q!==S.cfg.quiz);S.cfg.past.unshift({q:S.cfg.quiz,d:S.cfg.test});S.cfg.quiz=NXT(S.cfg.quiz);;S.cfg.test='';save()}}
 function pastQ(){screen();A.innerHTML=`<h1>Past quizzes</h1><p class="mean">Tap one to try it again.</p>${(S.cfg.past||[]).map((p,i)=>`<button class="today" style="background:var(--surface-strong)" onclick="dictStart(S.cfg.past[${i}].q)"><span><b>${QZ(p.q).join(' ')}</b><small>Test on ${p.d||'—'}</small></span><span class="go">▶ Start</span></button>`).join('')}`}
-function PF(){try{batch().forEach(c=>{if(!STROKES[c.c])SL(c.c,()=>{});fetch('audio/'+encodeURIComponent(c.c)+'.mp3').catch(()=>{})})}catch(e){}}function home(){$('grove-action-notice')?.setAttribute('hidden','');feedbackQuestion=null;renderRewards();ACTIVE_REVIEW=null;NAV++;stopSpeech();CRAM=null;archQ();setTimeout(PF,1200);window._scr='';window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));SESS=null;window._lp=window._fp=window._ts=0;TH=[];TF=[];document.body.dataset.screen='home';$('home').style.display='none';$('ttl').style.display='';if(writer){writer=null}
+function PF(){try{batch().forEach(c=>{if(!STROKES[c.c])SL(c.c,()=>{});fetch('audio/'+encodeURIComponent(c.c)+'.mp3').catch(()=>{})})}catch(e){}}function home(){delete document.body.dataset.study;$('grove-action-notice')?.setAttribute('hidden','');feedbackQuestion=null;renderRewards();ACTIVE_REVIEW=null;NAV++;stopSpeech();CRAM=null;archQ();setTimeout(PF,1200);window._scr='';window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));SESS=null;window._lp=window._fp=window._ts=0;TH=[];TF=[];document.body.dataset.screen='home';$('home').style.display='none';$('ttl').style.display='';if(writer){writer=null}
  const d=daysLeft(),dl=d===null?'Keep it up':d>1?`Test in <b>${d} days</b>`:d===1?'Test is <b>tomorrow</b>':d===0?'Test is <b>today</b> — you got this!':'Test done 🎉';
  A.innerHTML=groveHomeMarkup(dl);hdr();checkBadges();homeSets()}
 function HSETS(){
@@ -99,16 +99,16 @@ let HO={};function homeSets(){const e=$('sets');if(!e)return;const {o,cur,ix}=HS
   const d=h.c.filter(m).length,dn=d===h.c.length,on=op.has(h.id);
   html+=`<div class="set${j===cur?' cur':''}${dn?' done':''}${on?' open':''}"><button aria-expanded="${on}" aria-label="${h.f}, ${d} of ${h.c.length} reward milestones" onclick="HTG('${h.id}')"><span class="unit-tree" aria-hidden="true">${groveTree('unit',unitGroveGrowth(h.c).stage)}</span><span class="tt">${h.t}</span><span class="pv" aria-hidden="true">${on?'':h.c.join(' ')}</span><span class="grove-growth">${unitGroveGrowth(h.c).practiced}/${h.c.length} practiced · ${unitGroveGrowth(h.c).badges} badges</span><span class="st">${d}/${h.c.length} ${dn?'✓':'⭐'}</span><span class="cv" aria-hidden="true">⌄</span></button>${on?`<div class="zoo">${h.c.map(x=>tile(x,j,h)).join('')}</div><button class="pset" onclick="PSET(${j})">▶ Practice this ${h.supplemental?'set':'unit'}</button>`:''}</div>`});
  e.innerHTML=groveVisitorNote()+html;updateGroveView()}
-function PSET(j){const h=HS[j];if(!h)return;const set=[...SET()],add=h.c.filter(x=>!set.includes(x));if(add.length){S.cfg.set=set.concat(add);save();setCards();lq=[];mq=[]}const pool=CARDS.filter(c=>h.c.includes(c.c));if(pool.length)startSession(pool,h.f)}
+function PSET(j){const h=HS[j];if(h)showStudySetup('practice',h.c.map(c=>ALL.find(x=>x.c===c)).filter(Boolean));}
 function HTG(t){const op=HO[(prof()||{}).id||'_'];op.has(t)?op.delete(t):op.add(t);homeSets()}
 addEventListener('scroll',()=>{const b=$('totop');b&&b.classList.toggle('show',scrollY>innerHeight*1.5)},{passive:true});
 function startSession(pool,t){pool=pool&&pool.length?pool:CARDS;SESS={q:progressiveQueue(S,pool,10,KG(),Date.now(),shuffle,Number(GR())>=2),i:0,t:t||'',pool};nextItem()}
-function nextItem(){if(!SESS)return;if(SESS.i>=SESS.q.length){delete S.cfg[SESS.cram?'cram':'rs'];save();const n=SESS.q.length,st=(SESS.t||'').replace(/^Cram · /,'Unit review · ').replace('Hear, Write & Pinyin','Listen & Write'),sp=SESS.pool;window.SESS_P=sp;SESS=null;screen();A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:40px">${st?st+' round done!':'Great practice, '+(prof()?prof().name:'')+'!'}</h1><p class="mean">You finished ${n} activities. ${st?sp.filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+sp.length+' in this set':mastered()+' of '+CARDS.length} reward milestones. See Grown-ups → Parent dashboard for learning mastery.</p>${CRAM?`<button class="btn" onclick="startCram(CRAM.mode,true)">Practice again</button><button class="btn gray" onclick="showCram()">Choose units / mode</button>`:st?`<button class="btn" onclick="startSession(SESS_P,'${st}')" id="again">🔁 Practice again</button>`:''}<button class="btn" onclick="home()">🏠 Back home</button>`;say('太棒了');return}
+function nextItem(){if(!SESS)return;if(SESS.study)return studyNextItem();if(SESS.i>=SESS.q.length){delete S.cfg[SESS.cram?'cram':'rs'];save();const n=SESS.q.length,st=(SESS.t||'').replace(/^Cram · /,'Unit review · ').replace('Hear, Write & Pinyin','Listen & Write'),sp=SESS.pool;window.SESS_P=sp;SESS=null;screen();A.innerHTML=`<div class="big">🎉</div><h1 style="font-size:40px">${st?st+' round done!':'Great practice, '+(prof()?prof().name:'')+'!'}</h1><p class="mean">You finished ${n} activities. ${st?sp.filter(c=>(S.pts[c.c]||0)>=MASTER).length+' of '+sp.length+' in this set':mastered()+' of '+CARDS.length} reward milestones. See Grown-ups → Parent dashboard for learning mastery.</p>${CRAM?`<button class="btn" onclick="startCram(CRAM.mode,true)">Practice again</button><button class="btn gray" onclick="showCram()">Choose units / mode</button>`:st?`<button class="btn" onclick="startSession(SESS_P,'${st}')" id="again">🔁 Practice again</button>`:''}<button class="btn" onclick="home()">🏠 Back home</button>`;say('太棒了');return}
  saveRound();const [m,c]=SESS.q[SESS.i++];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion})[m](c)}
 function RS(){const r=S.cfg.rs;if(!r||!r.q||r.i>=r.q.length)return null;const f=x=>CARDS.find(c=>c.c===x);if(!r.q.every(x=>f(x[1])))return null;return r}
-function resume(){const r=RS();if(!r)return startSession();SESS={q:r.q.map(x=>[x[0],CARDS.find(c=>c.c===x[1])]),i:r.i,t:r.t||'',pool:r.p.map(x=>CARDS.find(c=>c.c===x)).filter(Boolean)};nextItem()}
+function resume(){if(!resumeLegacyRound('rs'))return showStudySetup('practice');const r=RS();if(!r)return startSession();SESS={q:r.q.map(x=>[x[0],CARDS.find(c=>c.c===x[1])]),i:r.i,t:r.t||'',pool:r.p.map(x=>CARDS.find(c=>c.c===x)).filter(Boolean)};nextItem()}
 function go(f){skipReview();SESS?nextItem():f()}
-function sessBar(){return SESS?`<div class="sess">${SESS.i} / ${SESS.q.length}<div class="bar"><i style="width:${SESS.i/SESS.q.length*100}%"></i></div></div>`:''}
+function sessBar(){if(SESS?.study)return studySessionBar();return SESS?`<div class="sess">${SESS.i} / ${SESS.q.length}<div class="bar"><i style="width:${SESS.i/SESS.q.length*100}%"></i></div></div>`:''}
 let NAV=0;function after(ms,f){const k=NAV;setTimeout(()=>{if(k===NAV)f()},ms)}
 function screen(){$('grove-action-notice')?.setAttribute('hidden','');document.body.dataset.screen='activity';feedbackQuestion=null;renderRewards();ACTIVE_REVIEW=null;NAV++;stopSpeech();$('home').style.display='inline-block';$('ttl').style.display='';const pv=window._scr;requestAnimationFrame(()=>{const h=(A.querySelector('h1')||{}).textContent||'';if(h!==pv)window.scrollTo(0,0);window._scr=h})}
 // TRACE
@@ -118,21 +118,21 @@ function trace(i){screen();i=(i+practiceCards().length)%practiceCards().length;c
  A.innerHTML=`${groveActivityHeading('trace')}${sessBar()||`<div class="prog">${i+1} / ${practiceCards().length}</div>`}<div class="pin">${c.p} <span class="mean">${c.m}</span></div>${wordLine(c)}
  <div id="hw"></div><div class="msg" id="m"></div>
  ${SESS?'':`<button class="btn gray" id="tb" aria-label="Back" ${TH.length?'':'disabled style="opacity:.35;cursor:default"'} onclick="trNav(-1,${i})">◀</button>`}<button class="btn" onclick="say('${c.c}')">🔊</button>
- <button class="btn b5" style="background:var(--violet)" onclick="ACTIVE_REVIEW.help=true;writer.cancelQuiz();writer.animateCharacter({onComplete:()=>startQ()})">👀 Show me</button>
+ <button class="btn b5" style="background:var(--violet)" onclick="ACTIVE_REVIEW.help=true;if(SESS?.study)studyAttempt('help');writer.cancelQuiz();writer.animateCharacter({onComplete:()=>startQ()})">👀 Show me</button>
  <button class="btn gray" id="tn" aria-label="Next" onclick="trNav(1,${i})">▶</button>`;
  mkWriter(c,true);if(KG()&&!window._ts){window._ts=1;sayThen('en_trace',c.c)}else say(c.c);
  window.startQ=()=>{writer.hideCharacter();writer.quiz({showHintAfterMisses:2,leniency:1.3,
-  onMistake:()=>{$('m').style.color='var(--ac-ink)';$('m').textContent='Try again — follow the glow ✨'},
+  onMistake:()=>{if(SESS?.study)studyAttempt('stroke');$('m').style.color='var(--ac-ink)';$('m').textContent='Try again — follow the glow ✨'},
   onCorrectStroke:()=>{$('m').textContent=''},
   onComplete:r=>{$('m').style.color='var(--success)';$('m').textContent=r.totalMistakes<=2?'Perfect! 🎉':'Nice work! 👍';if(finishReview(traceOutcome(r.totalMistakes,ACTIVE_REVIEW.help)))win(c);say(c.c);const n=$('tn');if(n){n.textContent='Next ▶';n.style.background='var(--success-solid)';n.style.color='var(--on-solid)';n.classList.add('pulse')}}})};
  startQ()}
 // LISTEN
-let lq=[];function listen(c0){screen();if(!lq.length)lq=shuffle(practiceCards());const c=c0&&c0.c?c0:reviewPick(S,practiceCards(),'listen');beginReview(c,'listen');let tries=0;
+let lq=[];function listen(c0){screen();if(!lq.length)lq=shuffle(practiceCards());const c=c0&&c0.c?c0:reviewPick(S,practiceCards(),'listen');beginReview(c,'listen');let tries=SESS?.study&&studyAttemptInfo()?.miss?1:0;
  const opts=shuffle([c,...shuffle(practiceCards().filter(x=>x.c!==c.c&&!samePronunciation(x,c))).slice(0,KG()?2:3)]);
  A.innerHTML=`${groveActivityHeading('listen')}${sessBar()}<div class="listen-prompt"><h2>Which one do you hear?</h2><button id="rp" aria-label="Hear the instructions again" onclick="say('en_listen')">🔊</button></div><button class="btn listen-play" onclick="say('${c.c}')">🔊 Play again</button>
  <div class="pin" id="pp" style="visibility:hidden">${c.p}</div>
  <div class="choices">${opts.map(o=>`<button data-c="${o.c}">${o.c}</button>`).join('')}</div><div class="msg" id="m"></div>`;
- A.querySelectorAll('.choices button').forEach(b=>b.onclick=()=>{if(ACTIVE_REVIEW.done)return;if(b.dataset.c===c.c){b.classList.add('ok');$('pp').style.visibility='visible';$('m').textContent=KG()?(EMO[c.c]||'').replace('<br>',' ')+' 🎉':`${c.c} = ${c.m} 🎉`;finishReview(tries===0?'correct':'miss');if(tries===0)win(c);after(1500,()=>go(listen))}else{tries++;ACTIVE_REVIEW.missed=true;b.classList.add('no');$('pp').style.visibility='visible';say(c.c)}});
+ A.querySelectorAll('.choices button').forEach(b=>b.onclick=()=>{if(ACTIVE_REVIEW.done)return;if(b.dataset.c===c.c){b.classList.add('ok');$('pp').style.visibility='visible';$('m').textContent=KG()?(EMO[c.c]||'').replace('<br>',' ')+' 🎉':`${c.c} = ${c.m} 🎉`;finishReview(tries===0?'correct':'miss');if(tries===0)win(c);after(1500,()=>go(listen))}else{tries++;if(SESS?.study)studyAttempt('miss');ACTIVE_REVIEW.missed=true;b.classList.add('no');$('pp').style.visibility='visible';say(c.c)}});
  if(KG()&&!SESS&&!window._lp){window._lp=1;sayThen('en_listen',c.c)}else after(300,()=>say(c.c))}
 // FLIP (Leitner spaced review)
 const GAP=[0,1,2,4,7];function dayNum(){return Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)}
@@ -151,9 +151,9 @@ let mq=[];function memory(c0){screen();if(!mq.length)mq=shuffle(practiceCards())
  <div id="hw"></div><div class="msg" id="m"></div>
  <button class="btn" onclick="say('${c.c}')">🔊</button><button class="btn" style="background:var(--violet)" id="pk">💡 Peek</button><button class="btn gray" id="sk" onclick="go(memory)">Skip ▶</button>`;
  mkWriter(c,false);say(c.c);
- $('pk').onclick=()=>{peek=true;writer.showOutline();setTimeout(()=>writer.hideOutline(),1500)};
- writer.quiz({showHintAfterMisses:3,leniency:1.2,onMistake:()=>{$('m').style.color='var(--ac-ink)';$('m').textContent='Hmm, not that stroke'},onCorrectStroke:()=>{$('m').textContent=''},
-  onComplete:r=>{writer.showCharacter();$('m').style.color='var(--success)';const good=!peek&&r.totalMistakes<=2;$('m').textContent=good?'You remembered it! 🎉':'Got it! Keep practicing 👍';if(finishReview(good?'correct':'assisted')&&good)win(c,2);say(c.c);const n=$('sk');if(n){n.textContent='Next ▶';n.style.background='var(--success-solid)';n.style.color='var(--on-solid)';n.classList.add('pulse')}}})}
+ $('pk').onclick=()=>{peek=true;if(SESS?.study)studyAttempt('help');writer.showOutline();setTimeout(()=>writer.hideOutline(),1500)};
+ writer.quiz({showHintAfterMisses:3,leniency:1.2,onMistake:()=>{if(SESS?.study)studyAttempt('stroke');$('m').style.color='var(--ac-ink)';$('m').textContent='Hmm, not that stroke'},onCorrectStroke:()=>{$('m').textContent=''},
+  onComplete:r=>{writer.showCharacter();$('m').style.color='var(--success)';const good=!peek&&r.totalMistakes<=2&&(!SESS?.study||studyOutcome('correct')==='correct');$('m').textContent=good?'You remembered it! 🎉':'Got it! Keep practicing 👍';if(finishReview(good?'correct':'assisted')&&good)win(c,2);say(c.c);const n=$('sk');if(n){n.textContent='Next ▶';n.style.background='var(--success-solid)';n.style.color='var(--on-solid)';n.classList.add('pulse')}}})}
 
 // DICTATION QUIZ
 function QOPT(g){return '<option value="">Custom (type below)</option>'+QU(g).map(([n,u])=>`<option value="${u}" ${u===S.cfg.quiz?'selected':''}>Unit ${n} · ${u}</option>`).join('')}
@@ -163,7 +163,7 @@ const NOTES=[['2026-10-18','Units match the Better Immersion list. Review any un
 function NOTE([d,t]){return `<p style="margin:6px 0 0;font-size:15px"><b>${new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</b> · ${t}</p>`}
 function UQ(){const l=QU();return [l.map(x=>x[1]),l.map(x=>x[0])]}
 function UN(q){const [UNITS,UNUM]=UQ(),i=UNITS.indexOf(q||S.cfg.quiz||'');return i<0?0:UNUM[i]}function NXT(q){const [UNITS]=UQ(),i=UNITS.indexOf(q);return i>=0&&i+1<UNITS.length?UNITS[i+1]:''}
-function qList(){screen();const [UNITS,UNUM]=UQ(),done=new Set((S.cfg.past||[]).map(p=>p.q)),cur=S.cfg.quiz||'',other=(S.cfg.past||[]).filter(p=>!UNITS.includes(p.q));A.innerHTML=`<h1>📚 Quizzes</h1><p class="mean">Tap one to practice it.</p>${UNITS.map((u,i)=>`<button class="today quiz-unit ${u===cur?'is-current':done.has(u)?'is-done':''}" style="margin-top:12px" onclick="dictStart('${u}')"><span><b>${done.has(u)?'✓ ':''}Unit ${UNUM[i]}${u===cur?' · next quiz':''}</b><small>${[...u].join(' ')}</small></span><span class="go">▶</span></button>`).join('')}${other.length?`<h2 style="margin-top:24px">Other quizzes</h2>`+other.map(p=>`<button class="today" style="margin-top:12px;background:var(--surface-strong)" onclick="dictStart('${p.q}')"><span><b>${QZ(p.q).join(' ')}</b><small>Test on ${p.d||'—'}</small></span><span class="go">▶</span></button>`).join(''):''}<button class="btn gray" style="margin-top:20px" onclick="home()">Home</button>`}
+function qList(){screen();const [UNITS,UNUM]=UQ(),done=new Set((S.cfg.past||[]).map(p=>p.q)),cur=S.cfg.quiz||'',other=(S.cfg.past||[]).filter(p=>!UNITS.includes(p.q));A.innerHTML=`<h1>📚 Quizzes</h1><p class="mean">Tap one to practice it.</p>${UNITS.map((u,i)=>`<button class="today quiz-unit ${u===cur?'is-current':done.has(u)?'is-done':''}" style="margin-top:12px" onclick="studyQuiz('${u}')"><span><b>${done.has(u)?'✓ ':''}Unit ${UNUM[i]}${u===cur?' · next quiz':''}</b><small>${[...u].join(' ')}</small></span><span class="go">▶</span></button>`).join('')}${other.length?`<h2 style="margin-top:24px">Other quizzes</h2>`+other.map(p=>`<button class="today" style="margin-top:12px;background:var(--surface-strong)" onclick="studyQuiz('${p.q}')"><span><b>${QZ(p.q).join(' ')}</b><small>Test on ${p.d||'—'}</small></span><span class="go">▶</span></button>`).join(''):''}<button class="btn gray" style="margin-top:20px" onclick="home()">Home</button>`}
 function QZ(l){return [...(l||S.cfg.quiz||'')].filter(x=>ALL.some(c=>c.c===x))}let DQ=null,DQL=null;
 const TM=['\u0304','\u0301','\u030C','\u0300'];
 function pyBase(p){return pinyinBase(p)}
@@ -175,7 +175,7 @@ function dictItem(){screen();if(CRAM&&!DQ.session){if(DQ.i>=DQ.q.length)delete S
  const c=DQ.q[DQ.i];feedbackQuestion={card:c,mode:'dictation'};renderRewards();const letters=pinyinLetters(c),base=letters.join('');const dec=shuffle([...'abcdeghijklmnoprstuwxyz'].filter(x=>!base.includes(x))).slice(0,3);
  const tiles=shuffle([...letters,...dec]);let mine='',mt=0,drawn=false;
  A.innerHTML=`${groveActivityHeading('dictation')}<div class="prog">${DQ.session?SESS.i:DQ.i+1} / ${DQ.session?SESS.q.length:DQ.q.length}</div>
- <div class="dictation-prompt"><div><h2>Listen, then write it</h2><p class="mean" id="dictation-clue">Meaning: ${voiceEscape(c.m)}</p></div><button class="btn" onclick="say('${c.c}')" aria-label="Play the word">🔊</button></div>
+ <div class="dictation-prompt"><div><h2>Listen, then write it</h2><p class="mean" id="dictation-clue">Meaning: ${voiceEscape(c.m)}</p><small class="reading-note">Different characters can share a meaning. Listen for the sound, too.</small></div><button class="btn" onclick="say('${c.c}')" aria-label="Play the word">🔊</button></div>
  <div class="dictation-workspace"><section class="dictation-writing" aria-label="Write the character"><div class="dictation-paper"><canvas id="dc" style="width:100%;height:100%;touch-action:none"></canvas></div><button class="btn gray" id="dclr">Clear</button></section>
  <section class="dictation-pinyin" aria-label="Build the pinyin"><div class="dictation-pinyin-heading"><h2>Pinyin</h2><div id="pyout" style="font-weight:700;color:var(--tx)">&nbsp;</div></div>${readings(c).length>1?'<p class="reading-note">This character has more than one reading. Any listed reading is accepted.</p>':''}
  <div id="tiles" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:420px;margin:0 auto">${tiles.map(t=>`<button class="btn gray" style="min-width:44px;font-size:24px;margin:0" data-t="${t}">${t==='v'?'ü':t}</button>`).join('')}<button class="btn gray" style="font-size:24px;margin:0" id="bk" aria-label="Delete">⌫</button></div>
@@ -189,7 +189,7 @@ function dictItem(){screen();if(CRAM&&!DQ.session){if(DQ.i>=DQ.q.length)delete S
  A.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{mine+=b.dataset.t;upd()});$('bk').onclick=()=>{mine=mine.slice(0,-1);upd()};
  A.querySelectorAll('[data-tn]').forEach(b=>b.onclick=()=>{mt=+b.dataset.tn;upd()});
  say(c.c);
- $('dchk').onclick=()=>{const img=cv.toDataURL();const pyOk=pinyinMatches(c,mine,mt);const mineTxt=mine?pyMark(mine,mt):'—';
+ $('dchk').onclick=()=>{const img=cv.toDataURL();const pyOk=pinyinMatches(c,mine,mt);if(DQ.session&&SESS?.study&&!pyOk)studyAttempt('pinyinMiss');const mineTxt=mine?pyMark(mine,mt):'—';
   const pair=(c.c==='买'||c.c==='卖')?`<div style="margin:14px auto;max-width:420px;background:var(--ac-soft);border-radius:16px;padding:12px"><b>Don't mix them up!</b><div style="display:flex;justify-content:space-around;font-size:56px"><div>买<div style="font-size:22px">mǎi ˇ · buy</div></div><div>卖<div style="font-size:22px">mài ˋ · sell</div></div></div><div class="mean">卖 (sell) has an extra <b style="color:var(--ac-ink)">十</b> on top. You sell what you bought!</div></div>`:'';
   A.innerHTML=`${groveActivityHeading('dictation')}<div class="prog">${DQ.session?SESS.i:DQ.i+1} / ${DQ.session?SESS.q.length:DQ.q.length}</div><h2>How did you do?</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:440px;margin:0 auto;align-items:center">
@@ -198,8 +198,9 @@ function dictItem(){screen();if(CRAM&&!DQ.session){if(DQ.i>=DQ.q.length)delete S
    <div style="font-size:34px;font-weight:700">${mineTxt} ${pyOk?'✅':'❌'}</div><div style="font-size:34px;font-weight:700;color:var(--success)">${c.p}</div></div>
   ${pair}<p class="mean">Does your character match?</p>
   <button class="btn r" id="cn">❌ Not yet</button><button class="btn g" id="cy">✅ Yes!</button>`;
+  if(DQ.session&&SESS?.study)A.insertAdjacentHTML('afterbegin',studySessionBar());
   say(c.c);
-  let graded=false;const fin=chOk=>{if(graded)return;graded=true;recordSkill(S,c.c,'pinyin',pyOk?'correct':'miss');recordSkill(S,c.c,'writing',chOk?'correct':'miss');if(DQ.session){const key=SESS.cram?'cram':'rs';S.cfg[key].i=SESS.i;save();if(chOk&&pyOk)win(c,2);nextItem();return}save();if(!pyOk)DQ.bad=1;DQ.n+=2;DQ.score+=(chOk?1:0)+(pyOk?1:0);DQ.i++;if(chOk&&pyOk)win(c,2);else if(!CRAM&&!DQ.q.slice(DQ.i).includes(c)&&!c._re){c._re=1;DQ.q.push(c)}dictItem()};
+  let graded=false;const fin=chOk=>{if(graded)return;graded=true;const firstPy=pyOk&&!(DQ.session&&SESS?.study&&studyAttemptInfo()?.pinyinMiss);recordSkill(S,c.c,'pinyin',firstPy?'correct':'miss');recordSkill(S,c.c,'writing',chOk?'correct':'miss');if(DQ.session){if(SESS.study)recordStudyAnswer(null,chOk&&firstPy?'correct':'miss');else{const key=SESS.cram?'cram':'rs';S.cfg[key].i=SESS.i;}save();if(chOk&&firstPy)win(c,2);nextItem();return}save();if(!pyOk)DQ.bad=1;DQ.n+=2;DQ.score+=(chOk?1:0)+(pyOk?1:0);DQ.i++;if(chOk&&firstPy)win(c,2);else if(!CRAM&&!DQ.q.slice(DQ.i).includes(c)&&!c._re){c._re=1;DQ.q.push(c)}dictItem()};
   $('cn').onclick=()=>fin(false);$('cy').onclick=()=>fin(true)}}
 
 // DETAIL CARD
@@ -224,7 +225,7 @@ function detail(i,L){DL=L||CARDS;DI=(i+DL.length)%DL.length;if(!STROKES[DL[DI].c
  ${pr?`<div style="background:var(--ac-soft);border-radius:14px;padding:10px;margin-top:10px;color:var(--tx)">👀 Don't mix up <b>${c.c}</b> and <b style="cursor:pointer;text-decoration:underline" onclick="detail(CARDS.findIndex(x=>x.c==='${pr[0]}'))">${pr[0]}</b>. ${pr[1]}</div>`:''}
  <div style="display:flex;gap:10px;margin-top:14px"><button class="btn" style="flex:1;margin:0;background:var(--violet)" onclick="dw&&dw.animateCharacter()">▶ Watch strokes</button><button class="btn" style="flex:1;margin:0;background:var(--ac)" onclick="PRAC(DL[DI])">✏️ Practice</button></div></div>`;
  const sz=$('dhw').clientWidth;dw=HanziWriter.create('dhw',c.c,{width:sz,height:sz,padding:14,strokeColor:'#1F2937',strokeAnimationSpeed:1.3,delayBetweenStrokes:120,charDataLoader:SL});$('dhw').onclick=()=>dw.animateCharacter();say(c.c)}
-function PRAC(c){dclose();if(!CARDS.includes(c)){S.cfg.set=[...SET(),c.c];save();setCards();lq=[];mq=[]}trace(practiceCards().indexOf(c))}
+function PRAC(c){dclose();showStudySetup('practice',[c]);}
 function dclose(){const o=$('dov');if(o)o.remove();dw=null}
 document.addEventListener('keydown',e=>{if(!$('dov'))return;if(e.key==='Escape')dclose();if(e.key==='ArrowRight')detail(DI+1,DL);if(e.key==='ArrowLeft')detail(DI-1,DL)});
 

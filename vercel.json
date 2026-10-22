@@ -4,6 +4,11 @@
   "buildCommand": "npm run build",
   "installCommand": "",
   "outputDirectory": "dist",
+  "functions": {
+    "api/feedback.js": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/version.txt",

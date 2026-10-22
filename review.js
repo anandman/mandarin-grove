@@ -2,16 +2,20 @@ let ACTIVE_REVIEW=null;
 function beginReview(c,mode){feedbackQuestion={card:c,mode};renderRewards();ACTIVE_REVIEW={c,mode,done:false,help:false};}
 function finishReview(outcome){
  const r=ACTIVE_REVIEW;if(!r||r.done)return false;r.done=true;
+ if(SESS?.study)outcome=studyOutcome(outcome);
  recordSkill(S,r.c.c,r.mode,outcome);
- if(SESS){const key=SESS.cram?'cram':'rs';if(S.cfg[key])S.cfg[key].i=SESS.i;}
+ if(SESS?.study)recordStudyAnswer(r,outcome);
+ else if(SESS){const key=SESS.cram?'cram':'rs';if(S.cfg[key])S.cfg[key].i=SESS.i;}
  save();return true;
 }
 function skipReview(){finishReview(ACTIVE_REVIEW?.missed?'miss':'skip');}
 function saveRound(){
+ if(SESS?.study)return saveStudyRound();
  const key=SESS.cram?'cram':'rs';
  S.cfg[key]={q:SESS.q.map(([m,c])=>[m,c.c]),i:SESS.i,t:SESS.t,p:SESS.pool.map(c=>c.c),mode:CRAM?.mode};save();
 }
 function resumeCram(){
+ if(!resumeLegacyRound('cram'))return showStudySetup('review');
  const r=S.cfg.cram;if(!r||r.i>=r.q.length)return showCram();
  const by=new Map(ALL.map(c=>[c.c,c]));
  if(!r.q.every(([m,c])=>['trace','listen','flip','memory','dictation'].includes(m)&&by.has(c)))return showCram();
@@ -46,6 +50,8 @@ function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false){
 
 function resumeCramDict(){
  const r=S.cfg.cramDict;if(!r)return showCram();
+ const excluded=new Set(S.cfg.notLearned||[]);r.q=r.q.slice(0,r.i).concat(r.q.slice(r.i).filter(c=>!excluded.has(c)));
+ if(r.i>=r.q.length){delete S.cfg.cramDict;save();return showStudySetup('review');}
  const by=new Map(ALL.map(c=>[c.c,c]));
  CRAM={mode:'dictation',pool:r.pool.map(c=>by.get(c)).filter(Boolean)};
  DQL=CRAM.pool.map(c=>c.c).join('');SESS=null;DQ={...r,q:r.q.map(c=>by.get(c)).filter(Boolean)};dictItem();

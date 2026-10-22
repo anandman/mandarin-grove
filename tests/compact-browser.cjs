@@ -12,15 +12,9 @@ const assert=require('node:assert/strict');
    for(const mode of ['light','dark']){
     await page.evaluate(mode=>{setAppearance(mode);home()},mode);await page.evaluate(()=>new Promise(requestAnimationFrame));
     await fits(page.locator('.grove-daily'),device+' daily practice');
-    const core=page.locator('.grove-paths button,.grove-explore button');
-    assert.equal(await core.count(),8);
-    assert.ok(await page.locator('.grove-path-dictation').isVisible(),'Grade 2+ gets a direct Listen & Write path');
-    if(width<680){
-     const pinyin=await page.locator('.grove-path-dictation').boundingBox(),grid=await page.locator('.grove-paths').boundingBox();
-     assert.ok(Math.abs(pinyin.width-grid.width)<2,'The fifth path fills its phone row');
-    }
+    const core=page.locator('.study-home-entries button,.grove-explore button');
+    assert.equal(await core.count(),4,'Two learning entries plus two existing tools');
     for(let i=0;i<await core.count();i++){await fits(core.nth(i),device+' activity '+i);const r=await core.nth(i).boundingBox();assert.ok(r.height>=44&&r.width>=44);}
-    await fits(page.getByRole('button',{name:'Choose units',exact:true}),device+' unit choice');
     await fits(page.getByRole('button',{name:'My progress',exact:true}),device+' progress');
     assert.ok(await page.locator('.grove-hero-art svg').isVisible(),'Keep the Grove artwork');
     const homeArt=await page.locator('.grove-hero-art svg').boundingBox();
@@ -89,24 +83,18 @@ const assert=require('node:assert/strict');
     await page.setViewportSize({width,height});
     for(const mode of ['light','dark']){
      await page.evaluate(mode=>{setAppearance(mode);home()},mode);
-     const paths=page.locator('.grove-paths button');
-     assert.equal(await paths.count(),4,grade+' Home offers the same four base paths as mixed Cram');
-     const bounds=await paths.evaluateAll(buttons=>buttons.map(b=>{const r=b.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height}}));
-     const grid=await page.locator('.grove-paths').boundingBox();
-     assert.ok(Math.abs(bounds[3].right-grid.x-grid.width)<2,'Paths fill the final grid column');
-     assert.ok(Math.abs(bounds[0].top-bounds[width<680?1:3].top)<2,'Paths share their expected row');
-     if(width<680)assert.ok(Math.abs(bounds[2].top-bounds[3].top)<2,'Phone has two complete rows');
-     for(const r of bounds)assert.ok(r.height>=44&&r.height<=100,grade+' Home paths stay compact and tappable');
-     await fits(page.locator('.grove-explore').getByRole('button',{name:/Unit review/}),grade+' '+device+' review entry');
+     const paths=page.locator('.study-home-entries button');
+     assert.equal(await paths.count(),2,grade+' Home has Practice and Review');
+     for(const path of await paths.all()){const r=await path.boundingBox();assert.ok(r.height>=44);await fits(path,grade+' '+device+' learning entry');}
      await page.screenshot({path:`/tmp/grove-paths-${grade}-${device}-${mode}.png`});
     }
    }
-   await page.locator('.grove-path-memory').click();
+   await page.evaluate(()=>memory(practiceCards()[0]));
    assert.ok(await page.getByRole('heading',{name:'Draw from Memory',exact:true}).isVisible(),'Memory opens directly for '+grade);
    assert.ok(await page.locator('#hw svg').isVisible(),'Memory provides a handwriting area');
    assert.equal(await page.evaluate(()=>JSON.stringify([S.pts,S.stars,S.learning])),progress,'Opening paths leaves earned progress intact');
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: complete, compact K/Grade1 path grids and direct Memory access; first-screen daily/eight activities/unit choice/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
+  console.log('PASS: compact Practice/Review entries for all grades and retained Memory activity; first-screen tools/progress, reward categories/projects/ground cards, keyboard tabs, persistent category, visible cram start/multi-select, writing completion and preserved state on iPhone/iPad in both themes.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

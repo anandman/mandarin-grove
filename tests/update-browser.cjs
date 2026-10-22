@@ -37,7 +37,7 @@ const assert=require('node:assert/strict');
   release='same';await Promise.all([page.waitForNavigation(),primary.press('Enter')]);
   assert.match(page.url(),/\?v=\d+$/,'Keyboard activation explicitly loads a fresh app URL');
   assert.equal(await page.evaluate(()=>localStorage.getItem('zh_p_update')),saved,'Updating preserves profiles, stars, character counts and saved question cursor exactly');
-  assert.ok(await page.getByRole('button',{name:/Keep going/}).isVisible(),'Saved practice is resumable after update');
+  assert.ok(await page.getByRole('button',{name:/Continue earlier practice/}).isVisible(),'Saved practice is resumable after update');
   await page.evaluate(()=>resume());assert.match(await page.locator('#app').innerText(),/2 \/ 2/,'Resumes the saved next question');
   assert.deepEqual(errors,[]);
   console.log('PASS: full-screen update controls, keyboard/focus, deferral, offline/same-release behavior, unsubmitted input and exact saved progress/resume on phone/tablet/desktop in both themes.');

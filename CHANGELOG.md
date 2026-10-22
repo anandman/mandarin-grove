@@ -1,5 +1,11 @@
 # Change history
 
+## Practice and Review, with direct feedback — 20261021-study-31
+
+Consolidate learning into two Home entries with shared unit, individual-character, activity and question-limit choices. Remember editable defaults separately from each round’s saved snapshot. Balance selected activities, retain due-first Practice and random Review, and aim for 90% first-attempt accuracy within a finite round. Preserve original scores through optional missed-question practice. Save untaught-character exclusions without creating failures, and keep original backups, skills, rewards and old saved rounds compatible.
+
+Replace manual child feedback exports with category selection and an explicit Send action. A small Vercel Function delivers validated reports to the fixed private GitHub inbox once a repository-scoped server credential is configured. Confirm delivery only after a receipt; retain unconfirmed reports for explicit retry. No child accounts, automatic upload, audio recording or central progress database. English meanings can apply to several different characters; dictation now explains that the sound also identifies the answer.
+
 ## Clear full-screen updates — 20261021-update-30
 
 Replace the narrow clickable strip with a full-screen Grove dialog and a large Update now button. Keep practicing and Escape defer that release without losing an unfinished answer or immediately repeating the notice. Support keyboard focus and both appearances, with comfortable controls on phones and tablets. Reload only on an explicit action; preserve child profiles, progress and saved session cursors.

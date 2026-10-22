@@ -3,12 +3,12 @@ const assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),headless:true,args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:4173');
+ await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
  await page.evaluate(()=>{
   localStorage.setItem('zh_profiles',JSON.stringify({list:[{id:'test4',name:'Test student',av:'🐳',gr:'4'}],cur:'test4'}));
   localStorage.setItem('zh_p_test4',JSON.stringify({stars:149,streak:1,last:'',pts:{'假':3,'子':4},box:{'假':2},due:{'假':99999},cfg:{set:['查','族','裔','行','本','确','办','祖','正'],quiz:'游假旁停谈访止判程',rs:{q:[['listen','查']],i:0,t:'Saved daily session',p:['查']}}}));
  });await page.reload();
- await page.getByRole('button',{name:/Unit review/}).click();
+ await page.evaluate(()=>showCram());
  await page.locator('[data-unit="2"]').check();await page.locator('[data-unit="6"]').check();await page.locator('[data-unit="11"]').check();
  assert.match(await page.locator('#cram-count').innerText(),/3 units \/ sets · 27 characters · 30 activities/);
  await page.screenshot({path:'/tmp/hanzi-cram-desktop.png',fullPage:true});
