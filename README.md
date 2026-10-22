@@ -33,6 +33,8 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 - `audio/` and `strokes/`: recovered curriculum assets.
 - `icon*.png`: Mandarin Grove orchard/book identity at browser, installation, and native source sizes.
 - `manifest.webmanifest`: standalone installation name, colors, and icons.
+- `help.js`: local curriculum/dictionary lookup and the homework Help hub.
+- `summary-help.js`: fixed summary-planning prompts and per-child local drafts.
 - `writing.js` and `vendor/writing-spark/`: Writing ideas interface, local idea collection, source attribution, and MIT license.
 - `theme.js` and `theme.css`: appearance preference, shared colors/components, and the complete Grove presentation.
 
@@ -58,13 +60,23 @@ Home has two learning entries: **Practice** and **Review**. Both open the same s
 
 Practice defaults to 10 questions, prioritizing due skills within each selected activity and introducing at most three new characters. Review defaults to 30 questions sampled across the selection. Both balance the selected activities and stop at the chosen question limit (5, 10, 20 or 30), or earlier when there are fewer unique character/activity pairs. The default goal is **90% correct on first attempts**. The end screen shows Goal reached or Round finished, offers an optional separate round for missed questions, and always allows Finish. Original results remain in a bounded local history; retries do not rewrite them. Flip-card ratings and handwriting self-ratings are identified. This session goal does not replace spaced mastery or change earned rewards.
 
-Trace, Listen & Tap, Flip Cards and Draw from Memory are selectable for every grade. Grade 2+ adds **Listen & Write**, with character handwriting and pinyin tracked separately. **Build words (组词)** is an optional activity in both flows. **Help** on Home contains Writing ideas for homework. School unit quiz links open Review setup; legacy saved daily/unit-review/Listen & Write rounds can still be continued after importing an older backup.
+Trace, Listen & Tap, Flip Cards and Draw from Memory are selectable for every grade. Grade 2+ adds **Listen & Write**, with character handwriting and pinyin tracked separately. **Build words (组词)** is an optional activity in both flows. **Help** on Home contains character/word lookup, Writing ideas and local summary planning for homework. School unit quiz links open Review setup; legacy saved daily/unit-review/Listen & Write rounds can still be continued after importing an older backup.
 
 Your grove keeps its category tabs, compact decorations and large preview. iPad dictation places handwriting beside pinyin; phone screens can scroll without shrinking the writing area. Appearance and all existing reward collections remain available.
 
 ## Adding units at school or at home
 
 Choose units and individual characters explicitly before each session; school units can be studied in any order. You can include earlier units and previous grades without changing school quiz settings or erasing earlier progress. **I haven’t learned this yet** sets a character aside across activities and future/resumed rounds, without recording a wrong answer or skip. The setup sheet shows deferred characters and lets the child add them back. These preferences and eligibility choices are included in ordinary backups. A forgotten character can still receive help and spaced review; it need not be excluded.
+
+## Homework Help
+
+Choose **Help** on Home for a specific homework question. These tools run without model calls and do not score homework or manufacture character mastery.
+
+**Find a character or word** searches school characters from all grades and the bundled word dictionary. Enter Chinese (including supported traditional aliases), pinyin such as `xué`, `xue2`, `nǚ`/`nv3`/`nu:3`, or an English meaning. Multiple readings remain visible. Open a result for pronunciation, available stroke guides and example words from existing curriculum/Writing ideas vocabulary. Choose known characters from one or more results, then **Practice selected** opens the ordinary session choices for that selection. Lookup alone does not alter units, learning evidence, stars or oranges. Query and temporary selection stay in the current child's browser session.
+
+The general CC-CEDICT word bank loads only when needed and is shared with Build words. Searches run locally; typed queries are not sent to a dictionary/model service. Initial dictionary/asset loading needs a connection. School characters remain searchable if the dictionary fails, with an explicit retry. Bundled dictionary coverage and examples are not claimed to be a teacher-reviewed vocabulary list. Audio uses the existing voice setting and retains its existing quality limitations; this release does not replace recordings.
+
+**Plan a summary** gives fixed prompts for the main idea, two or three important details and the child's own summary. Pasting the reading is optional; a book can stay open alongside the app. It does not generate an answer, check comprehension/grammar or award new rewards. Drafts save per child on this device and are included in normal backups. Merely opening the tool creates no saved draft. Clear draft asks for confirmation and preserves other progress. Save failures retain visible text and show an error; type again to retry after storage is available. Reading/draft text is not automatically attached to feedback reports or uploaded.
 
 ## Writing ideas
 

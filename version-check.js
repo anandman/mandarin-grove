@@ -1,4 +1,4 @@
-const VER='20261021-words-32';
+const VER='20261022-help-33';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

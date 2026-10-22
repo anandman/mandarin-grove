@@ -1,5 +1,13 @@
 # Change history
 
+## Local homework lookup and summary planning — 20261022-help-33
+
+Add Find a character or word under Help: search all school grades and the bundled dictionary using Chinese/traditional aliases, meanings, marked or numbered pinyin, and ü/u:/v spellings. Keep alternate word readings visible. Offer existing voice playback, available stroke guides and a few curricular/prompt example words. Choose known characters and open shared Practice setup without recording lookup as learning evidence or changing active units. Load dictionary data lazily, retain school-character search if it fails, and keep typed queries on-device.
+
+Add Plan a summary with fixed main-idea/key-detail/own-summary prompts and optional reading text. Save drafts per child locally, include them in ordinary backups, confirm clearing and handle storage failures honestly. No generated homework, comprehension grading, new reward rates, model calls or automatic draft uploads. Keep Writing ideas and its sentence reward intact; preserve original progress and backups.
+
+Audit the roadmap: record completed Practice/Review consolidation and direct feedback, close the delivered typed word-practice stage, split vocabulary review, and track the local Help tools, guided summary coaching, spoken word answers and potential school exam activities separately.
+
 ## Word-building in both learning flows; homework Help — 20261021-words-32
 
 Move Build words (组词) into the shared Practice/Review activity selector. Ask for one 2–8-character word or expression per question, mix it with selected activities, and preserve first attempts through Pause/reload. Known dictionary matches add word-building evidence and normal practice steps; existing mastery requirements and reward rates remain unchanged. Previously collected words can be used again without duplicating collections. Hide saved words until grading, and let children say they do not know a word yet.

@@ -43,10 +43,6 @@ function writingBook(){
 function writingIdeasHomeEntry(){
  return `<button class="grove-explore-card grove-writing-entry" onclick="showWritingIdeas()"><span class="grove-explore-icon" aria-hidden="true">${writingBook()}</span><b>Writing ideas</b><small>A seed for a sentence</small></button>`;
 }
-function showHomeworkHelp(){
- screen();SESS=null;CRAM=null;delete document.body.dataset.study;
- A.innerHTML=`<section class="homework-help"><div class="writing-heading"><span class="writing-tree">${groveTree('writing')}</span><div><h1>Help</h1><p>A little help with your Chinese homework.</p></div></div><div class="grove-help-tools">${writingIdeasHomeEntry()}</div><button class="progress-link" onclick="home()">Back to your grove</button></section>`;
-}
 function showWritingIdeas(){
  screen();SESS=null;CRAM=null;
  const state=writingIdeasSession();
