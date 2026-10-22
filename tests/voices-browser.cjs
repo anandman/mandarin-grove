@@ -13,7 +13,7 @@ const assert=require('node:assert/strict');
  await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');await page.evaluate(()=>grown());
  const select=page.locator('#voice-choice');assert.equal(await select.locator('option').count(),6);
  assert.ok(await select.locator('option').allTextContents().then(v=>v.includes('Google Cloud TTS recordings')));
- assert.equal(await select.inputValue(),'reference');await select.selectOption('auto');
+ assert.equal(await select.inputValue(),'auto');assert.ok(await select.locator('option').allTextContents().then(v=>v.includes('Taiwan Mandarin recordings · optional')));await select.selectOption('auto');
  await page.locator('#voice-preview').click();assert.equal(await page.evaluate(()=>window.testSpoken[0].voice),undefined);
  const second=await select.locator('option').filter({hasText:'Tingting · zh-CN · variant 2'}).getAttribute('value');
  await select.selectOption(second);await page.locator('#voice-preview').click();assert.equal(await page.evaluate(()=>window.testSpoken.at(-1).voice.voiceURI),'ting-other');

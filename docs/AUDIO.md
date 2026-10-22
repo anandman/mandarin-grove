@@ -8,20 +8,24 @@ The workflow checks the assessor before trusting its judgments. A matching
 transcript cannot establish the consonant, vowel or tone. Neither an API score nor
 agreement with the printed answer automatically approves a file.
 
-## Shipped reference recordings
+## Mainland target and optional Taiwan recordings
 
-The student app now has a **Reference recordings · recommended** option. It uses
-CNS11643’s published short Mandarin pronunciation files, keyed by pinyin plus tone,
-instead of asking a speech synthesizer to infer the character’s reading. There are
-557 distinct curriculum readings for 841 catalog characters, including all listed
-alternate readings and nine neutral-tone syllables. A multi-reading card plays its
-first displayed reading by default; `say(character, listedReading)` selects an
-explicit listed alternative. Homophones share the same syllable file.
+The app targets **Mainland Standard Mandarin (Putonghua), Hanyu Pinyin and
+simplified Chinese**. The initial audio-34 recommendation of Taiwan recordings
+was too broad for that target. Release mainland-35 restores the `zh-CN` browser
+default when no voice choice is saved and labels the recordings **Taiwan Mandarin
+recordings · optional**. Explicit saved choices are preserved. A `zh-CN` request
+is not verification of the browser's actual output; a verified Mainland static
+recording set is still required.
 
-New installations use this option. Explicit saved browser/Google preferences stay
-unchanged; existing families can switch in Grown-ups → Pronunciation voice. Failed
-reference playback shows an error and never quietly changes voice or reading.
-These changes do not alter grading, progress, backups, rewards or mastery.
+The optional CNS11643 source uses 557 reading-specific clips for 841 catalog
+characters, including all listed alternatives and nine neutral syllables.
+Each file is matched to the existing curriculum pinyin, rather than importing
+Taiwan's character-to-reading dictionary. The curriculum's simplified characters,
+expected pinyin, grading, progress, backups, rewards and mastery remain unchanged.
+A multi-reading card plays its first displayed reading; `say(character,
+listedReading)` selects a listed alternative. Homophones share a syllable file.
+Failed reference playback never quietly changes voice or reading.
 
 The source is the Ministry of Digital Affairs’
 [CNS11643 site](https://www.cns11643.gov.tw/), Voice.zip version 20250113, under the

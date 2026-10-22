@@ -1,5 +1,9 @@
 # Change history
 
+## Mainland pronunciation target — 20261022-mainland-35
+
+Make Mainland Standard Mandarin (Putonghua), Hanyu Pinyin and simplified Chinese explicit. Restore a zh-CN browser request for new/unset voice preferences, and label CNS11643 audio Taiwan Mandarin recordings · optional. Preserve saved voice choices and all child progress. Clarify that reading/file provenance does not establish a Mainland accent; verified Mainland static audio remains unfinished. Curriculum characters, pinyin and grading stay unchanged.
+
 ## Reading-specific pronunciation references — 20261022-audio-34
 
 Add published CNS11643 Mandarin recordings for all 557 distinct curriculum readings, with exact tone/ü keys, alternate-reading files, source attribution and SHA-256 provenance. Detect archive filename collisions and use verified official numbered files for affected nǔ/lù entries. Keep MP3s unchanged and static, encode the nine neutral float WAVs as PCM16 for browser compatibility, check every selected file, and preserve all progress and explicit voice preferences. New installations default to the recommended reference option; existing families can select it in Grown-ups. Failed reference playback shows a retry message without changing the voice. Include intended pinyin and asset metadata in explicit feedback reports.

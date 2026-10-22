@@ -29,7 +29,7 @@ function voiceLabel(voice, voices=mandarinVoices()) {
   const index=sameName.findIndex(v=>voiceKey(v)===voiceKey(voice));
   return `${voice.name} · ${voice.lang}${sameName.length>1?' · variant '+(index+1):''}`;
 }
-function voicePreference() { return localStorage.getItem('zh_voice') || 'reference'; }
+function voicePreference() { return localStorage.getItem('zh_voice') || 'auto'; }
 function selectedMandarinVoice() {
   const preference=voicePreference();
   if (preference==='auto' || preference==='recorded' || preference==='reference') return null;
@@ -106,7 +106,7 @@ async function speakPrompt(text, token, reading) {
     const recording=referenceRecording(card,reading);
     window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt:text,preference,
       voice:null,source:'CNS11643 reference recording',recording:recording?.file||null,
-      selectionNote:'Published pronunciation reference; exact reading and file provenance in audio-sources/cns11643.json.'};
+      selectionNote:'Taiwan Mandarin published reference, not verified as Mainland pronunciation; exact reading and file provenance in audio-sources/cns11643.json.'};
     if (!recording) {
       speechStatus('No reference recording for this reading. Choose another pronunciation voice in Grown-ups.');
       return false;
@@ -142,8 +142,8 @@ function voiceSettingsMarkup() {
     <p id="voice-note" class="reading-note" role="status"></p>
     <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假 · 满</button>
     <button type="button" class="btn gray" id="voice-refresh">Refresh voices</button>
-    <p class="reading-note">CNS11643 reference recordings use a separate file for each pinyin reading. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
-    <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try Browser default Mandarin; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
+    <p class="reading-note">The app targets Mainland Mandarin (Putonghua) and simplified Chinese. CNS11643 recordings are Taiwan Mandarin and remain an optional regional voice, not a verified Mainland pronunciation model. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
+    <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try the browser default; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
     <details><summary class="reading-note">Browser voice report</summary>
       <p class="reading-note">This lists every voice the browser reports, before filtering. If a downloaded voice is absent here, this page cannot select it by name. You can copy this report to help troubleshoot.</p>
       <textarea id="voice-report" aria-label="Browser voice report" readonly style="width:100%;height:180px;user-select:text;-webkit-user-select:text;font-size:13px"></textarea>
@@ -153,7 +153,7 @@ function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
   const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
   const available = preference==='auto'||preference==='recorded'||preference==='reference'||!!selected;
-  const html='<option value="reference">Reference recordings · recommended</option><option value="auto">Browser default Mandarin</option><option value="recorded">Google Cloud TTS recordings</option>' +
+  const html='<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
     (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');
   // Avoid rebuilding an unchanged native iOS picker during catalog refreshes.
@@ -161,12 +161,12 @@ function refreshVoiceSettings() {
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
   note.textContent = preference === 'reference'
-    ? 'Published Mandarin pronunciation recordings from CNS11643 (Taiwan), matched to the pinyin shown. Plays bundled files; no speech service or downloaded voice required.'
+    ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'
     ? 'Plays the bundled Google Cloud Text-to-Speech audio. This does not use your downloaded iOS voices.'
-    : !window.speechSynthesis ? 'Browser speech is unavailable. Choose the recommended reference recordings, or use the older Google Cloud TTS files.'
+    : !window.speechSynthesis ? 'Browser speech is unavailable. Optional Taiwan Mandarin or older Google Cloud TTS recordings are available; neither is a newly verified Mainland voice.'
     : !available ? 'The saved voice is not currently exposed by this browser. Playback uses the browser’s Mandarin default instead.'
-    : preference==='auto' ? 'The browser chooses its default voice for Mandarin (zh-CN). The app does not force Tingting or follow your Accessibility voice setting.'
+    : preference==='auto' ? 'Requests Mainland Mandarin (zh-CN). The browser chooses the voice; its actual pronunciation is not verified. This does not force Tingting or follow your Accessibility voice setting.'
     : `Requested voice: ${voiceLabel(selected,voices)}. Use the sample to check how this browser actually sounds.`;
   const report=document.getElementById('voice-report');if(report)report.value=voiceReport();
 }

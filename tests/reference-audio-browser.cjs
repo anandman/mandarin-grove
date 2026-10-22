@@ -13,7 +13,8 @@ const fs=require('node:fs');const crypto=require('node:crypto');
   localStorage.setItem('zh_p_audio-test',JSON.stringify({stars:149,streak:1,last:'',pts:{'假':3,'子':4},box:{'假':2},due:{'假':99999},cfg:{set:['假','女','绿','路','努','狗'],cramUnits:{'4':[1,3]}}}));
  });await page.reload();
  const before=await page.evaluate(()=>localStorage.getItem('zh_p_audio-test'));
- assert.equal(await page.evaluate(()=>voicePreference()),'reference');
+ assert.equal(await page.evaluate(()=>voicePreference()),'auto');
+ await page.evaluate(()=>localStorage.setItem('zh_voice','reference'));
  const assets=new Set();
  for(const [character,pinyin] of [['止','zhǐ'],['离','lí'],['狗','gǒu'],['满','mǎn'],['假','jià'],['假','jiǎ'],['女','nǚ'],['努','nǔ'],['绿','lǜ'],['路','lù'],['的','de']]){
   assert.equal(await page.evaluate(([c,p])=>say(c,p),[character,pinyin]),true,character+' '+pinyin+' playback');

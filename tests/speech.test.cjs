@@ -56,10 +56,10 @@ test('selected voice receives 满 without a voice-specific pronunciation substit
 });
 
 // Reading-specific reference recordings must not inherit the character-only file bug.
-test('new installations use reference audio without rewriting saved preferences or progress',()=>{
+test('new installations request Mainland Mandarin without changing saved progress',()=>{
  const h=harness(null);h.saved.set('zh_profiles','unchanged');h.ctx.say('狗');
- assert.equal(h.ctx.voicePreference(),'reference');assert.equal(h.audio[0].url,'audio/cns-gou3.mp3');
- assert.equal(h.spoken.length,0);assert.equal(h.saved.get('zh_profiles'),'unchanged');assert.equal(h.saved.has('zh_voice'),false);
+ assert.equal(h.ctx.voicePreference(),'auto');assert.equal(h.spoken[0].lang,'zh-CN');assert.equal(h.audio.length,0);
+ assert.equal(h.saved.get('zh_profiles'),'unchanged');assert.equal(h.saved.has('zh_voice'),false);
 });
 test('reference playback follows the primary expected reading and accepts an explicit listed alternative',()=>{
  const h=harness('reference');h.ctx.say('假');assert.equal(h.audio[0].url,'audio/cns-jia4.mp3');
@@ -81,6 +81,18 @@ test('reference speech cancellation cannot advance instruction or question playb
  const h=harness('reference');const pending=h.ctx.sayThen('en_listen','狗');h.ctx.stopSpeech();h.audio[0].onended();
  await pending;assert.equal(h.audio.length,1);assert.equal(h.spoken.length,0);
 });
-test('voice settings recommend reference recordings and retain explicit legacy choices',()=>{
+test('voice settings describe reference recordings and retain explicit legacy choices',()=>{
  const h=harness('mandarin');assert.equal(h.ctx.voicePreference(),'mandarin');assert.match(h.ctx.voiceSettingsMarkup(),/CNS11643/);
+});
+
+test('Taiwan recordings are explicitly optional and saved selections are preserved',()=>{
+ const h=harness('reference'),elements={
+  'voice-choice':{value:'',innerHTML:''},'voice-note':{textContent:''}
+ };
+ h.ctx.document.getElementById=id=>elements[id]||null;h.ctx.refreshVoiceSettings();
+ assert.match(elements['voice-choice'].innerHTML,/Mainland Mandarin · browser default/);
+ assert.match(elements['voice-choice'].innerHTML,/Taiwan Mandarin recordings · optional/);
+ assert.doesNotMatch(elements['voice-choice'].innerHTML,/recommended/);
+ assert.match(elements['voice-note'].textContent,/not verified as Mainland/);
+ assert.equal(elements['voice-choice'].value,'reference');assert.equal(h.saved.get('zh_voice'),'reference');
 });

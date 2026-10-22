@@ -1,4 +1,4 @@
-const VER='20261022-audio-34';
+const VER='20261022-mainland-35';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
