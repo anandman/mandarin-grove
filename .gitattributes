@@ -1,0 +1,2 @@
+# Preserve the publisher mapping bytes and its original CRLF line endings.
+audio-sources/cns11643-phonetics.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

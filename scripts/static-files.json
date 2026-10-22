@@ -1,5 +1,9 @@
 [
   "app.js",
+  "audio-sources/LICENSE.txt",
+  "audio-sources/README.md",
+  "audio-sources/cns11643-phonetics.txt",
+  "audio-sources/cns11643.json",
   "backups.js",
   "cram.js",
   "feedback.js",
@@ -13,6 +17,7 @@
   "learning.js",
   "manifest.webmanifest",
   "practice.js",
+  "pronunciations.js",
   "review.js",
   "rewards.js",
   "speech.js",

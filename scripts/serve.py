@@ -18,7 +18,7 @@ class AppHandler(SimpleHTTPRequestHandler):
         parts = Path(path).parts
         allowed = path in FILES or (
             len(parts) == 2
-            and ((parts[0] == "audio" and parts[1].endswith(".mp3"))
+            and ((parts[0] == "audio" and parts[1].endswith((".mp3", ".wav")))
                  or (parts[0] == "strokes" and parts[1].endswith(".json")))
         )
         target = ROOT / path

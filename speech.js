@@ -29,10 +29,10 @@ function voiceLabel(voice, voices=mandarinVoices()) {
   const index=sameName.findIndex(v=>voiceKey(v)===voiceKey(voice));
   return `${voice.name} · ${voice.lang}${sameName.length>1?' · variant '+(index+1):''}`;
 }
-function voicePreference() { return localStorage.getItem('zh_voice') || 'auto'; }
+function voicePreference() { return localStorage.getItem('zh_voice') || 'reference'; }
 function selectedMandarinVoice() {
   const preference=voicePreference();
-  if (preference==='auto' || preference==='recorded') return null;
+  if (preference==='auto' || preference==='recorded' || preference==='reference') return null;
   // Preserve preferences saved by earlier versions, which stored just voiceURI.
   return mandarinVoices().find(v=>voiceKey(v)===preference||v.voiceURI===preference)||null;
 }
@@ -72,9 +72,18 @@ function speakDevice(text, token, english = false) {
     try { speechSynthesis.speak(u); } catch (_) { done(false); }
   });
 }
-function playRecording(text, token) {
+function recordingKey(pinyin) {
+  return pinyinBase(pinyin.trim()) + (pinyinTone(pinyin) || 5);
+}
+function referenceRecording(card, reading) {
+  const expected=reading || readings(card)[0];
+  if (!readings(card).includes(expected)) return null;
+  const file=typeof REFERENCE_AUDIO==='undefined' ? null : REFERENCE_AUDIO.readings[recordingKey(expected)];
+  return file ? {file,pinyin:expected} : null;
+}
+function playRecording(text, token, file) {
   return new Promise(resolve => {
-    const a = new Audio('audio/' + encodeURIComponent(text) + '.mp3');
+    const a = new Audio(file || 'audio/' + encodeURIComponent(text) + '.mp3');
     activeAudio = a;
     let settled = false;
     const done = ok => {
@@ -88,12 +97,26 @@ function playRecording(text, token) {
     try { a.play().catch(() => done(false)); } catch (_) { done(false); }
   });
 }
-async function speakPrompt(text, token) {
+async function speakPrompt(text, token, reading) {
   const english = ENGLISH_PROMPTS[text];
   const card = ALL.find(c => c.c === text);
   const prompt = english || (card ? speechText(card) : text);
-  if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,prompt,preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:voicePreference()==='recorded'||!window.speechSynthesis?'bundled recording (device fallback if unavailable)':'browser speech',selectionNote:'Requested voice; actual browser audio is not verified.'};}
-  if (!english && voicePreference() !== 'recorded' && window.speechSynthesis) {
+  const preference=voicePreference();
+  if (card && preference==='reference') {
+    const recording=referenceRecording(card,reading);
+    window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt:text,preference,
+      voice:null,source:'CNS11643 reference recording',recording:recording?.file||null,
+      selectionNote:'Published pronunciation reference; exact reading and file provenance in audio-sources/cns11643.json.'};
+    if (!recording) {
+      speechStatus('No reference recording for this reading. Choose another pronunciation voice in Grown-ups.');
+      return false;
+    }
+    const ok=await playRecording(text,token,recording.file);
+    if (!ok && token===speechSequence) speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
+    return ok;
+  }
+  if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt,preference,voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:preference==='recorded'||!window.speechSynthesis?'Google Cloud TTS bundled recording (device fallback if unavailable)':'browser speech',selectionNote:'Requested voice; actual browser audio is not verified.'};}
+  if (!english && preference !== 'recorded' && preference !== 'reference' && window.speechSynthesis) {
     const ok = await speakDevice(prompt, token);
     // Do not substitute a potentially different recording after cancelled speech.
     if (!ok && token === speechSequence) speechStatus('Could not play this voice. Tap the speaker to retry, or choose another voice in Grown-ups.');
@@ -103,9 +126,9 @@ async function speakPrompt(text, token) {
   if (!ok && token === speechSequence) return speakDevice(prompt, token, !!english);
   return ok;
 }
-function say(text) {
+function say(text, reading) {
   stopSpeech();
-  return speakPrompt(text, speechSequence);
+  return speakPrompt(text, speechSequence, reading);
 }
 async function sayThen(first, second) {
   stopSpeech();
@@ -119,7 +142,7 @@ function voiceSettingsMarkup() {
     <p id="voice-note" class="reading-note" role="status"></p>
     <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假 · 满</button>
     <button type="button" class="btn gray" id="voice-refresh">Refresh voices</button>
-    <p class="reading-note">Google Cloud TTS recordings are the audio files bundled with this app. The other choices use browser speech.</p>
+    <p class="reading-note">CNS11643 reference recordings use a separate file for each pinyin reading. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
     <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try Browser default Mandarin; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
     <details><summary class="reading-note">Browser voice report</summary>
       <p class="reading-note">This lists every voice the browser reports, before filtering. If a downloaded voice is absent here, this page cannot select it by name. You can copy this report to help troubleshoot.</p>
@@ -129,17 +152,19 @@ function voiceSettingsMarkup() {
 function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
   const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
-  const available = preference==='auto'||preference==='recorded'||!!selected;
-  const html='<option value="auto">Browser default Mandarin</option><option value="recorded">Google Cloud TTS recordings</option>' +
+  const available = preference==='auto'||preference==='recorded'||preference==='reference'||!!selected;
+  const html='<option value="reference">Reference recordings · recommended</option><option value="auto">Browser default Mandarin</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
     (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');
   // Avoid rebuilding an unchanged native iOS picker during catalog refreshes.
   if (select._voiceOptions!==html) { select.innerHTML=html; select._voiceOptions=html; }
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
-  note.textContent = preference === 'recorded'
+  note.textContent = preference === 'reference'
+    ? 'Published Mandarin pronunciation recordings from CNS11643 (Taiwan), matched to the pinyin shown. Plays bundled files; no speech service or downloaded voice required.'
+    : preference === 'recorded'
     ? 'Plays the bundled Google Cloud Text-to-Speech audio. This does not use your downloaded iOS voices.'
-    : !window.speechSynthesis ? 'Browser speech is unavailable. Using Google Cloud TTS recordings.'
+    : !window.speechSynthesis ? 'Browser speech is unavailable. Choose the recommended reference recordings, or use the older Google Cloud TTS files.'
     : !available ? 'The saved voice is not currently exposed by this browser. Playback uses the browser’s Mandarin default instead.'
     : preference==='auto' ? 'The browser chooses its default voice for Mandarin (zh-CN). The app does not force Tingting or follow your Accessibility voice setting.'
     : `Requested voice: ${voiceLabel(selected,voices)}. Use the sample to check how this browser actually sounds.`;

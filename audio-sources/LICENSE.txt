@@ -1,0 +1,29 @@
+CNS11643 Mandarin pronunciation recordings and phonetic mapping
+
+數位發展部 2025 CNS11643中文標準交換碼全字庫，Voice.zip 版本20250113。
+數位發展部，CNS11643中文標準交換碼全字庫網站，https://www.cns11643.gov.tw。
+
+此開放資料依政府資料開放授權條款－第1版進行公眾釋出，使用者於遵守本條款各項規定之前提下，得利用之。
+政府資料開放授權條款：https://data.gov.tw/license
+
+Open Government Data License, version 1.0:
+https://data.gov.tw/license
+
+Official dataset, explicitly listing the voice archive:
+https://data.gov.tw/dataset/5961
+Publisher's licensing and attribution notice:
+https://www.cns11643.gov.tw/pageView.jsp?ID=59
+
+Mandarin Grove selects 557 publisher-labeled readings. 548 MP3 files are
+unchanged. Nine neutral-tone IEEE Float32 WAV files are converted to signed
+PCM16 WAV for browser compatibility, preserving every sample frame, the
+original 48kHz mono rate and volume. They are not trimmed or resampled.
+The manifest records source and distributed hashes and conversion details.
+
+The publisher does not endorse this application. Its personal speaker
+identities are not specified in the archive. These are publisher references;
+no fluent-listener certification or automated pronunciation guarantee is made.
+
+See cns11643.json for per-file provenance and the two verified replacements
+for source archive u/ü duplicates. See cns11643-phonetics.txt for the original,
+unchanged publisher mapping and README.md for reproducible import commands.

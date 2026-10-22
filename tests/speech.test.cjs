@@ -1,12 +1,13 @@
 const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
 function harness(voice='auto') {
- const spoken=[],audio=[],saved=new Map([['zh_voice',voice]]),events={};
+ const spoken=[],audio=[],saved=new Map(voice===null?[]:[['zh_voice',voice]]),events={};
  const voices=[{name:'Mandarin',lang:'zh-CN',voiceURI:'mandarin',localService:true},{name:'Cantonese',lang:'zh-HK',voiceURI:'cantonese'}];
  const synth={getVoices:()=>voices,cancel(){},speak(u){spoken.push(u)},addEventListener(n,f){events[n]=f}};
  class Audio {constructor(url){this.url=url;audio.push(this)}play(){return Promise.resolve()}pause(){this.paused=true}}
  const ctx=vm.createContext({window:{speechSynthesis:synth},speechSynthesis:synth,SpeechSynthesisUtterance:class{constructor(text){this.text=text}},Audio,localStorage:{getItem:k=>saved.get(k),setItem:(k,v)=>saved.set(k,v)},document:{getElementById:()=>null},setTimeout,clearTimeout});
  vm.runInContext(fs.readFileSync('practice.js','utf8'),ctx);
  vm.runInContext("const ALL=[{c:'狗',p:'gǒu'},{c:'子',p:'zǐ'},{c:'假',p:'jià / jiǎ'},{c:'满',p:'mǎn'}];",ctx);
+ vm.runInContext("const REFERENCE_AUDIO={source:'CNS11643',readings:{gou3:'audio/cns-gou3.mp3',zi3:'audio/cns-zi3.mp3',jia4:'audio/cns-jia4.mp3',jia3:'audio/cns-jia3.mp3',man3:'audio/cns-man3.mp3'}};",ctx);
  vm.runInContext(fs.readFileSync('speech.js','utf8'),ctx);
  return {ctx,spoken,audio,voices,saved,events};
 }
@@ -52,4 +53,34 @@ test('browser report shows unfiltered catalog, including excluded languages',()=
 
 test('selected voice receives 满 without a voice-specific pronunciation substitution',()=>{
  const h=harness('mandarin');h.ctx.say('满');assert.equal(h.spoken[0].text,'满');assert.equal(h.spoken[0].voice.voiceURI,'mandarin');
+});
+
+// Reading-specific reference recordings must not inherit the character-only file bug.
+test('new installations use reference audio without rewriting saved preferences or progress',()=>{
+ const h=harness(null);h.saved.set('zh_profiles','unchanged');h.ctx.say('狗');
+ assert.equal(h.ctx.voicePreference(),'reference');assert.equal(h.audio[0].url,'audio/cns-gou3.mp3');
+ assert.equal(h.spoken.length,0);assert.equal(h.saved.get('zh_profiles'),'unchanged');assert.equal(h.saved.has('zh_voice'),false);
+});
+test('reference playback follows the primary expected reading and accepts an explicit listed alternative',()=>{
+ const h=harness('reference');h.ctx.say('假');assert.equal(h.audio[0].url,'audio/cns-jia4.mp3');
+ h.ctx.say('假','jiǎ');assert.equal(h.audio[1].url,'audio/cns-jia3.mp3');
+ assert.equal(h.ctx.window.lastSpeechRequest.pinyin,'jiǎ');assert.equal(h.ctx.window.lastSpeechRequest.recording,'audio/cns-jia3.mp3');
+});
+test('reading keys retain ü and all five tones',()=>{
+ const h=harness();assert.equal(h.ctx.recordingKey('lǜ'),'lv4');assert.equal(h.ctx.recordingKey('lù'),'lu4');
+ assert.equal(h.ctx.recordingKey('nǚ'),'nv3');assert.equal(h.ctx.recordingKey('de'),'de5');assert.equal(h.ctx.recordingKey('mān'),'man1');
+});
+test('failed reference recording never substitutes a browser or old Google pronunciation',async()=>{
+ const h=harness('reference');const pending=h.ctx.say('狗');h.audio[0].onerror();
+ assert.equal(await pending,false);assert.equal(h.spoken.length,0);assert.equal(h.audio.length,1);
+});
+test('unlisted reading is rejected instead of guessing a clip',async()=>{
+ const h=harness('reference');assert.equal(await h.ctx.say('假','jiā'),false);assert.equal(h.audio.length,0);assert.equal(h.spoken.length,0);
+});
+test('reference speech cancellation cannot advance instruction or question playback',async()=>{
+ const h=harness('reference');const pending=h.ctx.sayThen('en_listen','狗');h.ctx.stopSpeech();h.audio[0].onended();
+ await pending;assert.equal(h.audio.length,1);assert.equal(h.spoken.length,0);
+});
+test('voice settings recommend reference recordings and retain explicit legacy choices',()=>{
+ const h=harness('mandarin');assert.equal(h.ctx.voicePreference(),'mandarin');assert.match(h.ctx.voiceSettingsMarkup(),/CNS11643/);
 });

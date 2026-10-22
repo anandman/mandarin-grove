@@ -17,10 +17,10 @@ function exportStatic(root,output){
   const dest=path.join(out,relative);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(input,dest);
  }
  for(const file of publicFiles)copy(file);
- for(const [dir,extension]of [['audio','.mp3'],['strokes','.json']]){
+ for(const [dir,extensions]of [['audio',['.mp3','.wav']],['strokes',['.json']]]){
   const folder=path.join(base,dir);
   if(fs.lstatSync(folder).isSymbolicLink())throw Error('Unsafe public asset directory: '+dir);
-  for(const file of fs.readdirSync(folder))if(file.endsWith(extension))copy(path.join(dir,file));
+  for(const file of fs.readdirSync(folder))if(extensions.some(extension=>file.endsWith(extension)))copy(path.join(dir,file));
  }
  fs.writeFileSync(path.join(out,'.nojekyll'),'');
  return out;

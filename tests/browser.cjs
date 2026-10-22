@@ -43,7 +43,8 @@ const assert=require('node:assert/strict');
  const state=await page.evaluate(()=>JSON.parse(localStorage.getItem('zh_p_test4')));
  assert.deepEqual(state.cfg.set,['查','族','裔','行','本','确','办','祖','正']);
  assert.equal(state.cfg.rs.t,'Saved daily session');assert.equal(state.due['假'],99999);assert.ok(state.stars>=149);assert.ok(state.pts['子']>=4);
- await page.evaluate(()=>home());await page.getByRole('button',{name:'All unit quizzes'}).click();assert.equal(await page.locator('.today').count(),13);
+ // Home now exposes the shared Review setup; all PDF units remain selectable.
+ await page.evaluate(()=>home());await page.getByRole('button',{name:'Review',exact:true}).click();assert.equal(await page.locator('[data-study-unit^="4:"]').count(),13);await page.getByRole('button',{name:'Close session choices',exact:true}).click();
  await page.evaluate(()=>{home();grown()});assert.ok(await page.locator('#voice-choice').isVisible());await page.locator('#voice-choice').selectOption('recorded');assert.equal(await page.evaluate(()=>localStorage.getItem('zh_voice')),'recorded');
  await page.getByRole('button',{name:'Close',exact:true}).click();
  await page.setViewportSize({width:390,height:844});await page.evaluate(()=>showCram());

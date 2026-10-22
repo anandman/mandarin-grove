@@ -21,8 +21,8 @@ function validateReport(value,origin){
  if(!['K','1','2','3','4','5'].includes(r.grade))throw Error('invalid');
  text(r.browser,600);if(r.app!==origin)throw Error('invalid');
  optionalObject(r.question,['character','pinyin','meaning','mode'],q=>{text(q.character,32,true);text(q.pinyin,200);text(q.meaning,400);text(q.mode,40,true);});
- optionalObject(r.speech,['character','preference','voice','prompt','source','selectionNote'],s=>{
-  for(const k of ['character','preference','prompt','source','selectionNote'])if(s[k]!=null)text(s[k],k==='preference'?500:400);
+ optionalObject(r.speech,['character','pinyin','preference','voice','prompt','source','recording','selectionNote'],s=>{
+  for(const k of ['character','pinyin','preference','prompt','source','recording','selectionNote'])if(s[k]!=null)text(s[k],k==='preference'?500:400);
   optionalObject(s.voice,['name','lang','uri'],v=>{text(v.name,200);text(v.lang,50);text(v.uri,500);});
  });
  optionalObject(r.session,['kind','question','total'],s=>{text(s.kind,40,true);if(!Number.isInteger(s.question)||s.question<0||s.question>10000||!Number.isInteger(s.total)||s.total<0||s.total>10000)throw Error('invalid');});

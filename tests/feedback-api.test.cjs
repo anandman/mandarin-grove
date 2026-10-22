@@ -67,3 +67,11 @@ test('coalesces concurrent retries and bounds per-instance reports without expos
  for(let i=0;i<8;i++)await request(handler,{...report(),id:`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`});
  const limited=await request(handler);assert.equal(limited.statusCode,429);assert.equal(limited.data.sent,false);assert.equal(limited.headers['Retry-After'],'600');assert.ok(!JSON.stringify(limited.data).includes('192.0.2.5'));
 });
+test('reference audio feedback retains intended pinyin and bounded asset provenance',async()=>{
+ const gh=github(),body=report();body.speech={character:'止',pinyin:'zhǐ',preference:'reference',voice:null,prompt:'止',source:'CNS11643 reference recording',recording:'audio/cns-zhi3.mp3',selectionNote:'Published pronunciation reference'};
+ const res=await request(createHandler({env,fetch:gh.fetch}),body);
+ assert.equal(res.statusCode,201);const issue=JSON.parse(gh.calls[2].body).body;
+ assert.match(issue,/cns-zhi3.mp3/);assert.match(issue,/zhǐ/);
+ const invalid={...body,speech:{...body.speech,recording:'x'.repeat(401)}};
+ assert.equal((await request(createHandler({env,fetch:gh.fetch}),invalid)).statusCode,400);
+});

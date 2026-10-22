@@ -8,6 +8,61 @@ The workflow checks the assessor before trusting its judgments. A matching
 transcript cannot establish the consonant, vowel or tone. Neither an API score nor
 agreement with the printed answer automatically approves a file.
 
+## Shipped reference recordings
+
+The student app now has a **Reference recordings · recommended** option. It uses
+CNS11643’s published short Mandarin pronunciation files, keyed by pinyin plus tone,
+instead of asking a speech synthesizer to infer the character’s reading. There are
+557 distinct curriculum readings for 841 catalog characters, including all listed
+alternate readings and nine neutral-tone syllables. A multi-reading card plays its
+first displayed reading by default; `say(character, listedReading)` selects an
+explicit listed alternative. Homophones share the same syllable file.
+
+New installations use this option. Explicit saved browser/Google preferences stay
+unchanged; existing families can switch in Grown-ups → Pronunciation voice. Failed
+reference playback shows an error and never quietly changes voice or reading.
+These changes do not alter grading, progress, backups, rewards or mastery.
+
+The source is the Ministry of Digital Affairs’
+[CNS11643 site](https://www.cns11643.gov.tw/), Voice.zip version 20250113, under the
+[Open Government Data License 1.0](https://www.cns11643.gov.tw/pageView.jsp?ID=59).
+The 548 selected MP3 files are unchanged. Nine neutral-tone float WAVs are
+encoded as widely supported PCM16 WAVs, preserving sample rate and frame count
+without trimming, resampling or volume changes. The manifest records both source
+and output hashes and this encoding conversion. [Source manifest](../audio-sources/cns11643.json)
+records exact file hashes, original archive members, Bopomofo/pinyin labels and
+individual official URLs for repairs; [attribution](../audio-sources/LICENSE.txt)
+is included in the static app. [Reproducible import commands](../audio-sources/README.md)
+and the pinned original phonetic mapping accompany the manifest. This is reference-source provenance, not a claim
+that every clip passed an infallible acoustic model or that the publisher endorses
+the app. Speaker identity and recording technique are not independently established.
+
+An automated collision audit found real archive defects: some `u` and `ü` entries
+share identical bytes in both voices; the female bundle also merges `e` and `er`.
+We use the male bundle and replace the two affected curriculum entries (`nu3` and
+`lu4`) with separately numbered official recordings whose pinyin is verified on the
+努 and 路 source pages. The corresponding `nv3` and `lv4` entries are separately
+checked against the 女 and 綠 pages. Import checks reject missing labels, wrong
+archive/repair hashes, unexpected cross-reading byte duplicates and missing
+curriculum coverage. This avoids reproducing a source packaging error.
+
+All shipped files receive decode, duration, silence and clipping checks.
+Independent pitch analyses of reported trouble cases and alternative published
+references are additional diagnostics: compatible tone contours support the
+mapping but do not certify consonants or vowels. Short unprompted recognition
+probes confirm the source clips are single utterances rather than dictionary
+metadata; their transcripts are not pronunciation grades. Source-based reference
+selection is the delivery path; neither experimental assessor below is used as
+an approval oracle.
+
+Limits: recordings reflect Taiwan Mandarin and isolated syllables. Accent,
+third-tone realization and connected-speech changes can differ from classroom
+phrases or mainland voices. Words/sentences outside the curriculum recording set,
+English instructions and celebration audio retain their existing playback paths.
+This does not add spoken-answer grading or guarantee an offline-installed website.
+No student audio, provider key, neural model or ongoing per-student API call is
+needed to play these static curriculum recordings.
+
 ## Current findings — October 22, 2026
 
 An actual CPU-only experiment used
@@ -20,9 +75,9 @@ from a model error.
 We then imposed four physical pitch contours on each of two recordings using
 PSOLA. The model recognized six of eight interventions; both dip-then-rise
 contours became tone 2. One had 0.838 tone-2 posterior mass. A deliberately
-uncalibrated confidence gate even accepted three contradictory catalog-tone
-references. This rejects that model as an approval mechanism. The controls are
-acoustic interventions, not native-speaker gold-standard utterances.
+uncalibrated confidence gate accepted three contradictory catalog-tone
+references. This experiment did not establish an approval mechanism. The controls
+are acoustic interventions, not native-speaker gold-standard utterances.
 
 The experiment used Torch 2.6.0 CPU, Transformers 4.44.2, SciPy 1.14.1 and
 Praat-Parselmouth 0.4.7. Weight SHA-256:
@@ -52,9 +107,8 @@ pinyin-only isolated-word assessment. These findings describe that configuration
 
 Six of eight heard tone labels match the imposed contours. Three pass the
 unchanged high-confidence / score-at-least-90 diagnostic gate. This is a small
-physical-contour check, not a native-speaker accuracy benchmark. The two label
-errors and remaining uncertainty prevent using this judge to approve recordings
-automatically.
+physical-contour check, not a native-speaker accuracy benchmark. It does not
+establish a trustworthy automatic approval procedure.
 
 Of 13 existing candidate readings, 12 remain uncertain and 假 jià is flagged;
 none passes the entire diagnostic gate. This does **not** establish that those
@@ -70,6 +124,29 @@ retaining measured final/tone evidence. Reports were regenerated from retained
 responses without additional calls; the diagnostic threshold was not relaxed.
 No replacement audio was promoted. Evaluate another independent assessor or
 validated reference source before enabling unattended acceptance.
+
+### Native-reference audit changes the interpretation
+
+The imposed profiles have unvalidated register, timing and voice quality. A
+flat pitch is not automatically a valid first-tone reference: the imposed yi1
+was about 16.5% below the existing speaker's first-tone register. A third-tone
+reference can contain creak, missing pitch frames and little final rise. Two
+separately licensed Beijing-speaker clips, zhǐ and nǚ, show those natural features.
+Consequently, failure on our artificial profiles cannot establish a native-tone
+error rate or prove an assessor wrong. The arbitrary display-score threshold
+does not repair this limitation. The pilot remains inconclusive for approval.
+
+Independent pitch estimators find an ordinary rise in the existing 离 recording
+and a strong fall in 绿. Their model disagreements therefore do not justify
+replacing those files. The existing 假 recording instead has a third-tone-family
+contour, while the application uses its one filename for both jiǎ and jià. It
+needs reading-specific selection. Pitch analysis supports these tone-family
+observations; it does not certify consonants or vowels.
+
+The next acceptance path uses published pronunciation-reference audio with exact
+reading labels, reuse rights, immutable hashes and independent source checks.
+Signal analysis checks mappings and corruption rather than imposing artificial
+contours on native speech. Unverified synthesis remains a candidate.
 
 ## Local tools
 
@@ -159,7 +236,7 @@ report without requests:
 node scripts/audio-audit.cjs report
 ```
 
-## Getting replacement recordings into the app
+## Optional synthesis workflow
 
 After the judge passes the relevant controls, use the existing Google generation
 tool with explicit intended pinyin, then assess the resulting exact bytes. Google
@@ -189,3 +266,25 @@ Transport fixtures test schema, budgeting, checkpoint/resume and credential
 handling; they are not live acoustic validation. Synthetic signals test estimator
 mechanics. Neither is presented as Mandarin accuracy. Static export tests should
 continue to exclude scripts, reports, models and keys.
+
+
+Reference release checks (no provider calls):
+
+```sh
+python3 scripts/import-cns-audio.py --verify
+node tests/reference-audio.test.cjs
+python3 tests/import-cns-audio.test.py
+# With localhost preview and the Playwright/Chromium environment described in README:
+node tests/reference-audio-browser.cjs
+```
+
+The first reference release checked all 557 actual distributed clips: zero decode
+errors, zero silence/clipping flags, no duplicate bytes across distinct readings;
+durations 0.470–1.906 seconds, total 9,176,489 bytes. An independent reconstruction
+from the pinned archive and numbered repairs matched every selected file and the
+complete manifest. Each neutral WAV retained its frame count, 48kHz mono format
+and quantized waveform within half a PCM16 step. Browser tests played eleven real
+clips including reported cases, alternate readings, u/ü and neutral tone; verified
+served bytes, saved progress/preferences and visible failure without substitution.
+These checks establish usable files and source correspondence, not an individual
+child's accent or a general automatic pronunciation-grading capability.

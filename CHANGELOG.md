@@ -1,5 +1,11 @@
 # Change history
 
+## Reading-specific pronunciation references — 20261022-audio-34
+
+Add published CNS11643 Mandarin recordings for all 557 distinct curriculum readings, with exact tone/ü keys, alternate-reading files, source attribution and SHA-256 provenance. Detect archive filename collisions and use verified official numbered files for affected nǔ/lù entries. Keep MP3s unchanged and static, encode the nine neutral float WAVs as PCM16 for browser compatibility, check every selected file, and preserve all progress and explicit voice preferences. New installations default to the recommended reference option; existing families can select it in Grown-ups. Failed reference playback shows a retry message without changing the voice. Include intended pinyin and asset metadata in explicit feedback reports.
+
+Qualify the earlier synthetic-contour evaluation: imposed shapes are not native lexical-tone gold standards, so that trial did not establish an automatic approval oracle or prove the disputed recordings incorrect. Published reference labels, exact source mapping and independent diagnostics support this delivery; automated grading of children’s spoken pronunciation remains unimplemented.
+
 ## Live pronunciation assessment trial — 2026-10-22
 
 Complete the 44-check specialist pilot using 43 free trial credits, leaving seven. The returned model agrees with six of eight controlled pitch labels and fails the calibration required for automatic approval; keep existing audio unchanged. Preserve the actual responses and local findings without publishing keys or raw reports. Fix legitimate zero-onset handling so a syllable with no initial consonant retains its measured final and tone evidence; reclassify saved responses without additional calls or relaxed thresholds.
