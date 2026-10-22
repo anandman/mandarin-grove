@@ -1,5 +1,9 @@
 # Change history
 
+## Clear full-screen updates — 20261021-update-30
+
+Replace the narrow clickable strip with a full-screen Grove dialog and a large Update now button. Keep practicing and Escape defer that release without losing an unfinished answer or immediately repeating the notice. Support keyboard focus and both appearances, with comfortable controls on phones and tablets. Reload only on an explicit action; preserve child profiles, progress and saved session cursors.
+
 ## Clear word-building instructions — 20261021-words-29
 
 Rename the activity Build words (组词). Explain that each answer uses 2–8 Chinese characters including the displayed character, and that the number of answers per character is open-ended. Acknowledge that single-character words exist and explain that this activity asks for longer words or short expressions. Keep Next character as the child’s choice.

@@ -144,3 +144,17 @@ body[data-screen=activity] #app{padding-top:14px}.grove-activity-heading{margin:
 @media(max-width:680px){.grove-explore-card{grid-template-columns:minmax(0,1fr);row-gap:3px;padding:8px;min-height:64px}.grove-explore-icon{display:none}.grove-explore-card>b{font-size:14px}.grove-explore-card>small{font-size:10px}.grove-review-extra{display:none}}
 .word-tools>.progress-link{margin:0;min-height:44px;min-width:44px;padding:0 6px;line-height:44px;font-size:14px}.word-tools+.reading-note{margin:4px 0 10px;text-align:left}
 .word-instructions{font-size:14px;line-height:1.4;text-align:left;color:var(--mut);margin:0 0 10px}.word-seed .word-input-help{font-size:14px;line-height:1.4;text-align:left;margin:0 0 10px}
+
+
+/* A full-screen update with explicit actions and native modal focus handling. */
+#upd{box-sizing:border-box;position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;border:0;padding:max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));background:var(--bg);color:var(--tx);overflow:auto;text-align:center}
+#upd[open]{display:flex;align-items:center;justify-content:center}
+#upd::backdrop{background:var(--bg)}
+.update-card{width:100%;max-width:440px;margin:auto}
+.update-icon{display:block;width:100px;height:100px;margin:0 auto 24px;border-radius:24px}
+#upd h2{font-size:clamp(30px,6vw,40px);line-height:1.15;margin:0 0 18px}
+#update-description{font-size:19px;line-height:1.55;margin:0 0 24px}
+#upd .btn{display:block;box-sizing:border-box;width:100%;min-height:64px;margin:12px 0;padding:14px 20px;font-size:23px;line-height:1.3;border-radius:16px}
+#upd #update-later{min-height:48px;font-size:17px}
+.update-hint{color:var(--mut);font-size:14px;line-height:1.5;margin:20px 0 0}
+@media(max-height:580px){.update-icon{width:72px;height:72px;margin-bottom:14px}#upd h2{font-size:30px;margin-bottom:12px}#update-description{margin-bottom:16px}.update-hint{margin-top:14px}}

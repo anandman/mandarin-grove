@@ -29,7 +29,7 @@ Open http://localhost:4173. The server binds to all IPv4 interfaces and serves o
 - `styles.css`: original stylesheet.
 - `app.js`: curriculum data, embedded stroke data, practice modes, profiles, quizzes, rewards, and backup/restore.
 - `vendor/hanzi-writer.js`: original bundled Hanzi Writer library; retains its license header.
-- `version-check.js` and `version.txt`: original update notification mechanism.
+- `version-check.js` and `version.txt`: version checks and a full-screen update prompt with explicit Update now / Keep practicing controls. Updating preserves saved local profiles, progress and resumable sessions; Keep practicing retains an unfinished answer without immediately repeating the same notice. A refresh is needed once to load this prompt on a device still running the older banner.
 - `audio/` and `strokes/`: recovered curriculum assets.
 - `icon*.png`: Mandarin Grove orchard/book identity at browser, installation, and native source sizes.
 - `manifest.webmanifest`: standalone installation name, colors, and icons.
