@@ -27,3 +27,10 @@ test('the CC-CEDICT importer retains independently licensed word data and exclud
  const text='# license header\n學校 学校 [xue2 xiao4] /school/CL:所[suo3]/\n學 学 [xue2] /study/\n學生 学生 [xue2 sheng1] /student/pupil/\n';
  const data=parseCedict(text);assert.equal(data.length,2);assert.deepEqual(data[0],['学校','學校','xue2 xiao4','school']);
 });
+test('word-building accepts two through eight characters and guides longer answers without recording them',()=>{
+ const limitIndex=createWordIndex({entries:[['学校','學校','xue2 xiao4','school'],['千里之行始于足下','','qian1 li3 zhi1 xing2 shi3 yu2 zu2 xia4','A long journey begins with one step.']]});
+ assert.equal(checkWordAnswer('学','学校',limitIndex).status,'recognized');
+ assert.equal(checkWordAnswer('行','千里之行始于足下',limitIndex).status,'recognized');
+ const over=checkWordAnswer('行','千里之行始于足下也',limitIndex),state={stars:10};
+ assert.equal(over.status,'input-help');assert.equal(collectWord(state,'行',over),false);assert.deepEqual(state,{stars:10});
+});

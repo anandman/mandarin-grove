@@ -1,5 +1,11 @@
 # Change history
 
+## Clear word-building instructions — 20261021-words-29
+
+Rename the activity Build words (组词). Explain that each answer uses 2–8 Chinese characters including the displayed character, and that the number of answers per character is open-ended. Acknowledge that single-character words exist and explain that this activity asks for longer words or short expressions. Keep Next character as the child’s choice.
+
+Unknown entries now say only “Not in our word bank yet.” Remove the expression-report prompt and keep those answers unrecorded and non-punitive. Preserve collections, backups, learning and reward rules.
+
 ## Local word practice and audio-review preparation — 20261020-words-28
 
 Add a separate 组词 activity: select a character, enter words or short expressions, and collect recognized dictionary words with pinyin and meaning. Support traditional forms, Chinese IME input, arbitrary cross-grade units, per-child collections and existing backups. Treat unknown expressions as unverified rather than incorrect. Keep mastery, spaced review, stars and orange rules unchanged. Lazy-load an attributed CC-CEDICT snapshot from the static app; send no typed answers to a service. Fit the new Home entry alongside Unit review and Writing ideas.
