@@ -1,5 +1,13 @@
 # Change history
 
+## Word-building in both learning flows; homework Help — 20261021-words-32
+
+Move Build words (组词) into the shared Practice/Review activity selector. Ask for one 2–8-character word or expression per question, mix it with selected activities, and preserve first attempts through Pause/reload. Known dictionary matches add word-building evidence and normal practice steps; existing mastery requirements and reward rates remain unchanged. Previously collected words can be used again without duplicating collections. Hide saved words until grading, and let children say they do not know a word yet.
+
+Keep expressions outside the dictionary neutral: explicit Next leaves them ungraded, excluded from accuracy and missed-question practice, with no SRS mistake or skip. Finite round limits still apply; a round with no checked answers cannot reach the accuracy goal. Retain word collections and all earlier progress in backups. Put Writing ideas under a compact Home Help entry, with a return to Help; keep its one-orange sentence reward intact. No additional homework tools are introduced.
+
+Verified production feedback delivery using a synthetic report after the owner configured the scoped GitHub credential; the private inbox returned a real issue receipt. Closed the synthetic test issue after verification.
+
 ## Practice and Review, with direct feedback — 20261021-study-31
 
 Consolidate learning into two Home entries with shared unit, individual-character, activity and question-limit choices. Remember editable defaults separately from each round’s saved snapshot. Balance selected activities, retain due-first Practice and random Review, and aim for 90% first-attempt accuracy within a finite round. Preserve original scores through optional missed-question practice. Save untaught-character exclusions without creating failures, and keep original backups, skills, rewards and old saved rounds compatible.

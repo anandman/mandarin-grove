@@ -1,3 +1,4 @@
+// Legacy standalone word collection remains compatible; real learning entry is covered by study-words-browser.cjs.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict');
 (async()=>{
@@ -7,7 +8,7 @@ const assert=require('node:assert/strict');
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
   const baseline=await page.evaluate(()=>{PR={cur:'words',list:[{id:'words',name:'Learner',gr:'4',av:'🐳'},{id:'other',name:'Friend',gr:'2',av:'🐼'}]};savePR();S=blank();S.stars=149;S.pts={祖:5,止:5};S.cfg.set=['学','狗','组','绿'];localStorage.setItem('zh_p_words',JSON.stringify(S));loadS();save();window.say=()=>{};home();return JSON.stringify(S);});
   assert.equal(requests.filter(r=>r.url.includes('/cc-cedict/words.json')).length,0,'Word bank is lazy-loaded');
-  await page.getByRole('button',{name:/Build words.*组词/}).click();await page.locator('#word-check').waitFor();await page.waitForFunction(()=>!document.getElementById('word-check').disabled);
+  await page.evaluate(()=>showWordPractice());await page.locator('#word-check').waitFor();await page.waitForFunction(()=>!document.getElementById('word-check').disabled);
   await page.locator('#word-character').selectOption('学');
   await page.locator('#word-input').fill('学校');await page.locator('#word-input').dispatchEvent('compositionstart');await page.locator('#word-input').press('Enter');
   assert.equal(await page.evaluate(()=>S.wordPractice?.words?.学?.length||0),0,'IME Enter must not prematurely grade');
@@ -18,7 +19,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>document.querySelector('#word-result img')!==null),false);
   const after=await page.evaluate(()=>{const copy=JSON.parse(JSON.stringify(S));delete copy.wordPractice;return JSON.stringify(copy);});assert.equal(after,baseline,'Only vocabulary collection is added; progress, SRS, selection, rewards stay exact');
   const saved=await page.evaluate(()=>{const b=JSON.parse(decodeURIComponent(escape(atob(backup()))));return JSON.parse(b.data.words).wordPractice.words.学;});assert.deepEqual(saved,['学校','学生'],'Word collection is included in normal backups');
-  await page.reload();await page.evaluate(()=>{window.say=()=>{};home()});await page.getByRole('button',{name:/Build words.*组词/}).click();await page.waitForFunction(()=>!document.getElementById('word-check').disabled);await page.locator('#word-character').selectOption('学');assert.match(await page.locator('#word-count').innerText(),/2 words/);
+  await page.reload();await page.evaluate(()=>{window.say=()=>{};home()});await page.evaluate(()=>showWordPractice());await page.waitForFunction(()=>!document.getElementById('word-check').disabled);await page.locator('#word-character').selectOption('学');assert.match(await page.locator('#word-count').innerText(),/2 words/);
   await page.getByRole('button',{name:'Choose other units'}).click();assert.ok(await page.getByRole('heading',{name:'Build words units',exact:true}).isVisible());
   await page.getByRole('button',{name:'Clear',exact:true}).click();assert.ok(await page.getByRole('button',{name:/Start building words/}).isDisabled());
   await page.locator('[data-unit="2"]').check();await page.locator('[data-unit="11"]').check();const added=page.locator('[data-unit^="2:"]').first();if(await added.count())await added.check();

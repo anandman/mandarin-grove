@@ -8,3 +8,8 @@ test('90% uses first question results once; retry work cannot rewrite the origin
 test('saved defaults are editable copies and cannot mutate a paused round or another child',()=>{const s={cfg:{studyChoices:{'2':{practice:{units:['2:1'],chars:['学'],modes:['trace'],limit:10}}}}};const a=ctx.studyDefaults(s,'2','practice',['学','校'],['trace','listen']);a.chars.push('校');assert.deepEqual(s.cfg.studyChoices['2'].practice.chars,['学']);assert.equal(ctx.studyDefaults({cfg:{}},'2','review',['学'],['listen']).limit,30);assert.equal(ctx.studyDefaults({cfg:{}},'2','practice',['学'],['listen']).limit,10);});
 test('a due pinyin skill wins combined dictation priority even when writing is not due',()=>{const s={learning:{chars:{祖:{skills:{writing:{attempts:2,due:900},pinyin:{attempts:2,due:1}}},正:{skills:{writing:{attempts:2,due:800},pinyin:{attempts:2,due:800}}}}}};assert.equal(ctx.studyQueue(s,[{c:'祖'},{c:'正'}],['dictation'],1,'practice',identity,500)[0][1].c,'祖');});
 test('a below-goal fraction never displays as 90 percent',()=>{const r={results:{}};for(let i=0;i<29;i++)ctx.addStudyResult(r,String(i),{correct:i<26});assert.equal(ctx.studyScore(r).reached,false);assert.ok(ctx.studyScore(r).percent<90);});
+test('unverified word answers cannot lower accuracy or manufacture a goal without checked answers',()=>{
+ const r={results:{a:{correct:true},b:{correct:false,outcome:'unverified',ungraded:true}}};
+ const score=ctx.studyScore(r);assert.equal(score.total,1);assert.equal(score.percent,100);assert.equal(score.ungraded,1);
+ assert.equal(ctx.studyScore({results:{b:r.results.b}}).reached,false);
+});

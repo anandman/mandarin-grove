@@ -20,10 +20,10 @@ function studyQueue(s,pool,modes,limit,kind,mix=a=>a,now=Date.now()){
 }
 function studyDefaults(s,grade,kind,fallback,allowed){
  const stored=s.cfg?.studyChoices?.[grade]?.[kind];
- return {units:[...(stored?.units||[])],chars:[...(stored?.chars||fallback)],modes:(stored?.modes||allowed).filter(m=>allowed.includes(m)),limit:[5,10,20,30].includes(stored?.limit)?stored.limit:kind==='review'?30:10};
+ return {units:[...(stored?.units||[])],chars:[...(stored?.chars||fallback)],modes:(stored?.modes||allowed.filter(m=>m!=='words')).filter(m=>allowed.includes(m)),limit:[5,10,20,30].includes(stored?.limit)?stored.limit:kind==='review'?30:10};
 }
 function addStudyResult(round,key,result){if(Object.hasOwn(round.results,key))return false;round.results[key]={...result};return true;}
-function studyScore(round){const rows=Object.values(round.results||{}),correct=rows.filter(r=>r.correct).length,total=rows.length;return {total,correct,percent:total?Math.round(1000*correct/total)/10:0,reached:total>0&&correct/total>=.9,selfRated:rows.filter(r=>r.selfRated).length};}
+function studyScore(round){const all=Object.values(round.results||{}),rows=all.filter(r=>!r.ungraded),correct=rows.filter(r=>r.correct).length,total=rows.length;return {total,correct,percent:total?Math.round(1000*correct/total)/10:0,reached:total>0&&correct/total>=.9,selfRated:rows.filter(r=>r.selfRated).length,...(all.length>total?{ungraded:all.length-total}:{})};}
 function pruneStudyRound(round,excluded){
  const blocked=new Set(excluded),keep=(item)=>Object.hasOwn(round.results||{},item[0]+':'+item[1])||!blocked.has(item[1]);
  return {...round,q:round.q.filter(keep),cursor:round.q.slice(0,round.cursor).filter(keep).length};
@@ -32,7 +32,7 @@ function completeStudyRound(s,round,now=Date.now()){
  const history=s.studyHistory||=[];if(history.some(r=>r.id===round.id))return;
  history.push(JSON.parse(JSON.stringify({...round,ended:now,score:studyScore(round)})));s.studyHistory=history.slice(-20);
 }
-function studyActivities(){return CRAM_MODES.filter(([m])=>m!=='dictation'||Number(GR())>=2);}
+function studyActivities(){return [...CRAM_MODES.filter(([m])=>m!=='dictation'||Number(GR())>=2),['words','Build words · 组词']];}
 function studyUnitChoices(){
  const units=[];for(const grade of ['K','1','2','3','4','5'])for(const [n,chars]of QU(grade))if(chars.length)units.push({id:grade+':'+n,grade,label:'Unit '+n,chars:[...chars]});
  for(const h of HSETS().o.filter(h=>h.supplemental))units.push({id:h.id,grade:h.g,label:h.t,chars:h.c});
@@ -112,13 +112,13 @@ function saveStudyRound(){
 function recordStudyAnswer(review,outcome){
  if(!SESS?.study)return;
  const [mode,c]=SESS.q[SESS.currentIndex],r=SESS.round;
- addStudyResult(r,mode+':'+c.c,{character:c.c,mode,correct:outcome==='correct',outcome,selfRated:mode==='flip'||mode==='dictation'});
+ addStudyResult(r,mode+':'+c.c,{character:c.c,mode,correct:outcome==='correct',outcome,...(outcome==='unverified'?{ungraded:true}:{}),selfRated:mode==='flip'||mode==='dictation'});
  r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);A.querySelector('.study-not-learned')?.setAttribute('disabled','');saveStudyRound();
 }
 function studyNextItem(){
  if(SESS.i>=SESS.q.length){finishStudyRound();return;}
  const index=SESS.i;SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;saveStudyRound();
- const [mode,c]=SESS.q[index];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion})[mode](c);
+ const [mode,c]=SESS.q[index];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
  document.body.dataset.study=SESS.kind;
  if(mode==='dictation')A.insertAdjacentHTML('afterbegin',studySessionBar());
 }
@@ -135,12 +135,12 @@ function studyNotLearned(){
 }
 function finishStudyRound(){
  const round=SESS.round;round.cursor=round.q.length;completeStudyRound(S,round);saveStudyRound();STUDY_LAST=JSON.parse(JSON.stringify(round));
- const score=studyScore(round),misses=Object.entries(round.results).filter(([,r])=>!r.correct);
+ const score=studyScore(round),misses=Object.entries(round.results).filter(([,r])=>!r.correct&&!r.ungraded);
  SESS=null;CRAM=null;delete document.body.dataset.study;screen();
- A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="study-score">${score.correct} / ${score.total}</p><p>${score.percent}% correct · Goal 90%</p><p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' self-rated answer'+(score.selfRated===1?'':'s'):''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b>${r.character}</b> · ${CRAM_MODES.find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="retryStudyMisses()">Practice missed questions</button>`:''}<button class="btn gray" onclick="home()">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
+ A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="study-score">${score.correct} / ${score.total}</p><p>${score.total?score.percent+'% correct · Goal 90%':'No checked answers this round'}</p>${score.ungraded?`<p>${score.ungraded} answer${score.ungraded===1?'':'s'} not checked · excluded from the score and missed questions.</p>`:''}<p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' self-rated answer'+(score.selfRated===1?'':'s'):''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b>${r.character}</b> · ${studyActivities().find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="retryStudyMisses()">Practice missed questions</button>`:''}<button class="btn gray" onclick="home()">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
 }
 function retryStudyMisses(){
- if(!STUDY_LAST)return;const r=STUDY_LAST,by=new Map(ALL.map(c=>[c.c,c])),q=Object.values(r.results).filter(x=>!x.correct&&!(S.cfg.notLearned||[]).includes(x.character)).map(x=>[x.mode,by.get(x.character)]).filter(([,c])=>c);
+ if(!STUDY_LAST)return;const r=STUDY_LAST,by=new Map(ALL.map(c=>[c.c,c])),q=Object.values(r.results).filter(x=>!x.correct&&!x.ungraded&&!(S.cfg.notLearned||[]).includes(x.character)).map(x=>[x.mode,by.get(x.character)]).filter(([,c])=>c);
  if(q.length)startStudyRound('practice',r.config,[...new Map(q.map(([,c])=>[c.c,c])).values()],q);
 }
 

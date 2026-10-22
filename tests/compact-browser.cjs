@@ -12,8 +12,8 @@ const assert=require('node:assert/strict');
    for(const mode of ['light','dark']){
     await page.evaluate(mode=>{setAppearance(mode);home()},mode);await page.evaluate(()=>new Promise(requestAnimationFrame));
     await fits(page.locator('.grove-daily'),device+' daily practice');
-    const core=page.locator('.study-home-entries button,.grove-explore button');
-    assert.equal(await core.count(),4,'Two learning entries plus two existing tools');
+    const core=page.locator('.study-home-entries button,.study-help-entry');
+    assert.equal(await core.count(),3,'Two learning entries plus homework Help');
     for(let i=0;i<await core.count();i++){await fits(core.nth(i),device+' activity '+i);const r=await core.nth(i).boundingBox();assert.ok(r.height>=44&&r.width>=44);}
     await fits(page.getByRole('button',{name:'My progress',exact:true}),device+' progress');
     assert.ok(await page.locator('.grove-hero-art svg').isVisible(),'Keep the Grove artwork');
