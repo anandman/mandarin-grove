@@ -1,0 +1,1650 @@
+{
+  "schemaVersion": 1,
+  "id": "grove-elementary-vocabulary",
+  "version": "1.0.0",
+  "license": "CC-BY-SA-4.0",
+  "purpose": "A focused Help suggestion pack. Dictionary evidence is not instructional certification or a grading whitelist.",
+  "source": {
+    "id": "cc-cedict-2026-10-20",
+    "name": "CC-CEDICT",
+    "publisher": "MDBG and CC-CEDICT contributors",
+    "url": "https://www.mdbg.net/chinese/dictionary?page=cc-cedict",
+    "license": "CC-BY-SA-4.0",
+    "licenseURL": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "retrieved": "2026-10-20",
+    "upstreamSha256": "3681b52f0f733e0caada3fa2fbe2236bfa1234333397f35f10f285ac292abec9",
+    "transformedPath": "vendor/cc-cedict/words.json",
+    "transformedSha256": "6d9e0258fb39e78cc2d00c3cf76c403cdcd5db2789fcb6ecaa724bcb6bf81feb",
+    "changes": "Selected exact rows from the pinned transformed bank; selected a displayed English sense, omitted unrelated senses/classifier notation, added curriculum tags and separately labeled agent-authored writing-idea drafts. Numbered dictionary readings are lexical readings, not audio verification."
+  },
+  "review": {
+    "lexical": "Exact row equality checked against pinned local CC-CEDICT data.",
+    "instructional": "Pending fluent review for naturalness, sense fit and age suitability. No teacher certification.",
+    "writingIdeas": "Agent-authored local drafts; not sourced Chinese example sentences or semantic scoring keys.",
+    "pronunciation": "Not evaluated by this pack."
+  },
+  "entries": [
+    {
+      "id": "mg-vocab-0001",
+      "word": "改正",
+      "aliases": [],
+      "pinyin": "gai3 zheng4",
+      "meaning": "to correct",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 18,
+          "characters": [
+            "改"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "改正",
+          "",
+          "gai3 zheng4",
+          "to correct; to amend"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0001",
+        "text": "Think of a small mistake you corrected. What did you change?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0002",
+      "word": "让路",
+      "aliases": [
+        "讓路"
+      ],
+      "pinyin": "rang4 lu4",
+      "meaning": "to make way (for sth)",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 5,
+          "characters": [
+            "路"
+          ]
+        },
+        {
+          "grade": "2",
+          "unit": 18,
+          "characters": [
+            "让"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "让路",
+          "讓路",
+          "rang4 lu4",
+          "to make way (for sth)"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0002",
+        "text": "Think of a time you made space for someone to pass. What happened?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0003",
+      "word": "百万",
+      "aliases": [
+        "百萬"
+      ],
+      "pinyin": "bai3 wan4",
+      "meaning": "million",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 18,
+          "characters": [
+            "百",
+            "万"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "百万",
+          "百萬",
+          "bai3 wan4",
+          "million"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0003",
+        "text": "Imagine a collection with a million things. What would you collect, and why?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0004",
+      "word": "千万",
+      "aliases": [
+        "千萬"
+      ],
+      "pinyin": "qian1 wan4",
+      "meaning": "ten million",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 18,
+          "characters": [
+            "千",
+            "万"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "千万",
+          "千萬",
+          "qian1 wan4",
+          "ten million; countless"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0004",
+        "text": "Imagine ten million tiny things together. Describe what you might see.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0005",
+      "word": "亿万",
+      "aliases": [
+        "億萬"
+      ],
+      "pinyin": "yi4 wan4",
+      "meaning": "millions and millions",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 18,
+          "characters": [
+            "万",
+            "亿"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "亿万",
+          "億萬",
+          "yi4 wan4",
+          "millions and millions"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0005",
+        "text": "Imagine a place with millions and millions of stars. What would you notice?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0006",
+      "word": "怎么",
+      "aliases": [
+        "怎麼",
+        "怎麽"
+      ],
+      "pinyin": "zen3 me5",
+      "meaning": "how?",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 12,
+          "characters": [
+            "怎"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "怎么",
+          "怎麼",
+          "zen3 me5",
+          "how?; what?"
+        ],
+        "aliasRows": [
+          [
+            "怎么",
+            "怎麽",
+            "zen3 me5",
+            "variant of 怎麼|怎么[zen3 me5]"
+          ]
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0006",
+        "text": "Choose something you can do. Ask how someone else does it.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0007",
+      "word": "谢谢",
+      "aliases": [
+        "謝謝"
+      ],
+      "pinyin": "xie4 xie5",
+      "meaning": "thanks",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 12,
+          "characters": [
+            "谢"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "谢谢",
+          "謝謝",
+          "xie4 xie5",
+          "to thank; thanks"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0007",
+        "text": "Think of someone you want to thank. What did that person do?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0008",
+      "word": "拿来",
+      "aliases": [
+        "拿來"
+      ],
+      "pinyin": "na2 lai2",
+      "meaning": "to bring",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 12,
+          "characters": [
+            "拿"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "拿来",
+          "拿來",
+          "na2 lai2",
+          "to bring; to fetch"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0008",
+        "text": "Imagine asking a friend to bring something for a game. What would you ask for?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0009",
+      "word": "更加",
+      "aliases": [],
+      "pinyin": "geng4 jia1",
+      "meaning": "even more",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 12,
+          "characters": [
+            "更"
+          ]
+        },
+        {
+          "grade": "2",
+          "unit": 22,
+          "characters": [
+            "加"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "更加",
+          "",
+          "geng4 jia1",
+          "more (than sth else); even more"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0009",
+        "text": "Think of something you enjoy. What would make it even more enjoyable?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0010",
+      "word": "生活",
+      "aliases": [],
+      "pinyin": "sheng1 huo2",
+      "meaning": "life",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 12,
+          "characters": [
+            "活"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "生活",
+          "",
+          "sheng1 huo2",
+          "to live; life"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0010",
+        "text": "Describe one small part of your everyday life. What makes it special to you?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0011",
+      "word": "需要",
+      "aliases": [],
+      "pinyin": "xu1 yao4",
+      "meaning": "to need",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 19,
+          "characters": [
+            "需"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "需要",
+          "",
+          "xu1 yao4",
+          "to need; to want; to demand; to require; needs"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0011",
+        "text": "Plan a simple outing. What will you need to bring?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0012",
+      "word": "生命",
+      "aliases": [],
+      "pinyin": "sheng1 ming4",
+      "meaning": "life (as the characteristic of living beings)",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 19,
+          "characters": [
+            "命"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "生命",
+          "",
+          "sheng1 ming4",
+          "life (as the characteristic of living beings); living being; creature (CL:條|条[tiao2])"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0012",
+        "text": "Choose a living thing. What does it need to grow?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0013",
+      "word": "旧书",
+      "aliases": [
+        "舊書"
+      ],
+      "pinyin": "jiu4 shu1",
+      "meaning": "old book",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 19,
+          "characters": [
+            "旧"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "旧书",
+          "舊書",
+          "jiu4 shu1",
+          "second-hand book; old book"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0013",
+        "text": "Imagine finding an old book. What might you discover inside?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0014",
+      "word": "慢慢",
+      "aliases": [],
+      "pinyin": "man4 man4",
+      "meaning": "slowly",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 19,
+          "characters": [
+            "慢"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "慢慢",
+          "",
+          "man4 man4",
+          "slowly; gradually"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0014",
+        "text": "Think of something that you do slowly and carefully. Describe it.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0015",
+      "word": "长短",
+      "aliases": [
+        "長短"
+      ],
+      "pinyin": "chang2 duan3",
+      "meaning": "length",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 19,
+          "characters": [
+            "短"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "长短",
+          "長短",
+          "chang2 duan3",
+          "length; accident; mishap"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0015",
+        "text": "Compare two things with different lengths. What do you notice?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0016",
+      "word": "当然",
+      "aliases": [
+        "當然"
+      ],
+      "pinyin": "dang1 ran2",
+      "meaning": "as it should be",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 4,
+          "characters": [
+            "然"
+          ]
+        },
+        {
+          "grade": "2",
+          "unit": 21,
+          "characters": [
+            "当"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "当然",
+          "當然",
+          "dang1 ran2",
+          "only natural; as it should be"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0016",
+        "text": "Imagine answering a friend who asks to join a game. What might you say?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0017",
+      "word": "足够",
+      "aliases": [
+        "足夠"
+      ],
+      "pinyin": "zu2 gou4",
+      "meaning": "enough",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 21,
+          "characters": [
+            "够"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "足够",
+          "足夠",
+          "zu2 gou4",
+          "enough; sufficient"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0017",
+        "text": "Plan to share a snack with friends. How will you know you have enough?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0018",
+      "word": "次数",
+      "aliases": [
+        "次數"
+      ],
+      "pinyin": "ci4 shu4",
+      "meaning": "number of times",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 10,
+          "characters": [
+            "数"
+          ]
+        },
+        {
+          "grade": "2",
+          "unit": 21,
+          "characters": [
+            "次"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "次数",
+          "次數",
+          "ci4 shu4",
+          "number of times; frequency"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0018",
+        "text": "Think of something you practiced. How many times did you try?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0019",
+      "word": "时候",
+      "aliases": [
+        "時候"
+      ],
+      "pinyin": "shi2 hou5",
+      "meaning": "time",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 21,
+          "characters": [
+            "候"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "时候",
+          "時候",
+          "shi2 hou5",
+          "time; length of time"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0019",
+        "text": "Choose a time of day you enjoy. Describe what usually happens then.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0020",
+      "word": "讲话",
+      "aliases": [
+        "講話"
+      ],
+      "pinyin": "jiang3 hua4",
+      "meaning": "to speak",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 21,
+          "characters": [
+            "讲"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "讲话",
+          "講話",
+          "jiang3 hua4",
+          "a speech; to speak"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0020",
+        "text": "Think of a time you spoke to a group. What did you want them to know?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0021",
+      "word": "各种",
+      "aliases": [
+        "各種"
+      ],
+      "pinyin": "ge4 zhong3",
+      "meaning": "all kinds of",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 22,
+          "characters": [
+            "各"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "各种",
+          "各種",
+          "ge4 zhong3",
+          "every kind of; all kinds of; various"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0021",
+        "text": "Imagine a garden with all kinds of plants. Describe a few of them.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0022",
+      "word": "家庭",
+      "aliases": [],
+      "pinyin": "jia1 ting2",
+      "meaning": "family",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 22,
+          "characters": [
+            "庭"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "家庭",
+          "",
+          "jia1 ting2",
+          "family; household"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0022",
+        "text": "Choose something your family likes to do together. Describe it in your own words.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0023",
+      "word": "转弯",
+      "aliases": [
+        "轉彎"
+      ],
+      "pinyin": "zhuan3 wan1",
+      "meaning": "to go around a corner",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 22,
+          "characters": [
+            "转"
+          ]
+        },
+        {
+          "grade": "3",
+          "unit": 4,
+          "characters": [
+            "弯"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "转弯",
+          "轉彎",
+          "zhuan3 wan1",
+          "to turn; to go around a corner"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0023",
+        "text": "Imagine walking around a corner. What might you find?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0024",
+      "word": "加法",
+      "aliases": [],
+      "pinyin": "jia1 fa3",
+      "meaning": "addition",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 15,
+          "characters": [
+            "法"
+          ]
+        },
+        {
+          "grade": "2",
+          "unit": 22,
+          "characters": [
+            "加"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "加法",
+          "",
+          "jia1 fa3",
+          "addition"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0024",
+        "text": "Make up a small story about putting two groups of things together.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0025",
+      "word": "规律",
+      "aliases": [
+        "規律"
+      ],
+      "pinyin": "gui1 lu:4",
+      "meaning": "rule (e.g. of science)",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 20,
+          "characters": [
+            "规",
+            "律"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "规律",
+          "規律",
+          "gui1 lu:4",
+          "rule (e.g. of science); law of behavior"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0025",
+        "text": "Look for a pattern in things around you. Describe what repeats.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0026",
+      "word": "允许",
+      "aliases": [
+        "允許"
+      ],
+      "pinyin": "yun3 xu3",
+      "meaning": "to allow",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 20,
+          "characters": [
+            "许"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "允许",
+          "允許",
+          "yun3 xu3",
+          "to permit; to allow"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0026",
+        "text": "Imagine asking permission to try something new. What would you ask?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0027",
+      "word": "父母",
+      "aliases": [],
+      "pinyin": "fu4 mu3",
+      "meaning": "parents",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 20,
+          "characters": [
+            "父",
+            "母"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "父母",
+          "",
+          "fu4 mu3",
+          "father and mother; parents"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0027",
+        "text": "Imagine a child and their parents planning a day together. What might they do?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0028",
+      "word": "继续",
+      "aliases": [
+        "繼續"
+      ],
+      "pinyin": "ji4 xu4",
+      "meaning": "to continue",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 20,
+          "characters": [
+            "继",
+            "续"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "继续",
+          "繼續",
+          "ji4 xu4",
+          "to continue; to proceed with; to go on with"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0028",
+        "text": "Think of something you wanted to keep doing. Describe what happened next.",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0029",
+      "word": "科技",
+      "aliases": [],
+      "pinyin": "ke1 ji4",
+      "meaning": "science and technology",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 21,
+          "characters": [
+            "科",
+            "技"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "科技",
+          "",
+          "ke1 ji4",
+          "science and technology"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0029",
+        "text": "Imagine an invention that helps with an everyday job. What would it do?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0030",
+      "word": "复杂",
+      "aliases": [
+        "複雜"
+      ],
+      "pinyin": "fu4 za2",
+      "meaning": "complicated",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 21,
+          "characters": [
+            "复",
+            "杂"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "复杂",
+          "複雜",
+          "fu4 za2",
+          "complicated; complex"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0030",
+        "text": "Think of a task with many steps. Which part was complicated for you?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0031",
+      "word": "沟通",
+      "aliases": [
+        "溝通"
+      ],
+      "pinyin": "gou1 tong1",
+      "meaning": "to communicate",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 16,
+          "characters": [
+            "通"
+          ]
+        },
+        {
+          "grade": "3",
+          "unit": 21,
+          "characters": [
+            "沟"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "沟通",
+          "溝通",
+          "gou1 tong1",
+          "to join; to connect; to link up; to communicate"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0031",
+        "text": "Imagine two friends trying to understand each other. How could they share their ideas?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0032",
+      "word": "恐龙",
+      "aliases": [
+        "恐龍"
+      ],
+      "pinyin": "kong3 long2",
+      "meaning": "dinosaur",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 25,
+          "characters": [
+            "恐",
+            "龙"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "恐龙",
+          "恐龍",
+          "kong3 long2",
+          "dinosaur (CL:頭|头[tou2],隻|只[zhi1]); (old) (slang) ugly person"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0032",
+        "text": "Imagine seeing a dinosaur from a safe place. What would you notice first?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0033",
+      "word": "灭绝",
+      "aliases": [
+        "滅絕"
+      ],
+      "pinyin": "mie4 jue2",
+      "meaning": "to become extinct",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 25,
+          "characters": [
+            "灭",
+            "绝"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "灭绝",
+          "滅絕",
+          "mie4 jue2",
+          "to become extinct; to die out; to lose (sth abstract) completely"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0033",
+        "text": "Choose an extinct animal you have learned about. What would you like to find out?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0034",
+      "word": "考古",
+      "aliases": [],
+      "pinyin": "kao3 gu3",
+      "meaning": "archaeology",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 25,
+          "characters": [
+            "考",
+            "古"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "考古",
+          "",
+          "kao3 gu3",
+          "archaeology; to engage in archaeological studies"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0034",
+        "text": "Imagine carefully studying an object from long ago. What questions would you ask?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0035",
+      "word": "曾经",
+      "aliases": [
+        "曾經"
+      ],
+      "pinyin": "ceng2 jing1",
+      "meaning": "once",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 16,
+          "characters": [
+            "经"
+          ]
+        },
+        {
+          "grade": "3",
+          "unit": 23,
+          "characters": [
+            "曾"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "曾经",
+          "曾經",
+          "ceng2 jing1",
+          "once; already"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0035",
+        "text": "Think of something you once tried for the first time. What do you remember?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0036",
+      "word": "轻快",
+      "aliases": [
+        "輕快"
+      ],
+      "pinyin": "qing1 kuai4",
+      "meaning": "light and quick",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "2",
+          "unit": 13,
+          "characters": [
+            "快"
+          ]
+        },
+        {
+          "grade": "3",
+          "unit": 27,
+          "characters": [
+            "轻"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "轻快",
+          "輕快",
+          "qing1 kuai4",
+          "light and quick; brisk"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0036",
+        "text": "Imagine moving with light, quick steps. Where are you going?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    },
+    {
+      "id": "mg-vocab-0037",
+      "word": "再见",
+      "aliases": [
+        "再見"
+      ],
+      "pinyin": "zai4 jian4",
+      "meaning": "goodbye",
+      "sense": "selected-dictionary-sense",
+      "curriculum": [
+        {
+          "grade": "3",
+          "unit": 8,
+          "characters": [
+            "见"
+          ]
+        },
+        {
+          "grade": "3",
+          "unit": 27,
+          "characters": [
+            "再"
+          ]
+        }
+      ],
+      "source": {
+        "id": "cc-cedict-2026-10-20",
+        "license": "CC-BY-SA-4.0",
+        "row": [
+          "再见",
+          "再見",
+          "zai4 jian4",
+          "goodbye; see you again later"
+        ]
+      },
+      "status": {
+        "lexical": "pinned-dictionary-match",
+        "instructional": "pending-fluent-review",
+        "use": "lookup-only"
+      },
+      "writingIdea": {
+        "id": "mg-idea-0037",
+        "text": "Imagine saying goodbye after a visit. What would you like to say?",
+        "status": "agent-authored-draft",
+        "review": "pending-fluent-review",
+        "graded": false,
+        "license": "CC-BY-SA-4.0"
+      }
+    }
+  ]
+}

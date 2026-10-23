@@ -9,6 +9,7 @@
   "backups.js",
   "content/curriculum.js",
   "content/curriculum.json",
+  "content/elementary-vocabulary.json",
   "core/backup.js",
   "core/catalog.js",
   "core/mistakes.js",
@@ -63,6 +64,7 @@
   "vendor/writing-spark/curriculum-ideas.js",
   "version-check.js",
   "version.txt",
+  "vocabulary.js",
   "words.js",
   "writing.js"
 ]

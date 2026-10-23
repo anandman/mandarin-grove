@@ -1,0 +1,48 @@
+// Exercise the real served app and optional-pack failure/retry with disposable synthetic state.
+const assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});try{
+ const page=await browser.newPage({viewport:{width:390,height:740}}),errors=[],requests=[];
+ page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>requests.push({url:request.url(),method:request.method()}));
+ let examplesReady=false,dictionaryReady=false;
+ await page.route('**/content/elementary-vocabulary.json',route=>examplesReady?route.continue():route.abort());
+ await page.route('**/vendor/cc-cedict/words.json*',route=>dictionaryReady?route.continue():route.abort());
+ await page.goto(process.env.APP_URL||'http://127.0.0.1:4190');
+ assert.equal(await page.evaluate(()=>typeof GroveVocabulary),'object','The vocabulary adapter is served by the real app shell');
+ await page.evaluate(()=>{PR={cur:'help-vocab',list:[{id:'help-vocab',name:'Fixture',gr:'2',av:'🐼'},{id:'help-other',name:'Other fixture',gr:'3',av:'🐳'}]};savePR();loadS();S.stars=7;S.pts={改:4};S.privateDraft='PRIVATE FIXTURE TEXT';save();loadS();window.say=()=>{};showHomeworkHelp();});
+ const baseline=await page.evaluate(()=>JSON.stringify(S));
+ assert.equal(requests.filter(row=>row.url.includes('elementary-vocabulary.json')).length,0);
+ await page.getByRole('button',{name:'Find a character or word',exact:true}).click();
+ await page.locator('#lookup-examples-retry').waitFor({state:'visible'});await page.locator('#lookup-retry').waitFor({state:'visible'});
+ const search=async text=>{await page.locator('#lookup-input').fill(text);await page.locator('#lookup-search').click();};
+ await search('改');await page.locator('[data-lookup-text="改"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/改/);
+ examplesReady=true;await page.locator('#lookup-examples-retry').click();await page.waitForFunction(()=>document.getElementById('lookup-examples-status')?.dataset.ready==='true');
+ await page.getByRole('button',{name:'改正',exact:true}).click();assert.match(await page.locator('#lookup-detail').innerText(),/to correct/);assert.match(await page.locator('#lookup-detail').innerText(),/teaching review pending/);
+ assert.equal(await page.locator('#lookup-detail details').getAttribute('open'),null);await page.getByText('Try a writing idea (draft)',{exact:true}).click();assert.match(await page.locator('#lookup-detail').innerText(),/ungraded/);
+ await page.getByRole('button',{name:'Report this example',exact:true}).click();
+ const reportText=await page.locator('#feedback-output').inputValue();assert.match(reportText,/"packId": "grove-elementary-vocabulary"/);assert.match(reportText,/"itemId": "mg-vocab-0001"/);assert.match(reportText,/"version": "1.0.0"/);assert.ok(!reportText.includes('PRIVATE FIXTURE TEXT'));
+ await page.getByRole('button',{name:'Close feedback',exact:true}).click();assert.equal(await page.evaluate(()=>JSON.stringify(S)),baseline,'Examples and opening a report create no progress/reward evidence');
+ dictionaryReady=true;await page.locator('#lookup-retry').click();await page.waitForFunction(()=>document.getElementById('lookup-bank-status')?.dataset.ready==='true');
+ await search('謝謝');await page.locator('[data-lookup-text="谢谢"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/xiè xie/);
+ await search('nǚ');assert.ok(await page.locator('[data-lookup-text="女"]').isVisible());
+ await search('绿');await page.locator('[data-lookup-text="绿"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/green/);assert.ok(!/cheat|spouse/i.test(await page.locator('#lookup-detail').innerText()));
+ await search('lu4');assert.equal(await page.locator('[data-lookup-text="绿"]').count(),0);
+ await search('改甲乙丙');assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/);
+ await page.locator('#lookup-input').fill('改');await page.locator('#lookup-input').dispatchEvent('compositionstart');await page.locator('#lookup-input').press('Enter');assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/);await page.locator('#lookup-input').dispatchEvent('compositionend');await page.locator('#lookup-search').click();assert.ok(await page.locator('[data-lookup-text="改"]').isVisible());
+ await page.evaluate(()=>{ALL.find(card=>card.c==='改').w='改甲乙';HELP_DICTIONARY_CACHE=null;showHomeworkLookup();});await search('改');await page.locator('[data-lookup-text="改"]').click();await page.getByRole('button',{name:'改甲乙',exact:true}).click();assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/,'A legacy unknown example must stay a neutral search');
+ await search('改');await page.locator('[data-lookup-text="改"]').click();await page.locator('[data-lookup-char="改"]').check();
+ for(const width of [320,820]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+ await page.evaluate(()=>{PR.cur='help-other';savePR();loadS();showHomeworkLookup();});assert.equal(await page.locator('#lookup-input').inputValue(),'');assert.ok(await page.locator('#lookup-practice').isDisabled());
+ assert.deepEqual(errors,[]);assert.ok(requests.every(row=>row.method==='GET'),'Nothing is sent by opening Help or report details');assert.ok(requests.every(row=>!row.url.includes(encodeURIComponent('改甲乙丙'))&&!row.url.includes('PRIVATE')));
+ const late=await browser.newPage({viewport:{width:390,height:740}});late.on('pageerror',error=>errors.push(error.message));let latePackReady=false;
+ await late.route('**/content/elementary-vocabulary.json',route=>latePackReady?route.continue():route.abort());
+ await late.goto(process.env.APP_URL||'http://127.0.0.1:4190');await late.evaluate(()=>{window.say=()=>{};showHomeworkLookup();});
+ await late.waitForFunction(()=>document.getElementById('lookup-bank-status')?.dataset.ready==='true');await late.locator('#lookup-examples-retry').waitFor({state:'visible'});
+ await late.locator('#lookup-input').fill('改正');await late.locator('#lookup-search').click();await late.locator('[data-lookup-text="改正"]').click();assert.equal(await late.getByRole('button',{name:'Report this example',exact:true}).count(),0);
+ const lateState=await late.evaluate(()=>JSON.stringify(S));await late.locator('[data-lookup-char="改"]').check();
+ latePackReady=true;await late.locator('#lookup-examples-retry').click();await late.locator('#lookup-input').focus();await late.waitForFunction(()=>document.getElementById('lookup-examples-status')?.dataset.ready==='true');
+ assert.match(await late.locator('#lookup-detail').innerText(),/teaching review pending/);assert.equal(await late.getByRole('button',{name:'Report this example',exact:true}).count(),1);
+ assert.equal(await late.locator('[data-lookup-char="改"]').isChecked(),true);assert.equal(await late.evaluate(()=>document.activeElement.id),'lookup-input','An asynchronous detail refresh must preserve input focus');
+ assert.equal(await late.evaluate(()=>feedbackQuestion?.content?.itemId),'mg-vocab-0001');assert.equal(await late.evaluate(()=>JSON.stringify(S)),lateState);await late.close();assert.deepEqual(errors,[]);
+ console.log('PASS: sourced examples, explicit retry, dictionary-independent fallback, traditional aliases, green sense, IME, neutral unknown, optional drafts, bounded report identity, exact progress preservation and profile isolation.');
+}finally{await browser.close();}})().catch(error=>{console.error(error);process.exit(1);});

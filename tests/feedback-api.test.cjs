@@ -75,3 +75,38 @@ test('reference audio feedback retains intended pinyin and bounded asset provena
  const invalid={...body,speech:{...body.speech,recording:'x'.repeat(401)}};
  assert.equal((await request(createHandler({env,fetch:gh.fetch}),invalid)).statusCode,400);
 });
+
+const contentMetadata=()=>({packId:'grove-vocabulary',itemId:'grade-2:狗:小狗',version:'2026-10-22.1',sourceId:'cc-cedict:2026-10-21',reviewStatus:'source-backed'});
+function issueReport(body){const match=body.match(/<pre>\n([\s\S]*)\n<\/pre>$/);assert.ok(match,'report stays inside the inert pre block');return JSON.parse(match[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'));}
+test('accepts complete versioned content metadata without changing legacy report fields',async()=>{
+ const gh=github(),body={...report(),content:contentMetadata()},res=await request(createHandler({env,fetch:gh.fetch}),body);
+ assert.equal(res.statusCode,201);assert.deepEqual(res.data,{sent:true,id:body.id,receipt:48});
+ assert.deepEqual(issueReport(JSON.parse(gh.calls.find(call=>call.method==='POST').body).body),body);
+ const legacy=report(),old=github();assert.equal((await request(createHandler({env,fetch:old.fetch}),legacy)).statusCode,201);assert.deepEqual(issueReport(JSON.parse(old.calls.find(call=>call.method==='POST').body).body),legacy);assert.equal(Object.hasOwn(issueReport(JSON.parse(old.calls[2].body).body),'content'),false);
+});
+test('content metadata requires all five bounded nonempty strings and rejects extra student data before delivery',async()=>{
+ const gh=github(),handler=createHandler({env,fetch:gh.fetch}),limits={packId:100,itemId:160,version:100,sourceId:120,reviewStatus:100};
+ const bad=[null,[],true,0,'pack',{}, {...contentMetadata(),name:'Child'}, {...contentMetadata(),rawAnswer:'private student answer'}, {...contentMetadata(),progress:{stars:50}}, {...contentMetadata(),audio:[1,2,3]}];
+ for(const key of Object.keys(limits)){
+  const missing={...contentMetadata()};delete missing[key];bad.push(missing);
+  for(const value of ['', '   ',null,17,false,{},[],'x'.repeat(limits[key]+1)])bad.push({...contentMetadata(),[key]:value});
+  for(const control of ['\u0000','\t','\n','\r','\u007f','\u0085','\u202e','\u2066','\u2028'])bad.push({...contentMetadata(),[key]:'prefix'+control+'suffix'});
+ }
+ for(const content of bad){const result=await request(handler,{...report(),content});assert.equal(result.statusCode,400,JSON.stringify(content));assert.deepEqual(result.data,{sent:false,error:'invalid-report'});}
+ assert.equal(gh.calls.length,0,'invalid metadata never reaches the feedback inbox');
+ for(const [key,limit]of Object.entries(limits)){
+  const accepted={...report(),content:{...contentMetadata(),[key]:'x'.repeat(limit)}},boundary=github();assert.equal((await request(createHandler({env,fetch:boundary.fetch}),accepted)).statusCode,201,key+' accepts its exact bound');assert.deepEqual(issueReport(JSON.parse(boundary.calls[2].body).body),accepted);
+ }
+});
+test('content provenance stays inert in the issue body and cannot introduce active markup',async()=>{
+ const gh=github(),body={...report(),content:{...contentMetadata(),itemId:'</pre><img src=x onerror=alert(1)> @owner #1 &lt;literal&gt;'}};
+ assert.equal((await request(createHandler({env,fetch:gh.fetch}),body)).statusCode,201);const issue=JSON.parse(gh.calls[2].body).body;
+ assert.ok(!issue.includes('<img'));assert.equal((issue.match(/<\/pre>/g)||[]).length,1);assert.deepEqual(issueReport(issue),body);
+});
+test('versioned content reports still require a private inbox and keep durable idempotent receipts',async()=>{
+ const body={...report(),content:contentMetadata()},publicCalls=[];
+ const closed=createHandler({env,fetch:async(url,opts)=>{publicCalls.push({url,method:opts.method});return response(200,{private:false});}});
+ const denied=await request(closed,body);assert.equal(denied.statusCode,503);assert.equal(denied.data.sent,false);assert.deepEqual(publicCalls.map(call=>call.method),['GET']);
+ const issues=[],created=[];const fetch=async(url,opts)=>{if(url.endsWith('/mandarin-grove'))return response(200,{private:true});if(opts.method==='GET')return response(200,issues);const issue=JSON.parse(opts.body);created.push(issue);issues.push({number:67,body:issue.body,state:'closed'});return response(201,{number:67});};
+ const first=await request(createHandler({env,fetch}),body),retry=await request(createHandler({env,fetch}),body);assert.equal(first.statusCode,201);assert.equal(retry.statusCode,200);assert.deepEqual(first.data,{sent:true,id:body.id,receipt:67});assert.deepEqual(retry.data,first.data);assert.equal(created.length,1);assert.deepEqual(issueReport(created[0].body),body);
+});

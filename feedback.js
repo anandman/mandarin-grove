@@ -16,21 +16,27 @@ function feedbackId(){
  if(window.crypto?.randomUUID)return window.crypto.randomUUID();
  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,x=>{const n=window.crypto?.getRandomValues?window.crypto.getRandomValues(new Uint8Array(1))[0]&15:Math.random()*16|0;return (x==='x'?n:(n&3|8)).toString(16)});
 }
+function feedbackContentMetadata(value){
+ if(!value||typeof value!=='object')return null;
+ const limits={packId:100,itemId:120,version:40,sourceId:100,reviewStatus:100},content={};
+ for(const [key,limit]of Object.entries(limits)){if(typeof value[key]!=='string'||!value[key].trim()||value[key].length>limit||/[\u0000-\u001f]/.test(value[key]))return null;content[key]=value[key];}
+ return content;
+}
 function feedbackSnapshot(){
  const c=feedbackQuestion?.card||(feedbackQuestion?.c?feedbackQuestion:null);
- const writing=feedbackQuestion?.writing;
+ const writing=feedbackQuestion?.writing,content=feedbackContentMetadata(feedbackQuestion?.content);
  const voice=selectedMandarinVoice();
  const request=window.lastSpeechRequest?.character===c?.c?window.lastSpeechRequest:null;
  return {version:typeof VER==='undefined'?'unknown':VER,time:new Date().toISOString(),grade:GR(),
   question:c?{character:c.c,pinyin:c.p,meaning:c.m,mode:feedbackQuestion.mode}:null,
-  ...(writing?{writing:{...writing}}:{}),
+  ...(writing?{writing:{...writing}}:{}),...(content?{content}:{}),
   session:SESS?{kind:SESS.kind||(SESS.cram?'cram':'daily'),question:SESS.i,total:SESS.q.length}:null,
   speech:writing?null:request||{preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,prompt:c?speechText(c):null},
   browser:navigator.userAgent,app:location.origin};
 }
 function feedbackText(reports){return 'Mandarin Grove feedback\nDelivery status is listed on each report. Copying or downloading does not send it.\n\n'+reports.map(r=>JSON.stringify(r,null,2)).join('\n\n---\n\n')}
 function feedbackPayload(report){
- const payload={};for(const key of ['id','category','note','version','time','grade','question','speech','session','writing','browser','app'])if(report[key]!==undefined)payload[key]=report[key];return payload;
+ const payload={};for(const key of ['id','category','note','version','time','grade','question','speech','session','writing','content','browser','app'])if(report[key]!==undefined)payload[key]=report[key];if(payload.content){const content=feedbackContentMetadata(payload.content);if(content)payload.content=content;else delete payload.content;}return payload;
 }
 async function feedbackSendReport(report){
  const pending={...feedbackPayload(report),delivery:{state:'pending'}};

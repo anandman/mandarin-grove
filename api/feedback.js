@@ -4,6 +4,7 @@ const GITHUB='https://api.github.com/repos/anandman/mandarin-grove';
 const ORIGIN='https://mandarin-grove.vercel.app';
 const MAX_BYTES=16384;
 const CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work'};
+const CONTENT_LIMITS={packId:100,itemId:160,version:100,sourceId:120,reviewStatus:100};
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 function object(value,fields){
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!fields.includes(k)))throw Error('invalid');
@@ -15,11 +16,18 @@ function text(value,max,required=false){
 }
 function optionalObject(value,fields,validate){if(value===null||value===undefined)return null;object(value,fields);validate(value);return value;}
 function validateReport(value,origin){
- const r=object(value,['id','category','note','version','time','grade','question','speech','session','writing','browser','app']);
+ const r=object(value,['id','category','note','version','time','grade','question','speech','session','writing','browser','app','content']);
  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(r.id)||!own(CATEGORIES,r.category))throw Error('invalid');
  text(r.note,2000);text(r.version,100,true);text(r.time,40,true);if(!Number.isFinite(Date.parse(r.time)))throw Error('invalid');
  if(!['K','1','2','3','4','5'].includes(r.grade))throw Error('invalid');
  text(r.browser,600);if(r.app!==origin)throw Error('invalid');
+ // Static item provenance only; content is never an answer/progress blob.
+ if(own(r,'content')){
+  const content=object(r.content,Object.keys(CONTENT_LIMITS));
+  for(const [key,limit]of Object.entries(CONTENT_LIMITS)){
+   text(content[key],limit,true);if(/[\p{Cc}\p{Cf}\u2028\u2029]/u.test(content[key]))throw Error('invalid');
+  }
+ }
  optionalObject(r.question,['character','pinyin','meaning','mode'],q=>{text(q.character,32,true);text(q.pinyin,200);text(q.meaning,400);text(q.mode,40,true);});
  optionalObject(r.speech,['character','pinyin','preference','voice','prompt','source','recording','selectionNote'],s=>{
   for(const k of ['character','pinyin','preference','prompt','source','recording','selectionNote'])if(s[k]!=null)text(s[k],k==='preference'?500:400);

@@ -4,9 +4,9 @@ const {createHandler}=require('../api/feedback.js');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
  try{
-  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],posts=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],posts=[],upstreamPosts=[];page.on('pageerror',e=>errors.push(e.message));
   let mode='fail';
-  const actualApi=createHandler({env:{GH_FEEDBACK_TOKEN:'github_pat_test_scoped_token',FEEDBACK_ALLOWED_ORIGINS:new URL(process.env.APP_URL||'http://127.0.0.1:4181').origin},fetch:async(url,opts)=>({ok:true,status:opts.method==='POST'?201:200,json:async()=>url.endsWith('/mandarin-grove')?{private:true}:opts.method==='GET'?[]:{number:124}})});
+  const actualApi=createHandler({env:{GH_FEEDBACK_TOKEN:'github_pat_test_scoped_token',FEEDBACK_ALLOWED_ORIGINS:new URL(process.env.APP_URL||'http://127.0.0.1:4181').origin},fetch:async(url,opts)=>{if(opts.method==='POST')upstreamPosts.push(JSON.parse(opts.body));return {ok:true,status:opts.method==='POST'?201:200,json:async()=>url.endsWith('/mandarin-grove')?{private:true}:opts.method==='GET'?[]:{number:124}};}});
   await page.route('**/api/feedback',async route=>{const report=route.request().postDataJSON();posts.push(report);if(mode==='network')return route.abort();if(mode==='api'){const req={headers:route.request().headers(),method:'POST',body:report},res={setHeader(){},status(n){this.statusCode=n;return this},json(data){this.data=data;return this}};await actualApi(req,res);return route.fulfill({status:res.statusCode,contentType:'application/json',body:JSON.stringify(res.data)});}if(mode==='fake')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({sent:true,id:'wrong-id',receipt:123})});return route.fulfill({status:mode==='fail'?503:201,contentType:'application/json',body:JSON.stringify(mode==='fail'?{sent:false,error:'feedback-not-configured'}:{sent:true,id:report.id,receipt:123})});});
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
   await page.evaluate(()=>{PR={cur:'feedback',list:[{id:'feedback',name:'PRIVATE CHILD NAME',gr:'4',av:'🐳'}]};savePR();S=blank();localStorage.setItem('zh_p_feedback',JSON.stringify(S));loadS();listen(ALL.find(c=>c.c==='满'));});
@@ -40,6 +40,16 @@ const {createHandler}=require('../api/feedback.js');
   await page.locator('#feedback-retry').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Sent to the app maker'));
   assert.ok(await page.locator('#feedback-send').isDisabled(),'retrying an older report must not re-enable sending the already-sent current report');
   assert.equal(await page.evaluate(()=>{SESS={study:true,cram:true,kind:'review',q:[{}],i:0};return feedbackSnapshot().session.kind;}),'review','feedback identifies the new selected session kind');
+  await page.getByRole('button',{name:'Close feedback',exact:true}).click();
+  await page.evaluate(()=>{home();showHomeworkLookup();});
+  await page.waitForFunction(()=>document.getElementById('lookup-examples-status')?.dataset.ready==='true');
+  const contentBefore=await page.evaluate(()=>JSON.stringify(S)),postCount=posts.length;
+  await page.locator('#lookup-input').fill('改');await page.locator('#lookup-search').click();await page.locator('[data-lookup-text="改"]').click();await page.getByRole('button',{name:'改正',exact:true}).click();await page.getByRole('button',{name:'Report this example',exact:true}).click();
+  assert.equal(posts.length,postCount,'Opening content report is local');await page.getByRole('button',{name:'Meaning is confusing',exact:true}).click();assert.equal(posts.length,postCount);
+  mode='api';await page.locator('#feedback-send').click();await page.waitForFunction(()=>document.getElementById('feedback-status').textContent.includes('Sent to the app maker'));
+  const contentReport=posts.at(-1);assert.deepEqual(contentReport.content,{packId:'grove-elementary-vocabulary',itemId:'mg-vocab-0001',version:'1.0.0',sourceId:'cc-cedict-2026-10-20',reviewStatus:'pending-fluent-review'});
+  assert.equal(contentReport.question.character,'改正');assert.ok(!JSON.stringify(contentReport).includes('PRIVATE CHILD NAME'));assert.ok(!JSON.stringify(contentReport).includes('studyHistory'));assert.equal(await page.evaluate(()=>JSON.stringify(S)),contentBefore);
+  assert.ok(upstreamPosts.at(-1).body.includes('mg-vocab-0001'),'The actual API preserves the real client content identity in the mocked private inbox');
   await page.screenshot({path:'/tmp/grove-direct-feedback-primary.png'});
   console.log('PASS: explicit category/send, optional note, private question/voice metadata, configuration/network failure retention, reload/retry stable ID, matching server receipt, actual API validation, no progress changes, manual fallback and responsive themes.');
  }finally{await browser.close()}
