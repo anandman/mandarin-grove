@@ -1,0 +1,38 @@
+{
+  "PR": {
+    "cur": "synthetic-a",
+    "list": [
+      {
+        "id": "synthetic-a",
+        "name": "合成 Learner A",
+        "gr": "2",
+        "av": "🐼",
+        "futureProfile": {
+          "preserve": [
+            "简体",
+            "ü",
+            0,
+            false
+          ]
+        }
+      },
+      {
+        "id": "synthetic-b",
+        "name": "Synthetic Learner B",
+        "gr": "4",
+        "av": "🐳",
+        "futureProfile": {
+          "preserve": null
+        }
+      }
+    ],
+    "futureRegistry": {
+      "version": 7,
+      "keep": true
+    }
+  },
+  "data": {
+    "synthetic-a": "{\"stars\":149,\"streak\":7,\"last\":\"2026-10-22\",\"pts\":{\"狗\":6,\"猫\":5,\"子\":1,\"龘\":5},\"box\":{\"狗\":3,\"子\":1},\"due\":{\"狗\":20000,\"子\":19998},\"ok\":{\"狗\":1792692000000},\"bad\":{\"s7\":1792692000000,\"pq\":1792692000000},\"cfg\":{\"test\":\"\",\"quiz\":\"狗猫\",\"set\":[\"狗\",\"猫\",\"子\"],\"sets\":{\"K\":null,\"2\":[\"狗\",\"猫\",\"子\"],\"4\":[\"祖\",\"止\"]},\"past\":[{\"q\":\"子人\",\"d\":\"2026-10-01\",\"futureQuiz\":true}],\"rs\":{\"q\":[[\"listen\",\"狗\"],[\"memory\",\"猫\"]],\"i\":1,\"t\":\"Synthetic original round\",\"p\":[\"狗\",\"猫\"]},\"futureSetting\":{\"keep\":[\"女\",\"绿\",\"nǚ\"]}},\"futureState\":{\"keep\":true,\"nested\":{\"zero\":0,\"empty\":\"\",\"null\":null}}}",
+    "synthetic-b": "{\"stars\":48,\"streak\":2,\"last\":\"2026-10-22\",\"pts\":{\"狗\":6,\"猫\":5,\"子\":1,\"龘\":5},\"box\":{\"狗\":3,\"子\":1},\"due\":{\"狗\":20000,\"子\":19998},\"ok\":{\"狗\":1792692000000},\"bad\":{\"s7\":1792692000000,\"pq\":1792692000000},\"cfg\":{\"test\":\"\",\"quiz\":\"狗猫\",\"set\":[\"狗\",\"猫\",\"子\"],\"sets\":{\"K\":null,\"2\":[\"狗\",\"猫\",\"子\"],\"4\":[\"祖\",\"止\"]},\"past\":[{\"q\":\"子人\",\"d\":\"2026-10-01\",\"futureQuiz\":true}],\"rs\":{\"q\":[[\"listen\",\"狗\"],[\"memory\",\"猫\"]],\"i\":1,\"t\":\"Synthetic original round\",\"p\":[\"狗\",\"猫\"]},\"futureSetting\":{\"keep\":[\"女\",\"绿\",\"nǚ\"]}},\"futureState\":{\"keep\":true,\"nested\":{\"zero\":0,\"empty\":\"\",\"null\":null}}}"
+  }
+}

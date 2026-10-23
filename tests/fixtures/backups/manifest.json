@@ -1,0 +1,17 @@
+{
+  "syntheticOnly": true,
+  "baselineCommit": "e6b14ded7680cf3b2343f977358c49d2c905f2bd",
+  "format": "base64(UTF-8 JSON {PR,data}); data values are raw profile JSON strings",
+  "fixtures": [
+    {
+      "path": "original-v1.json",
+      "bytes": 2145,
+      "sha256": "b1633d804aa55efd69ba55113d4e2fcfbbdaf87db28a5a44c41b8799e3ba4ff5"
+    },
+    {
+      "path": "grove-v1.json",
+      "bytes": 13835,
+      "sha256": "50500a1797794cd19d572b6c63d208cca9db63293e07f476bdf87cd1bcd258e0"
+    }
+  ]
+}
