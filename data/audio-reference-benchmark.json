@@ -1,0 +1,828 @@
+{
+  "schemaVersion": 1,
+  "id": "scsc-natural-contrasts-20261022-v1",
+  "source": {
+    "name": "Syllable Corpus of Standard Chinese (SCSC)",
+    "publisher": "Institute of Linguistics, Chinese Academy of Social Sciences",
+    "url": "https://multi.ucass.edu.cn/resources/detail/3",
+    "samples": "https://multi.ucass.edu.cn/resources/data/3/msw",
+    "referenceBasis": "Published professional Standard Mandarin recordings by selected Beijing male speakers. Individual independent auditory review records not obtained.",
+    "audioRedistributionRights": "Not established; recordings are research-only and not included in this repository."
+  },
+  "design": {
+    "selectionBeforeInference": true,
+    "developmentSpeakers": [
+      "M01",
+      "M02"
+    ],
+    "heldOutSpeakers": [
+      "M03"
+    ],
+    "requestedReadings": 30,
+    "availableReadings": 29,
+    "missingReadings": [
+      "gou3"
+    ],
+    "limitations": [
+      "All three benchmark speakers are adult men; not a child-speech benchmark.",
+      "A label disagreement can be a model or a source error; it does not alone prove either.",
+      "This is not enough to certify all Mandarin phonemes, neutral tones, Mainland accents or connected speech."
+    ],
+    "missingReason": "A gǒu query returns no entries. The published 狗 entries are labeled gao3, including their filenames. They are quarantined; no automatic label correction or pronunciation claim."
+  },
+  "clips": [
+    {
+      "id": "scsc-2911",
+      "pinyin": "ma1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "3d16b8327fffd01932908901caf46c6e9de6dbab676ea9b3caec6133a1fcf1fe",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/73735d678cf547908e2f7772684bff79.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma1"
+    },
+    {
+      "id": "scsc-1636",
+      "pinyin": "ma1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "a0befb35cb79f59def7bc2539bffd5e5183958de9e841b4cbb86eb2ba0d40df7",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/4a8c049945234458bf68a76cd71bf442.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma1"
+    },
+    {
+      "id": "scsc-4276",
+      "pinyin": "ma1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "207461f6c291d28fe7f347268d4598f438a191d29efa32ee6366bba7af47b6a2",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/effc01ea3d4844058836cac0b6aadf50.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma1"
+    },
+    {
+      "id": "scsc-2840",
+      "pinyin": "ma2",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "40ae3496df6c8ca253598c05c56dc1a47625b5df84499c23bd473a37866606f2",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/7d938881012344f78a1ad67fa197abb8.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma2"
+    },
+    {
+      "id": "scsc-1565",
+      "pinyin": "ma2",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "30726a669e665e0981b607e4caab810017781db9066c5fad72e53014a0f4c853",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/e739e8bde1de4877bdcb8d1ae0142677.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma2"
+    },
+    {
+      "id": "scsc-4347",
+      "pinyin": "ma2",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "46dd955877be1b0e450a6b03515765e8b1b274ad48e8d7ff5929dfae810c87be",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/a863d5a86fb14fc9a73a14f2a7017aac.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma2"
+    },
+    {
+      "id": "scsc-2876",
+      "pinyin": "ma3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "01025125b6cc0c0df6da015b3529953c59ddc31e95d5e416560530d0ab6a90dc",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/f8d0b8116b4b44319c1b02a7cf0d95bc.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma3"
+    },
+    {
+      "id": "scsc-1601",
+      "pinyin": "ma3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "0d50b1834d6073e0d17b7ca04c86387a25d12196258a51c8c3ccbe1e3d80493f",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/7ae9c028aaa2411bb78e580e6ed3030a.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma3"
+    },
+    {
+      "id": "scsc-4311",
+      "pinyin": "ma3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "0466e9108cb0e3793de6a565d7783c14fa27ed937c9784a7eb125a27db8d9e7c",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/1dbeca468383414bbb2ddbf4c83eefc5.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma3"
+    },
+    {
+      "id": "scsc-3967",
+      "pinyin": "ma4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "8a38f21b2e9b094ff3bb7e91f7ecc2fbe82a37b48eac1a36b31778130908d027",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/a3f8642652df4f68aa44fc20d9fd2040.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma4"
+    },
+    {
+      "id": "scsc-3220",
+      "pinyin": "ma4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "d841f78432f914f253fc66b4d3420d4b7ba0d909154d333a2ad2b8bbce52e756",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/b8a5e43734ba4c96a4e83e1f6ea7088d.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma4"
+    },
+    {
+      "id": "scsc-1945",
+      "pinyin": "ma4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "c3862311e7e242aaf3cde947268cf2806cb842f4b200909607c63d96a71b8114",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/ac3b6d8d3cfe4fc08c79350f5aa87a38.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ma4"
+    },
+    {
+      "id": "scsc-2824",
+      "pinyin": "zhi1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "64d8e2bdc8f0977a3b940b3b9053f52d4f2dee4a81d0dbb5bc2520cd3a4b128a",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/09641b007244488da6e255cfdd26bd37.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi1"
+    },
+    {
+      "id": "scsc-4363",
+      "pinyin": "zhi1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "d6f3b622479d807a75e7b8419c3626c28366de309258742382cfc5eba65b89b2",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/75a7cbe542a642d88427540a47cca852.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi1"
+    },
+    {
+      "id": "scsc-1549",
+      "pinyin": "zhi1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "033f6ad62fde228754dfa03974f5cf2452995bbbc144acf584122c4be16d0484",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/9a1bcf520f5c4a76ad3e5566c3f0f717.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi1"
+    },
+    {
+      "id": "scsc-4737",
+      "pinyin": "zhi2",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "cef2e409c2c254d279ec8da682a3277f6f718e60d2eeca993a77fc224e87b0c9",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/427e8cf8dfba4319a34d9dac515147ce.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi2"
+    },
+    {
+      "id": "scsc-2450",
+      "pinyin": "zhi2",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "014aac4b13375c8c452628c5eb2c8e65f1b779ec9d3c4d82b1dec0f78eb4af38",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/506c86302e8c452eb66619765ecd667e.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi2"
+    },
+    {
+      "id": "scsc-1175",
+      "pinyin": "zhi2",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "d424c0a5baf5c1a52fb66099e5f758f4552be4cac45168b6304def5bbeac9320",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/ce209860f9564327b0d4e358c942efc0.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi2"
+    },
+    {
+      "id": "scsc-2608",
+      "pinyin": "zhi3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "1d7890bc637ccf7bb0a14e30d6df0d0fd2afe26adc2b7c6d833a099561c5f630",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/b8ff26da6ade4b099babd71834350524.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi3"
+    },
+    {
+      "id": "scsc-1333",
+      "pinyin": "zhi3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "b38f23115d2e56e55dc37ff996c7d3913253d4ea020a2a5cef0fa5c79a322ba6",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/6be6011f5dc041829b3f6fc5b652821e.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi3"
+    },
+    {
+      "id": "scsc-4579",
+      "pinyin": "zhi3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "6c0a6deef23cdcd14eb7bbdb51a4d34d7c5c57a87460b6da56157c868876dff2",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/55a595ded90d445c9bf488d7f51afd23.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi3"
+    },
+    {
+      "id": "scsc-3123",
+      "pinyin": "zhi4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "e2fb4c758a447914e9268bee19320e57fe7b3def917267e52e726467949e7e91",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/26f1ed499d14420ea1cefbdebf58e19e.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi4"
+    },
+    {
+      "id": "scsc-1848",
+      "pinyin": "zhi4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "f6f6c334cfd207f34f8ae75522309f77ec71e64d533eab4263f0c8f3a7da279d",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/87b98405ba834e339408a452e65925b7.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi4"
+    },
+    {
+      "id": "scsc-4064",
+      "pinyin": "zhi4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "19e5a89544f5666ac9a39afc480b223dd26efbc8c7f179ef7377f181c52006d1",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/235b777d2de84814ad96bedee3fde7f5.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zhi4"
+    },
+    {
+      "id": "scsc-3413",
+      "pinyin": "zi3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "4c5509136029bcbeb6db008b3d838a826910dcf46d4e9ea6e8ce650617fae463",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/8107c66fb4e04be7b570a82a4ac4ba77.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zi3"
+    },
+    {
+      "id": "scsc-2138",
+      "pinyin": "zi3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "9cdee8930b8a242c67ae06a5654fadfb5ea8124930dedd6e76462d12b6dcb3ca",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/a0cc599408894055bf9243e231f337c4.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zi3"
+    },
+    {
+      "id": "scsc-3774",
+      "pinyin": "zi3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "f1a7dc141be70f4d92aa3c5bd5ee60d1130afa5a5f8de8240f27a89e330dc45a",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/3d80be8276c94fbbadbbc911036cbf61.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=zi3"
+    },
+    {
+      "id": "scsc-2641",
+      "pinyin": "kou3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "bb1a808d74a6fa8c1bbb03394ad7997689623c8842fc00a00e751e59e3db33ac",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/f0d63e1b4d774a8dab590d89f63fe97e.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=kou3"
+    },
+    {
+      "id": "scsc-1366",
+      "pinyin": "kou3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "fa85a0de7943a9fc996856a9396e5b30abc2c89eb893f56d9bad9b28980e79fb",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/5cb59458e7de40ebb5a3f9d3d493a9c7.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=kou3"
+    },
+    {
+      "id": "scsc-4546",
+      "pinyin": "kou3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "e73b62b4bb700dea8115a9274328ae383c6234d009c7ed3e31e17c9c0d46a508",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0aa4a24de7a144c492cd745eb8ff99fd.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=kou3"
+    },
+    {
+      "id": "scsc-4154",
+      "pinyin": "ge1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "35583166d3dd451f081b8cbe49a6f86ebc68895981b4d4bbc7247ece7ecc5cdd",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/5a176c4005aa415d8b2913f619331d11.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ge1"
+    },
+    {
+      "id": "scsc-3033",
+      "pinyin": "ge1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "ec273c8145a73f33e378578b7461a376980bf59e2a8cffeb6a81ad97965ccc3a",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/048efe1648314fbbabbb080625994ca4.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ge1"
+    },
+    {
+      "id": "scsc-1758",
+      "pinyin": "ge1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "951cac4cb2134dc2c8c5d94232f0009420ce214716ab69f048411e9da5959458",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/7eabee18785f408b83506ad25bef5d9d.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ge1"
+    },
+    {
+      "id": "scsc-3450",
+      "pinyin": "ke1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "0a7d7dc5e57a7852e8699d71eaa7df44fb90fe3cf8a821e60871b56a0f2fe5ff",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/e11d4d295f894fcc85329fe7b081fb7a.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ke1"
+    },
+    {
+      "id": "scsc-2175",
+      "pinyin": "ke1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "8a5762ce452ed5da500b1c093029832604cea22efe56ef79c7d035b432709f12",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/8d62bd57dc974107b504594e5d40d297.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ke1"
+    },
+    {
+      "id": "scsc-3737",
+      "pinyin": "ke1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "2005785aaebf122b9c860b64e29d2649932b5d138ba025e4c7dda95590066729",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0e94ee9c7bb24813a28eb090e2b74d4b.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=ke1"
+    },
+    {
+      "id": "scsc-3388",
+      "pinyin": "nu3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "74747e8c236b5db8fa8c6e78222a3fdabc437af328c4e6ccd93db5502400d67c",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0c769ed4187b43ab9218c60008d6ada6.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nu3"
+    },
+    {
+      "id": "scsc-2113",
+      "pinyin": "nu3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "f878f5e1279698031410cca644b424ae065cb356a41964151b0ce52b0c9946d6",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0a976d1e3aa147fab83918475bd1972c.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nu3"
+    },
+    {
+      "id": "scsc-3799",
+      "pinyin": "nu3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "5d58541a4e4a1049675849458c175a84357c8d040e34a041b2cef30d586839a3",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/c4ea7a2c2e2c466aba11a113130b9976.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nu3"
+    },
+    {
+      "id": "scsc-3416",
+      "pinyin": "nv3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "7f68db401ba16edaef786fa6405d66a8ac04ef2d47f1a818ed2c560ac0c986a1",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/5f69be8e08584751b7674862731fd54b.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nv3"
+    },
+    {
+      "id": "scsc-2141",
+      "pinyin": "nv3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "ab32b8f9e7f39e8d9f24e338b9cc5ff1a54ca882b1abaa931e63ac8f2b56a734",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/3533754d75ac4fdebe3a36b2b4fb66bc.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nv3"
+    },
+    {
+      "id": "scsc-3771",
+      "pinyin": "nv3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "ec44d4ea9a0e0c4316a16ab6ee9e876223cef037ecd6ff1841bb7b0152e2bebb",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/88559d5dcb82472ea5d6134ec729eaa0.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=nv3"
+    },
+    {
+      "id": "scsc-3358",
+      "pinyin": "lu4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "f91aac506a678599808a210d886fe0caae26e84f01c49142b76aa08535b3c3d5",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/f3ff77e80c574dfda8545b3be7ff686e.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lu4"
+    },
+    {
+      "id": "scsc-2083",
+      "pinyin": "lu4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "1ab28a1aedc040c150a5f7e9428a42721637d0181a4573afa367a29eac9b8510",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0700ab313d7c46cfb86c8040d2d195ba.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lu4"
+    },
+    {
+      "id": "scsc-3829",
+      "pinyin": "lu4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "4ccf49f75217cf953f402808e83482b8225828a753172e0b3c7b831b64491c9d",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/986c8b4fb2174bdb90ed513c0446b744.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lu4"
+    },
+    {
+      "id": "scsc-3684",
+      "pinyin": "lv4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "26fe1153dda75c87b9f8855bb2286bc3f431737e5f9714a56cbb040455412f8a",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/79247ba7417e41ddbc9ceed17963c653.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lv4"
+    },
+    {
+      "id": "scsc-3503",
+      "pinyin": "lv4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "7347a5af2b345c9d0e7083fa2b92c8313889c11cb3b9e809034e3dc1fed5b62e",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/7cb70a049e444fce803e9fafd29e4fa4.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lv4"
+    },
+    {
+      "id": "scsc-2228",
+      "pinyin": "lv4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "810df59bcc5e26f37f49f373b19b2b6237f528085f17c38d20fff66f6f543b26",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/efbe9344d6bf449daa50a8492985e8cf.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=lv4"
+    },
+    {
+      "id": "scsc-4675",
+      "pinyin": "li2",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "8432ac39d719b4ab90fffc038a024c9cf01c312dedd57bb1eb4ab5b691cfe2b9",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/8377aebd04774011bf93a8a8f2f99de5.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=li2"
+    },
+    {
+      "id": "scsc-2512",
+      "pinyin": "li2",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "c52bb12d34ff797ef871633192158e7d515d32dcefef4651df5f36c60f62a69b",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/00bd818eb92246fa8b1103979f2903bb.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=li2"
+    },
+    {
+      "id": "scsc-1237",
+      "pinyin": "li2",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "95d6a1aab4d10ad4867c18fa2d95a264bd0bfa8342782030a2a1ef56579717be",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/a342b09f53c9454d9c15f4b68bcbbbcc.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=li2"
+    },
+    {
+      "id": "scsc-3887",
+      "pinyin": "man3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "3517375f7abce709b56fe8be991f6d583ab42a8e62a2e9f08c3f120c0470ed43",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/3cce2483e340481f9b41975442966ae1.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man3"
+    },
+    {
+      "id": "scsc-3300",
+      "pinyin": "man3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "a81632243548dfddf990237b2d770d0a0e3ba0bcd72f1813ada273293ba19436",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/84559670da744a3fb4ea529f724ab523.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man3"
+    },
+    {
+      "id": "scsc-2025",
+      "pinyin": "man3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "c421ad9a9f9b84fe7c532997916a6ea173be79f5a93632eab87bd694116076b1",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/d69bdcab5ced467bae5e76995104592f.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man3"
+    },
+    {
+      "id": "scsc-4703",
+      "pinyin": "man4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "6e810833d6610c6f3e2961283cd9e2214f6df678709a95cda250fec7a5bd17df",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/f52215401c75418c803e6a71736e3ad3.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man4"
+    },
+    {
+      "id": "scsc-2484",
+      "pinyin": "man4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "badbf3bdfb1a5c1813b0ef811a4eadf8755996c8adc01a856759f78c124a5f9b",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/897e9942f45447fd85f1183e5e793a84.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man4"
+    },
+    {
+      "id": "scsc-1209",
+      "pinyin": "man4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "f224c141618e7b721319aebf10de54b4bba009617920e4fccde1e25f7c3f4e97",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/084ccf1aadbc42a9838d94f18eb05cb2.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=man4"
+    },
+    {
+      "id": "scsc-4697",
+      "pinyin": "jia3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "dc3ce12384cbf6a4d026063ef351734fb74463c0e25f2ffcce150a74a190e898",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/532a6d35a0e143b58b4557ec4c088669.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia3"
+    },
+    {
+      "id": "scsc-2490",
+      "pinyin": "jia3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "c8886321112f65f10d585e4b0b86dd84ec3f04b18fd4fbaf8df58ab070e20a74",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/b3120c2b9cbd426b84a04b030157305b.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia3"
+    },
+    {
+      "id": "scsc-1215",
+      "pinyin": "jia3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "4815e9ef443bd6884fc3e7571a56b7057ee34c924fc1b7071dd765217672a0db",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/fae969eb8ffa4dbfa5d67e23ce37fa0c.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia3"
+    },
+    {
+      "id": "scsc-4098",
+      "pinyin": "jia4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "21951fc48afdf5add2f8169dd34756db56c7015aad16ce32fc3c7aa47351faa2",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/46854967ec3e4c09b532ccd21a43178d.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia4"
+    },
+    {
+      "id": "scsc-3089",
+      "pinyin": "jia4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "ef73c571883ba980b33f008e49cfd6f96e1612aa7b67b7b7885415c96c9996b7",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/8cfab47b738f42289b1bf1157294f81c.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia4"
+    },
+    {
+      "id": "scsc-1814",
+      "pinyin": "jia4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "555f1391390756acf8abb942c21a8895a42a8e7b4d97348ef0946213dd024f94",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/61ef4b9bdb6e47c5a9fdaa8c5d9e3730.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=jia4"
+    },
+    {
+      "id": "scsc-3375",
+      "pinyin": "shi1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "4e52b7ea9cadf6a818cd74f9318a5b1e662a3a56503f065391b3ce314a51b6e3",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/fca959b78f2c4d44bb0adf6af3cc0231.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi1"
+    },
+    {
+      "id": "scsc-2100",
+      "pinyin": "shi1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "4e63ff24d142963834cbb65d46b5efdb2752c9101f631dabe8c4102541180b94",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/a11a1437c3c6481db473bdbc203163b0.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi1"
+    },
+    {
+      "id": "scsc-3812",
+      "pinyin": "shi1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "71109cd91f29285d962e38ab45c3be0cd40600660d717dc3535b7d05c3f248f8",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/ffe09dd5aedf4389acce4607212438ab.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi1"
+    },
+    {
+      "id": "scsc-3421",
+      "pinyin": "shi2",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "6683ecff8de3ac705b2ea5a089f74e18824a74642dbecf885df55cff8691406a",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/92741a516f234569af6a5402bf231ee6.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi2"
+    },
+    {
+      "id": "scsc-2146",
+      "pinyin": "shi2",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "b47d891ba46811e716187345da7e4fd44088a73f8070fe3b7a3992af0d45aced",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/7103e36228e24394861fc64da490f6b7.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi2"
+    },
+    {
+      "id": "scsc-3766",
+      "pinyin": "shi2",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "e417a3a12b1bcd89be4c0605a2709211ee0fe700ec51a91916ae9d8e3c875521",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/d1bf9898736f4fed9417c18fbda6fdf9.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi2"
+    },
+    {
+      "id": "scsc-4672",
+      "pinyin": "shi3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "9842aa2c6f08b0da8259067d6f69dca054440aecc967d2c2e8f71d54ad067213",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/ede297abb71f456a8de8308596639fdc.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi3"
+    },
+    {
+      "id": "scsc-2515",
+      "pinyin": "shi3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "4e76572a5b385f6d9ab15149bbeee7666a54aa3b791a6212f0dc2a8451e0654f",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/aff2c9d8e67749879502557917d85012.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi3"
+    },
+    {
+      "id": "scsc-1240",
+      "pinyin": "shi3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "da7e03a74580017c271a872ec041544ef66add1667aa795ed9a1271f8da3e876",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/e29c59f0d066464391955e1dbe68f109.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi3"
+    },
+    {
+      "id": "scsc-4360",
+      "pinyin": "shi4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "9b81d7e0df6296ac9b3ece5ca3751b2648204180d7e0179bb01f62d7412b190f",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/762a21900e5b4dbd8f2a7e6b25daa2d6.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi4"
+    },
+    {
+      "id": "scsc-2827",
+      "pinyin": "shi4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "2cdc53f379103d537a4f7575d86433e2735b16ef52aa804604f5cb7d0fba163b",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/efb5ad5abdfb4b519c5de0edeebc3d79.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi4"
+    },
+    {
+      "id": "scsc-1552",
+      "pinyin": "shi4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "519897e0d0e07606ef345cfab05826fd33c7b06054cdebbaa2ee6d37717d8fa3",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/d0e14cad65d04c3dabdbff5124167658.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=shi4"
+    },
+    {
+      "id": "scsc-2367",
+      "pinyin": "yi1",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "c24d5e264a54950aa6f17f478c9296c865b35d4ce3b971af590145aa1782edb5",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/f3b36e175a1440edbf883375500bd1ab.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi1"
+    },
+    {
+      "id": "scsc-1092",
+      "pinyin": "yi1",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "2541052fa748ebeb4c136b13aa9da7e6ae96c078dea19c070383e20224454ade",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/97bae6bfa86e4a5b86ade57da203efde.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi1"
+    },
+    {
+      "id": "scsc-4820",
+      "pinyin": "yi1",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "6f7d24d631e0fbf1f071b2dfa206bd07dd8176fd179de976ec5e424141576d69",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/bef591eb9c1e494b8b997fa8014a3a1f.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi1"
+    },
+    {
+      "id": "scsc-2430",
+      "pinyin": "yi2",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "f611978578b56f8ed19816ae0b1efafa612923e58265248cfe40b200f326610b",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/1de2671d0f0b42caa4021fd935e4223a.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi2"
+    },
+    {
+      "id": "scsc-1155",
+      "pinyin": "yi2",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "5e4823b4d60f498624d59adaceaab45a1d2c17b5ea7ae6d5e4089119cf7dbe2e",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/0c08cfd731414e76b02be2df51d1a821.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi2"
+    },
+    {
+      "id": "scsc-4757",
+      "pinyin": "yi2",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "9b5e641dce6254d6dbf137173b57a58f11d05567df14d05117bbba900c51fca3",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/4f3715a06d66486f9742f993b8c18bd0.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi2"
+    },
+    {
+      "id": "scsc-2396",
+      "pinyin": "yi3",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "ebf0d8483e14716d15e7c559d18bbbe13cbb21032525ff41a383a90b44b6160c",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/28f2ad4fe4a94ca5804659db2367b7db.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi3"
+    },
+    {
+      "id": "scsc-1121",
+      "pinyin": "yi3",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "5c27a7f80d313086ad79509ea92e763b3e680fb00290879a90ecdbde19075ad1",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/6e9cbf9e215c40a39c0d013cc9e5e2c4.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi3"
+    },
+    {
+      "id": "scsc-4791",
+      "pinyin": "yi3",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "22c7a22c08fe607a344660351ffbc3d13bf5f05d4c71428822e5a44c00f577f7",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/4968909788f04a9c8d378b2942741d6a.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi3"
+    },
+    {
+      "id": "scsc-2420",
+      "pinyin": "yi4",
+      "speaker": "M02",
+      "split": "development",
+      "sha256": "4b86b6221f9e8a679ba3e839a151285f54aa808adab3a02204743813fc561fec",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/34667619d75d48c1babe8ec76954a06c.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi4"
+    },
+    {
+      "id": "scsc-1145",
+      "pinyin": "yi4",
+      "speaker": "M01",
+      "split": "development",
+      "sha256": "8d8c8894e038b9d6b9ff51b5911c87fe104650f734b1ad2ef17f93c14f799bab",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/b50830bc52534c109501705dafafcac0.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi4"
+    },
+    {
+      "id": "scsc-4767",
+      "pinyin": "yi4",
+      "speaker": "M03",
+      "split": "held-out",
+      "sha256": "d57e01b36a480519f0abd3b5cbd013b3a9063f675f57e810c1d83f6330bde43d",
+      "sourceAudio": "https://multi.ucass.edu.cn/prod-api/profile/corpus/2025/10/22/dd475e35477d4a50871182677a5850c8.wav",
+      "sourceMetadata": "https://multi.ucass.edu.cn/prod-api/website/corpus/list?pageNum=1&pageSize=20&orderByColumn=serialNumber&isAsc=asc&status=0&projectId=3&pinyin1=yi4"
+    }
+  ],
+  "criticalContrasts": [
+    [
+      "zhi3",
+      "zi3"
+    ],
+    [
+      "gou3",
+      "kou3"
+    ]
+  ]
+}

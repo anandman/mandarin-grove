@@ -1,0 +1,3036 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-22T23:57:43.424Z",
+  "note": "Actual local CPU inference on the SHA-bound natural audio files. No expected text/pinyin/filenames supplied to either neural encoder. Posteriors are uncalibrated.",
+  "models": [
+    {
+      "id": "charsiu/zh_w2v2_tiny_fc_10ms",
+      "weightsSha256": "31be61b1c0e08e7545ebf8a72d1272f1e1d9e94ae7e67cac1ec529378194e02f",
+      "input": "audio-only",
+      "method": "Dominant initial and tone-bearing final from frame posteriors, averaged over frames predicted in that category. No score-based approval.",
+      "predictions": [
+        {
+          "clipId": "scsc-2911",
+          "sha256": "3d16b8327fffd01932908901caf46c6e9de6dbab676ea9b3caec6133a1fcf1fe",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.9576335549354553
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.5835170149803162
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1636",
+          "sha256": "a0befb35cb79f59def7bc2539bffd5e5183958de9e841b4cbb86eb2ba0d40df7",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.8788837790489197
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.5513026714324951
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4276",
+          "sha256": "207461f6c291d28fe7f347268d4598f438a191d29efa32ee6366bba7af47b6a2",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.767615795135498
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.84222012758255
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2840",
+          "sha256": "40ae3496df6c8ca253598c05c56dc1a47625b5df84499c23bd473a37866606f2",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.5139821171760559
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.8638319969177246
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1565",
+          "sha256": "30726a669e665e0981b607e4caab810017781db9066c5fad72e53014a0f4c853",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.791599452495575
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.4586775004863739
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4347",
+          "sha256": "46dd955877be1b0e450a6b03515765e8b1b274ad48e8d7ff5929dfae810c87be",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.7986204624176025
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.5972493886947632
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2876",
+          "sha256": "01025125b6cc0c0df6da015b3529953c59ddc31e95d5e416560530d0ab6a90dc",
+          "components": {
+            "initial": "n",
+            "final": "a",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "n",
+              0.514504075050354
+            ]
+          ],
+          "finalTop": [
+            [
+              "a2",
+              0.529007613658905
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1601",
+          "sha256": "0d50b1834d6073e0d17b7ca04c86387a25d12196258a51c8c3ccbe1e3d80493f",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.8744840621948242
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.396698534488678
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4311",
+          "sha256": "0466e9108cb0e3793de6a565d7783c14fa27ed937c9784a7eb125a27db8d9e7c",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.8341853618621826
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.5141367316246033
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3967",
+          "sha256": "8a38f21b2e9b094ff3bb7e91f7ecc2fbe82a37b48eac1a36b31778130908d027",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "5"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.7949357032775879
+            ]
+          ],
+          "finalTop": [
+            [
+              "a5",
+              0.45990800857543945
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3220",
+          "sha256": "d841f78432f914f253fc66b4d3420d4b7ba0d909154d333a2ad2b8bbce52e756",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "5"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.9313569068908691
+            ]
+          ],
+          "finalTop": [
+            [
+              "a5",
+              0.5522471070289612
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1945",
+          "sha256": "c3862311e7e242aaf3cde947268cf2806cb842f4b200909607c63d96a71b8114",
+          "components": {
+            "initial": "f",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "f",
+              0.5353028774261475
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.38685503602027893
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2824",
+          "sha256": "64d8e2bdc8f0977a3b940b3b9053f52d4f2dee4a81d0dbb5bc2520cd3a4b128a",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.9489145278930664
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.6242768168449402
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4363",
+          "sha256": "d6f3b622479d807a75e7b8419c3626c28366de309258742382cfc5eba65b89b2",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.5099033117294312
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.5286754369735718
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1549",
+          "sha256": "033f6ad62fde228754dfa03974f5cf2452995bbbc144acf584122c4be16d0484",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.5641900300979614
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.3127942979335785
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4737",
+          "sha256": "cef2e409c2c254d279ec8da682a3277f6f718e60d2eeca993a77fc224e87b0c9",
+          "components": {
+            "initial": "r",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "r",
+              0.34159520268440247
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.5044905543327332
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2450",
+          "sha256": "014aac4b13375c8c452628c5eb2c8e65f1b779ec9d3c4d82b1dec0f78eb4af38",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.4498545527458191
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.548220157623291
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1175",
+          "sha256": "d424c0a5baf5c1a52fb66099e5f758f4552be4cac45168b6304def5bbeac9320",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.842678427696228
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.30493026971817017
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2608",
+          "sha256": "1d7890bc637ccf7bb0a14e30d6df0d0fd2afe26adc2b7c6d833a099561c5f630",
+          "components": {
+            "initial": "r",
+            "final": "iii",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "r",
+              0.3766231834888458
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii3",
+              0.24217098951339722
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1333",
+          "sha256": "b38f23115d2e56e55dc37ff996c7d3913253d4ea020a2a5cef0fa5c79a322ba6",
+          "components": {
+            "initial": "r",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "r",
+              0.40993204712867737
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.25544464588165283
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4579",
+          "sha256": "6c0a6deef23cdcd14eb7bbdb51a4d34d7c5c57a87460b6da56157c868876dff2",
+          "components": {
+            "initial": "j",
+            "final": "i",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.514166533946991
+            ]
+          ],
+          "finalTop": [
+            [
+              "i3",
+              0.26514267921447754
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3123",
+          "sha256": "e2fb4c758a447914e9268bee19320e57fe7b3def917267e52e726467949e7e91",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.9163492321968079
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.8733730316162109
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1848",
+          "sha256": "f6f6c334cfd207f34f8ae75522309f77ec71e64d533eab4263f0c8f3a7da279d",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.6595683097839355
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.7775233387947083
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4064",
+          "sha256": "19e5a89544f5666ac9a39afc480b223dd26efbc8c7f179ef7377f181c52006d1",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "zh",
+              0.6340413689613342
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.8206490278244019
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3413",
+          "sha256": "4c5509136029bcbeb6db008b3d838a826910dcf46d4e9ea6e8ce650617fae463",
+          "components": {
+            "initial": "z",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "z",
+              0.5493820905685425
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.4298173189163208
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2138",
+          "sha256": "9cdee8930b8a242c67ae06a5654fadfb5ea8124930dedd6e76462d12b6dcb3ca",
+          "components": {
+            "initial": "z",
+            "final": "ii",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "z",
+              0.3436635434627533
+            ]
+          ],
+          "finalTop": [
+            [
+              "ii3",
+              0.2830113172531128
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3774",
+          "sha256": "f1a7dc141be70f4d92aa3c5bd5ee60d1130afa5a5f8de8240f27a89e330dc45a",
+          "components": {
+            "initial": "z",
+            "final": "ii",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "z",
+              0.6369209289550781
+            ]
+          ],
+          "finalTop": [
+            [
+              "ii3",
+              0.3636033236980438
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2641",
+          "sha256": "bb1a808d74a6fa8c1bbb03394ad7997689623c8842fc00a00e751e59e3db33ac",
+          "components": {
+            "initial": "k",
+            "final": "ou",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "k",
+              0.9613636136054993
+            ]
+          ],
+          "finalTop": [
+            [
+              "ou3",
+              0.8037520051002502
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1366",
+          "sha256": "fa85a0de7943a9fc996856a9396e5b30abc2c89eb893f56d9bad9b28980e79fb",
+          "components": {
+            "initial": "k",
+            "final": "ao",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "k",
+              0.8628557920455933
+            ]
+          ],
+          "finalTop": [
+            [
+              "ao3",
+              0.48652219772338867
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4546",
+          "sha256": "e73b62b4bb700dea8115a9274328ae383c6234d009c7ed3e31e17c9c0d46a508",
+          "components": {
+            "initial": "h",
+            "final": "ao",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "h",
+              0.8871656060218811
+            ]
+          ],
+          "finalTop": [
+            [
+              "ao2",
+              0.24557192623615265
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4154",
+          "sha256": "35583166d3dd451f081b8cbe49a6f86ebc68895981b4d4bbc7247ece7ecc5cdd",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "g",
+              0.9691619277000427
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.9131121635437012
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3033",
+          "sha256": "ec273c8145a73f33e378578b7461a376980bf59e2a8cffeb6a81ad97965ccc3a",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "g",
+              0.8992902040481567
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.9371584057807922
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1758",
+          "sha256": "951cac4cb2134dc2c8c5d94232f0009420ce214716ab69f048411e9da5959458",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "g",
+              0.92769455909729
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.943292498588562
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3450",
+          "sha256": "0a7d7dc5e57a7852e8699d71eaa7df44fb90fe3cf8a821e60871b56a0f2fe5ff",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "k",
+              0.9678089022636414
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.9288362264633179
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2175",
+          "sha256": "8a5762ce452ed5da500b1c093029832604cea22efe56ef79c7d035b432709f12",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "k",
+              0.9778389930725098
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.9578134417533875
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3737",
+          "sha256": "2005785aaebf122b9c860b64e29d2649932b5d138ba025e4c7dda95590066729",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "k",
+              0.8871747255325317
+            ]
+          ],
+          "finalTop": [
+            [
+              "e1",
+              0.9136881828308105
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3388",
+          "sha256": "74747e8c236b5db8fa8c6e78222a3fdabc437af328c4e6ccd93db5502400d67c",
+          "components": {
+            "initial": "l",
+            "final": "u",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.34373801946640015
+            ]
+          ],
+          "finalTop": [
+            [
+              "u2",
+              0.42421984672546387
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2113",
+          "sha256": "f878f5e1279698031410cca644b424ae065cb356a41964151b0ce52b0c9946d6",
+          "components": {
+            "initial": "h",
+            "final": "uo",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "h",
+              0.3806791305541992
+            ]
+          ],
+          "finalTop": [
+            [
+              "uo2",
+              0.3704386055469513
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3799",
+          "sha256": "5d58541a4e4a1049675849458c175a84357c8d040e34a041b2cef30d586839a3",
+          "components": {
+            "initial": "m",
+            "final": "ong",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.3795226216316223
+            ]
+          ],
+          "finalTop": [
+            [
+              "ong2",
+              0.39813855290412903
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3416",
+          "sha256": "7f68db401ba16edaef786fa6405d66a8ac04ef2d47f1a818ed2c560ac0c986a1",
+          "components": {
+            "initial": "n",
+            "final": "v",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "n",
+              0.6210017204284668
+            ]
+          ],
+          "finalTop": [
+            [
+              "v2",
+              0.5993606448173523
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2141",
+          "sha256": "ab32b8f9e7f39e8d9f24e338b9cc5ff1a54ca882b1abaa931e63ac8f2b56a734",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "3"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i3",
+              0.15102702379226685
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3771",
+          "sha256": "ec44d4ea9a0e0c4316a16ab6ee9e876223cef037ecd6ff1841bb7b0152e2bebb",
+          "components": {
+            "initial": "n",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "n",
+              0.47603750228881836
+            ]
+          ],
+          "finalTop": [
+            [
+              "i2",
+              0.3585244119167328
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3358",
+          "sha256": "f91aac506a678599808a210d886fe0caae26e84f01c49142b76aa08535b3c3d5",
+          "components": {
+            "initial": "l",
+            "final": "u",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.7990527153015137
+            ]
+          ],
+          "finalTop": [
+            [
+              "u4",
+              0.8920035362243652
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2083",
+          "sha256": "1ab28a1aedc040c150a5f7e9428a42721637d0181a4573afa367a29eac9b8510",
+          "components": {
+            "initial": "l",
+            "final": "u",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.9052818417549133
+            ]
+          ],
+          "finalTop": [
+            [
+              "u4",
+              0.9068676233291626
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3829",
+          "sha256": "4ccf49f75217cf953f402808e83482b8225828a753172e0b3c7b831b64491c9d",
+          "components": {
+            "initial": "m",
+            "final": "u",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.299276739358902
+            ]
+          ],
+          "finalTop": [
+            [
+              "u4",
+              0.5719377994537354
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3684",
+          "sha256": "26fe1153dda75c87b9f8855bb2286bc3f431737e5f9714a56cbb040455412f8a",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.510917603969574
+            ]
+          ],
+          "finalTop": [
+            [
+              "i4",
+              0.3240497410297394
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3503",
+          "sha256": "7347a5af2b345c9d0e7083fa2b92c8313889c11cb3b9e809034e3dc1fed5b62e",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.8637031316757202
+            ]
+          ],
+          "finalTop": [
+            [
+              "i4",
+              0.595871090888977
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2228",
+          "sha256": "810df59bcc5e26f37f49f373b19b2b6237f528085f17c38d20fff66f6f543b26",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.7861775755882263
+            ]
+          ],
+          "finalTop": [
+            [
+              "i4",
+              0.6748225092887878
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4675",
+          "sha256": "8432ac39d719b4ab90fffc038a024c9cf01c312dedd57bb1eb4ab5b691cfe2b9",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.46475887298583984
+            ]
+          ],
+          "finalTop": [
+            [
+              "i2",
+              0.7167022228240967
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2512",
+          "sha256": "c52bb12d34ff797ef871633192158e7d515d32dcefef4651df5f36c60f62a69b",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "l",
+              0.5158828496932983
+            ]
+          ],
+          "finalTop": [
+            [
+              "i2",
+              0.7883172631263733
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1237",
+          "sha256": "95d6a1aab4d10ad4867c18fa2d95a264bd0bfa8342782030a2a1ef56579717be",
+          "components": {
+            "initial": "n",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "n",
+              0.34334030747413635
+            ]
+          ],
+          "finalTop": [
+            [
+              "i2",
+              0.3961580991744995
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3887",
+          "sha256": "3517375f7abce709b56fe8be991f6d583ab42a8e62a2e9f08c3f120c0470ed43",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.5947271585464478
+            ]
+          ],
+          "finalTop": [
+            [
+              "a1",
+              0.1829603761434555
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3300",
+          "sha256": "a81632243548dfddf990237b2d770d0a0e3ba0bcd72f1813ada273293ba19436",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.9062922596931458
+            ]
+          ],
+          "finalTop": [
+            [
+              "an2",
+              0.3840167224407196
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2025",
+          "sha256": "c421ad9a9f9b84fe7c532997916a6ea173be79f5a93632eab87bd694116076b1",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.508486270904541
+            ]
+          ],
+          "finalTop": [
+            [
+              "a3",
+              0.35490477085113525
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4703",
+          "sha256": "6e810833d6610c6f3e2961283cd9e2214f6df678709a95cda250fec7a5bd17df",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.8374195694923401
+            ]
+          ],
+          "finalTop": [
+            [
+              "an3",
+              0.19086267054080963
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2484",
+          "sha256": "badbf3bdfb1a5c1813b0ef811a4eadf8755996c8adc01a856759f78c124a5f9b",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.9122642874717712
+            ]
+          ],
+          "finalTop": [
+            [
+              "an4",
+              0.458279013633728
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1209",
+          "sha256": "f224c141618e7b721319aebf10de54b4bba009617920e4fccde1e25f7c3f4e97",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "m",
+              0.9078344106674194
+            ]
+          ],
+          "finalTop": [
+            [
+              "an4",
+              0.29950806498527527
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4697",
+          "sha256": "dc3ce12384cbf6a4d026063ef351734fb74463c0e25f2ffcce150a74a190e898",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.9179424047470093
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia3",
+              0.28575316071510315
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2490",
+          "sha256": "c8886321112f65f10d585e4b0b86dd84ec3f04b18fd4fbaf8df58ab070e20a74",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.8947269916534424
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia1",
+              0.6505986452102661
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1215",
+          "sha256": "4815e9ef443bd6884fc3e7571a56b7057ee34c924fc1b7071dd765217672a0db",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.6238707304000854
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia2",
+              0.20161744952201843
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4098",
+          "sha256": "21951fc48afdf5add2f8169dd34756db56c7015aad16ce32fc3c7aa47351faa2",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.9091770052909851
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia4",
+              0.7366976141929626
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3089",
+          "sha256": "ef73c571883ba980b33f008e49cfd6f96e1612aa7b67b7b7885415c96c9996b7",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.891096293926239
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia4",
+              0.49208325147628784
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1814",
+          "sha256": "555f1391390756acf8abb942c21a8895a42a8e7b4d97348ef0946213dd024f94",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.9067032933235168
+            ]
+          ],
+          "finalTop": [
+            [
+              "ia4",
+              0.7879725098609924
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3375",
+          "sha256": "4e52b7ea9cadf6a818cd74f9318a5b1e662a3a56503f065391b3ce314a51b6e3",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.9555457830429077
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.700474202632904
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2100",
+          "sha256": "4e63ff24d142963834cbb65d46b5efdb2752c9101f631dabe8c4102541180b94",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.9286937713623047
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.5913436412811279
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3812",
+          "sha256": "71109cd91f29285d962e38ab45c3be0cd40600660d717dc3535b7d05c3f248f8",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.9142234325408936
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.8618571162223816
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3421",
+          "sha256": "6683ecff8de3ac705b2ea5a089f74e18824a74642dbecf885df55cff8691406a",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.9325848817825317
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.8677093386650085
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2146",
+          "sha256": "b47d891ba46811e716187345da7e4fd44088a73f8070fe3b7a3992af0d45aced",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.5709021687507629
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii2",
+              0.6019725799560547
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-3766",
+          "sha256": "e417a3a12b1bcd89be4c0605a2709211ee0fe700ec51a91916ae9d8e3c875521",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.6210870146751404
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii1",
+              0.39572444558143616
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4672",
+          "sha256": "9842aa2c6f08b0da8259067d6f69dca054440aecc967d2c2e8f71d54ad067213",
+          "components": {
+            "initial": "x",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "x",
+              0.4325883984565735
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.34905532002449036
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2515",
+          "sha256": "4e76572a5b385f6d9ab15149bbeee7666a54aa3b791a6212f0dc2a8451e0654f",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.4446399509906769
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.48330676555633545
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1240",
+          "sha256": "da7e03a74580017c271a872ec041544ef66add1667aa795ed9a1271f8da3e876",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "3"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.7765671014785767
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii3",
+              0.2852190434932709
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4360",
+          "sha256": "9b81d7e0df6296ac9b3ece5ca3751b2648204180d7e0179bb01f62d7412b190f",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.8946220278739929
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.9117633104324341
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2827",
+          "sha256": "2cdc53f379103d537a4f7575d86433e2735b16ef52aa804604f5cb7d0fba163b",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.962198793888092
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.9580042362213135
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1552",
+          "sha256": "519897e0d0e07606ef345cfab05826fd33c7b06054cdebbaa2ee6d37717d8fa3",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "sh",
+              0.971958577632904
+            ]
+          ],
+          "finalTop": [
+            [
+              "iii4",
+              0.9485020041465759
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2367",
+          "sha256": "c24d5e264a54950aa6f17f478c9296c865b35d4ce3b971af590145aa1782edb5",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i1",
+              0.49620333313941956
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1092",
+          "sha256": "2541052fa748ebeb4c136b13aa9da7e6ae96c078dea19c070383e20224454ade",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i1",
+              0.4641324579715729
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4820",
+          "sha256": "6f7d24d631e0fbf1f071b2dfa206bd07dd8176fd179de976ec5e424141576d69",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i1",
+              0.6897346377372742
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2430",
+          "sha256": "f611978578b56f8ed19816ae0b1efafa612923e58265248cfe40b200f326610b",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i2",
+              0.636208713054657
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1155",
+          "sha256": "5e4823b4d60f498624d59adaceaab45a1d2c17b5ea7ae6d5e4089119cf7dbe2e",
+          "components": {
+            "initial": "j",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.24030199646949768
+            ]
+          ],
+          "finalTop": [
+            [
+              "i2",
+              0.6979203224182129
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4757",
+          "sha256": "9b5e641dce6254d6dbf137173b57a58f11d05567df14d05117bbba900c51fca3",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i2",
+              0.5988831520080566
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2396",
+          "sha256": "ebf0d8483e14716d15e7c559d18bbbe13cbb21032525ff41a383a90b44b6160c",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i2",
+              0.5449153184890747
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1121",
+          "sha256": "5c27a7f80d313086ad79509ea92e763b3e680fb00290879a90ecdbde19075ad1",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "2"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i2",
+              0.43732234835624695
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4791",
+          "sha256": "22c7a22c08fe607a344660351ffbc3d13bf5f05d4c71428822e5a44c00f577f7",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "3"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i3",
+              0.3005174994468689
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-2420",
+          "sha256": "4b86b6221f9e8a679ba3e839a151285f54aa808adab3a02204743813fc561fec",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i4",
+              0.5472851991653442
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-1145",
+          "sha256": "8d8c8894e038b9d6b9ff51b5911c87fe104650f734b1ad2ef17f93c14f799bab",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [],
+          "finalTop": [
+            [
+              "i4",
+              0.8079667091369629
+            ]
+          ]
+        },
+        {
+          "clipId": "scsc-4767",
+          "sha256": "d57e01b36a480519f0abd3b5cbd013b3a9063f675f57e810c1d83f6330bde43d",
+          "components": {
+            "initial": "j",
+            "final": "i",
+            "tone": "4"
+          },
+          "initialTop": [
+            [
+              "j",
+              0.2675037384033203
+            ]
+          ],
+          "finalTop": [
+            [
+              "i4",
+              0.652018129825592
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "robinsonphan/sensevoice-small-zh-pinyin-dual-ctc",
+      "weightsSha256": "1a1a95e868021e80f41a4cfe0a345328429a7e2ebfea6a090ca06d81631f4849",
+      "input": "audio-only",
+      "method": "FP32 ONNX; 16kHz, peak normalization, Kaldi80 Hamming25/10ms, 7/6 LFR, official CMVN, dither0, blind greedy CTC. Multiple or absent tokens abstain.",
+      "predictions": [
+        {
+          "clipId": "scsc-2911",
+          "sha256": "3d16b8327fffd01932908901caf46c6e9de6dbab676ea9b3caec6133a1fcf1fe",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "tokens": [
+            "ma1"
+          ],
+          "tokenPosteriors": [
+            0.9998939037322998
+          ]
+        },
+        {
+          "clipId": "scsc-1636",
+          "sha256": "a0befb35cb79f59def7bc2539bffd5e5183958de9e841b4cbb86eb2ba0d40df7",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "tokens": [
+            "ma1"
+          ],
+          "tokenPosteriors": [
+            0.9998292922973633
+          ]
+        },
+        {
+          "clipId": "scsc-4276",
+          "sha256": "207461f6c291d28fe7f347268d4598f438a191d29efa32ee6366bba7af47b6a2",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "1"
+          },
+          "tokens": [
+            "ma1"
+          ],
+          "tokenPosteriors": [
+            0.9993403553962708
+          ]
+        },
+        {
+          "clipId": "scsc-2840",
+          "sha256": "40ae3496df6c8ca253598c05c56dc1a47625b5df84499c23bd473a37866606f2",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "2"
+          },
+          "tokens": [
+            "ma2"
+          ],
+          "tokenPosteriors": [
+            0.9814234375953674
+          ]
+        },
+        {
+          "clipId": "scsc-1565",
+          "sha256": "30726a669e665e0981b607e4caab810017781db9066c5fad72e53014a0f4c853",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "2"
+          },
+          "tokens": [
+            "ma2"
+          ],
+          "tokenPosteriors": [
+            0.714460015296936
+          ]
+        },
+        {
+          "clipId": "scsc-4347",
+          "sha256": "46dd955877be1b0e450a6b03515765e8b1b274ad48e8d7ff5929dfae810c87be",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "2"
+          },
+          "tokens": [
+            "ma2"
+          ],
+          "tokenPosteriors": [
+            0.9371199607849121
+          ]
+        },
+        {
+          "clipId": "scsc-2876",
+          "sha256": "01025125b6cc0c0df6da015b3529953c59ddc31e95d5e416560530d0ab6a90dc",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "3"
+          },
+          "tokens": [
+            "ma3"
+          ],
+          "tokenPosteriors": [
+            0.9999386072158813
+          ]
+        },
+        {
+          "clipId": "scsc-1601",
+          "sha256": "0d50b1834d6073e0d17b7ca04c86387a25d12196258a51c8c3ccbe1e3d80493f",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "3"
+          },
+          "tokens": [
+            "ma3"
+          ],
+          "tokenPosteriors": [
+            0.9999744296073914
+          ]
+        },
+        {
+          "clipId": "scsc-4311",
+          "sha256": "0466e9108cb0e3793de6a565d7783c14fa27ed937c9784a7eb125a27db8d9e7c",
+          "components": {
+            "initial": "m",
+            "final": "a",
+            "tone": "3"
+          },
+          "tokens": [
+            "ma3"
+          ],
+          "tokenPosteriors": [
+            0.8454678058624268
+          ]
+        },
+        {
+          "clipId": "scsc-3967",
+          "sha256": "8a38f21b2e9b094ff3bb7e91f7ecc2fbe82a37b48eac1a36b31778130908d027",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-3220",
+          "sha256": "d841f78432f914f253fc66b4d3420d4b7ba0d909154d333a2ad2b8bbce52e756",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-1945",
+          "sha256": "c3862311e7e242aaf3cde947268cf2806cb842f4b200909607c63d96a71b8114",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-2824",
+          "sha256": "64d8e2bdc8f0977a3b940b3b9053f52d4f2dee4a81d0dbb5bc2520cd3a4b128a",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "tokens": [
+            "zhi1"
+          ],
+          "tokenPosteriors": [
+            0.9826310873031616
+          ]
+        },
+        {
+          "clipId": "scsc-4363",
+          "sha256": "d6f3b622479d807a75e7b8419c3626c28366de309258742382cfc5eba65b89b2",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "tokens": [
+            "zhi1"
+          ],
+          "tokenPosteriors": [
+            0.8779246211051941
+          ]
+        },
+        {
+          "clipId": "scsc-1549",
+          "sha256": "033f6ad62fde228754dfa03974f5cf2452995bbbc144acf584122c4be16d0484",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "tokens": [
+            "zhi1"
+          ],
+          "tokenPosteriors": [
+            0.8059204816818237
+          ]
+        },
+        {
+          "clipId": "scsc-4737",
+          "sha256": "cef2e409c2c254d279ec8da682a3277f6f718e60d2eeca993a77fc224e87b0c9",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "zhi2"
+          ],
+          "tokenPosteriors": [
+            0.9931731224060059
+          ]
+        },
+        {
+          "clipId": "scsc-2450",
+          "sha256": "014aac4b13375c8c452628c5eb2c8e65f1b779ec9d3c4d82b1dec0f78eb4af38",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "zhi2"
+          ],
+          "tokenPosteriors": [
+            0.9999447464942932
+          ]
+        },
+        {
+          "clipId": "scsc-1175",
+          "sha256": "d424c0a5baf5c1a52fb66099e5f758f4552be4cac45168b6304def5bbeac9320",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "zhi2"
+          ],
+          "tokenPosteriors": [
+            0.9999918341636658
+          ]
+        },
+        {
+          "clipId": "scsc-2608",
+          "sha256": "1d7890bc637ccf7bb0a14e30d6df0d0fd2afe26adc2b7c6d833a099561c5f630",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "3"
+          },
+          "tokens": [
+            "zhi3"
+          ],
+          "tokenPosteriors": [
+            0.9978188276290894
+          ]
+        },
+        {
+          "clipId": "scsc-1333",
+          "sha256": "b38f23115d2e56e55dc37ff996c7d3913253d4ea020a2a5cef0fa5c79a322ba6",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "3"
+          },
+          "tokens": [
+            "zhi3"
+          ],
+          "tokenPosteriors": [
+            0.9966363906860352
+          ]
+        },
+        {
+          "clipId": "scsc-4579",
+          "sha256": "6c0a6deef23cdcd14eb7bbdb51a4d34d7c5c57a87460b6da56157c868876dff2",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "zhi2"
+          ],
+          "tokenPosteriors": [
+            0.9999566078186035
+          ]
+        },
+        {
+          "clipId": "scsc-3123",
+          "sha256": "e2fb4c758a447914e9268bee19320e57fe7b3def917267e52e726467949e7e91",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "zhi4"
+          ],
+          "tokenPosteriors": [
+            0.9997803568840027
+          ]
+        },
+        {
+          "clipId": "scsc-1848",
+          "sha256": "f6f6c334cfd207f34f8ae75522309f77ec71e64d533eab4263f0c8f3a7da279d",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "zhi4"
+          ],
+          "tokenPosteriors": [
+            0.5014230608940125
+          ]
+        },
+        {
+          "clipId": "scsc-4064",
+          "sha256": "19e5a89544f5666ac9a39afc480b223dd26efbc8c7f179ef7377f181c52006d1",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "zhi4"
+          ],
+          "tokenPosteriors": [
+            0.999309241771698
+          ]
+        },
+        {
+          "clipId": "scsc-3413",
+          "sha256": "4c5509136029bcbeb6db008b3d838a826910dcf46d4e9ea6e8ce650617fae463",
+          "components": {
+            "initial": "z",
+            "final": "e",
+            "tone": "2"
+          },
+          "tokens": [
+            "ze2"
+          ],
+          "tokenPosteriors": [
+            0.9999500513076782
+          ]
+        },
+        {
+          "clipId": "scsc-2138",
+          "sha256": "9cdee8930b8a242c67ae06a5654fadfb5ea8124930dedd6e76462d12b6dcb3ca",
+          "components": {
+            "initial": "zh",
+            "final": "iii",
+            "tone": "3"
+          },
+          "tokens": [
+            "zhi3"
+          ],
+          "tokenPosteriors": [
+            0.7253715991973877
+          ]
+        },
+        {
+          "clipId": "scsc-3774",
+          "sha256": "f1a7dc141be70f4d92aa3c5bd5ee60d1130afa5a5f8de8240f27a89e330dc45a",
+          "components": {
+            "initial": "z",
+            "final": "ii",
+            "tone": "5"
+          },
+          "tokens": [
+            "zi5"
+          ],
+          "tokenPosteriors": [
+            0.7632318139076233
+          ]
+        },
+        {
+          "clipId": "scsc-2641",
+          "sha256": "bb1a808d74a6fa8c1bbb03394ad7997689623c8842fc00a00e751e59e3db33ac",
+          "components": {
+            "initial": "k",
+            "final": "ou",
+            "tone": "3"
+          },
+          "tokens": [
+            "kou3"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-1366",
+          "sha256": "fa85a0de7943a9fc996856a9396e5b30abc2c89eb893f56d9bad9b28980e79fb",
+          "components": {
+            "initial": "k",
+            "final": "ou",
+            "tone": "3"
+          },
+          "tokens": [
+            "kou3"
+          ],
+          "tokenPosteriors": [
+            0.9999999403953552
+          ]
+        },
+        {
+          "clipId": "scsc-4546",
+          "sha256": "e73b62b4bb700dea8115a9274328ae383c6234d009c7ed3e31e17c9c0d46a508",
+          "components": {
+            "initial": "k",
+            "final": "ou",
+            "tone": "3"
+          },
+          "tokens": [
+            "kou3"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-4154",
+          "sha256": "35583166d3dd451f081b8cbe49a6f86ebc68895981b4d4bbc7247ece7ecc5cdd",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "tokens": [
+            "ge1"
+          ],
+          "tokenPosteriors": [
+            0.9999997019767761
+          ]
+        },
+        {
+          "clipId": "scsc-3033",
+          "sha256": "ec273c8145a73f33e378578b7461a376980bf59e2a8cffeb6a81ad97965ccc3a",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "tokens": [
+            "ge1"
+          ],
+          "tokenPosteriors": [
+            0.9999939799308777
+          ]
+        },
+        {
+          "clipId": "scsc-1758",
+          "sha256": "951cac4cb2134dc2c8c5d94232f0009420ce214716ab69f048411e9da5959458",
+          "components": {
+            "initial": "g",
+            "final": "e",
+            "tone": "1"
+          },
+          "tokens": [
+            "ge1"
+          ],
+          "tokenPosteriors": [
+            0.9999492168426514
+          ]
+        },
+        {
+          "clipId": "scsc-3450",
+          "sha256": "0a7d7dc5e57a7852e8699d71eaa7df44fb90fe3cf8a821e60871b56a0f2fe5ff",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "1"
+          },
+          "tokens": [
+            "ke1"
+          ],
+          "tokenPosteriors": [
+            0.9998175501823425
+          ]
+        },
+        {
+          "clipId": "scsc-2175",
+          "sha256": "8a5762ce452ed5da500b1c093029832604cea22efe56ef79c7d035b432709f12",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "1"
+          },
+          "tokens": [
+            "ke1"
+          ],
+          "tokenPosteriors": [
+            0.999406099319458
+          ]
+        },
+        {
+          "clipId": "scsc-3737",
+          "sha256": "2005785aaebf122b9c860b64e29d2649932b5d138ba025e4c7dda95590066729",
+          "components": {
+            "initial": "k",
+            "final": "e",
+            "tone": "4"
+          },
+          "tokens": [
+            "ke4"
+          ],
+          "tokenPosteriors": [
+            0.9997126460075378
+          ]
+        },
+        {
+          "clipId": "scsc-3388",
+          "sha256": "74747e8c236b5db8fa8c6e78222a3fdabc437af328c4e6ccd93db5502400d67c",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-2113",
+          "sha256": "f878f5e1279698031410cca644b424ae065cb356a41964151b0ce52b0c9946d6",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-3799",
+          "sha256": "5d58541a4e4a1049675849458c175a84357c8d040e34a041b2cef30d586839a3",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-3416",
+          "sha256": "7f68db401ba16edaef786fa6405d66a8ac04ef2d47f1a818ed2c560ac0c986a1",
+          "components": {
+            "initial": "n",
+            "final": "v",
+            "tone": "3"
+          },
+          "tokens": [
+            "nv3"
+          ],
+          "tokenPosteriors": [
+            0.9999518394470215
+          ]
+        },
+        {
+          "clipId": "scsc-2141",
+          "sha256": "ab32b8f9e7f39e8d9f24e338b9cc5ff1a54ca882b1abaa931e63ac8f2b56a734",
+          "components": {
+            "initial": "n",
+            "final": "v",
+            "tone": "3"
+          },
+          "tokens": [
+            "nv3"
+          ],
+          "tokenPosteriors": [
+            0.9999479651451111
+          ]
+        },
+        {
+          "clipId": "scsc-3771",
+          "sha256": "ec44d4ea9a0e0c4316a16ab6ee9e876223cef037ecd6ff1841bb7b0152e2bebb",
+          "components": {
+            "initial": "n",
+            "final": "v",
+            "tone": "3"
+          },
+          "tokens": [
+            "nv3"
+          ],
+          "tokenPosteriors": [
+            0.9999760389328003
+          ]
+        },
+        {
+          "clipId": "scsc-3358",
+          "sha256": "f91aac506a678599808a210d886fe0caae26e84f01c49142b76aa08535b3c3d5",
+          "components": {
+            "initial": "l",
+            "final": "u",
+            "tone": "4"
+          },
+          "tokens": [
+            "lu4"
+          ],
+          "tokenPosteriors": [
+            0.9999755620956421
+          ]
+        },
+        {
+          "clipId": "scsc-2083",
+          "sha256": "1ab28a1aedc040c150a5f7e9428a42721637d0181a4573afa367a29eac9b8510",
+          "components": {
+            "initial": "l",
+            "final": "u",
+            "tone": "4"
+          },
+          "tokens": [
+            "lu4"
+          ],
+          "tokenPosteriors": [
+            0.9999855756759644
+          ]
+        },
+        {
+          "clipId": "scsc-3829",
+          "sha256": "4ccf49f75217cf953f402808e83482b8225828a753172e0b3c7b831b64491c9d",
+          "components": {
+            "initial": "n",
+            "final": "eng",
+            "tone": "2"
+          },
+          "tokens": [
+            "neng2"
+          ],
+          "tokenPosteriors": [
+            0.778052806854248
+          ]
+        },
+        {
+          "clipId": "scsc-3684",
+          "sha256": "26fe1153dda75c87b9f8855bb2286bc3f431737e5f9714a56cbb040455412f8a",
+          "components": {
+            "initial": "l",
+            "final": "v",
+            "tone": "4"
+          },
+          "tokens": [
+            "lv4"
+          ],
+          "tokenPosteriors": [
+            0.9559990763664246
+          ]
+        },
+        {
+          "clipId": "scsc-3503",
+          "sha256": "7347a5af2b345c9d0e7083fa2b92c8313889c11cb3b9e809034e3dc1fed5b62e",
+          "components": {
+            "initial": "l",
+            "final": "v",
+            "tone": "4"
+          },
+          "tokens": [
+            "lv4"
+          ],
+          "tokenPosteriors": [
+            0.9073928594589233
+          ]
+        },
+        {
+          "clipId": "scsc-2228",
+          "sha256": "810df59bcc5e26f37f49f373b19b2b6237f528085f17c38d20fff66f6f543b26",
+          "components": {
+            "initial": "l",
+            "final": "v",
+            "tone": "4"
+          },
+          "tokens": [
+            "lv4"
+          ],
+          "tokenPosteriors": [
+            0.9769133925437927
+          ]
+        },
+        {
+          "clipId": "scsc-4675",
+          "sha256": "8432ac39d719b4ab90fffc038a024c9cf01c312dedd57bb1eb4ab5b691cfe2b9",
+          "components": {
+            "initial": "",
+            "final": "ui",
+            "tone": "1"
+          },
+          "tokens": [
+            "wei1"
+          ],
+          "tokenPosteriors": [
+            0.3998488783836365
+          ]
+        },
+        {
+          "clipId": "scsc-2512",
+          "sha256": "c52bb12d34ff797ef871633192158e7d515d32dcefef4651df5f36c60f62a69b",
+          "components": {
+            "initial": "l",
+            "final": "i",
+            "tone": "2"
+          },
+          "tokens": [
+            "li2"
+          ],
+          "tokenPosteriors": [
+            0.9994093775749207
+          ]
+        },
+        {
+          "clipId": "scsc-1237",
+          "sha256": "95d6a1aab4d10ad4867c18fa2d95a264bd0bfa8342782030a2a1ef56579717be",
+          "components": {
+            "initial": "n",
+            "final": "i",
+            "tone": "3"
+          },
+          "tokens": [
+            "ni3"
+          ],
+          "tokenPosteriors": [
+            0.9522157311439514
+          ]
+        },
+        {
+          "clipId": "scsc-3887",
+          "sha256": "3517375f7abce709b56fe8be991f6d583ab42a8e62a2e9f08c3f120c0470ed43",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "3"
+          },
+          "tokens": [
+            "man3"
+          ],
+          "tokenPosteriors": [
+            0.9999997019767761
+          ]
+        },
+        {
+          "clipId": "scsc-3300",
+          "sha256": "a81632243548dfddf990237b2d770d0a0e3ba0bcd72f1813ada273293ba19436",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "3"
+          },
+          "tokens": [
+            "man3"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-2025",
+          "sha256": "c421ad9a9f9b84fe7c532997916a6ea173be79f5a93632eab87bd694116076b1",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "3"
+          },
+          "tokens": [
+            "man3"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-4703",
+          "sha256": "6e810833d6610c6f3e2961283cd9e2214f6df678709a95cda250fec7a5bd17df",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "4"
+          },
+          "tokens": [
+            "man4"
+          ],
+          "tokenPosteriors": [
+            0.9999175071716309
+          ]
+        },
+        {
+          "clipId": "scsc-2484",
+          "sha256": "badbf3bdfb1a5c1813b0ef811a4eadf8755996c8adc01a856759f78c124a5f9b",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "4"
+          },
+          "tokens": [
+            "man4"
+          ],
+          "tokenPosteriors": [
+            0.9999991655349731
+          ]
+        },
+        {
+          "clipId": "scsc-1209",
+          "sha256": "f224c141618e7b721319aebf10de54b4bba009617920e4fccde1e25f7c3f4e97",
+          "components": {
+            "initial": "m",
+            "final": "an",
+            "tone": "4"
+          },
+          "tokens": [
+            "man4"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-4697",
+          "sha256": "dc3ce12384cbf6a4d026063ef351734fb74463c0e25f2ffcce150a74a190e898",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "3"
+          },
+          "tokens": [
+            "jia3"
+          ],
+          "tokenPosteriors": [
+            0.9999234676361084
+          ]
+        },
+        {
+          "clipId": "scsc-2490",
+          "sha256": "c8886321112f65f10d585e4b0b86dd84ec3f04b18fd4fbaf8df58ab070e20a74",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "3"
+          },
+          "tokens": [
+            "jia3"
+          ],
+          "tokenPosteriors": [
+            0.9999629855155945
+          ]
+        },
+        {
+          "clipId": "scsc-1215",
+          "sha256": "4815e9ef443bd6884fc3e7571a56b7057ee34c924fc1b7071dd765217672a0db",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "3"
+          },
+          "tokens": [
+            "jia3"
+          ],
+          "tokenPosteriors": [
+            0.9999809861183167
+          ]
+        },
+        {
+          "clipId": "scsc-4098",
+          "sha256": "21951fc48afdf5add2f8169dd34756db56c7015aad16ce32fc3c7aa47351faa2",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "tokens": [
+            "jia4"
+          ],
+          "tokenPosteriors": [
+            0.9999999403953552
+          ]
+        },
+        {
+          "clipId": "scsc-3089",
+          "sha256": "ef73c571883ba980b33f008e49cfd6f96e1612aa7b67b7b7885415c96c9996b7",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "tokens": [
+            "jia4"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-1814",
+          "sha256": "555f1391390756acf8abb942c21a8895a42a8e7b4d97348ef0946213dd024f94",
+          "components": {
+            "initial": "j",
+            "final": "ia",
+            "tone": "4"
+          },
+          "tokens": [
+            "jia4"
+          ],
+          "tokenPosteriors": [
+            0.9999997019767761
+          ]
+        },
+        {
+          "clipId": "scsc-3375",
+          "sha256": "4e52b7ea9cadf6a818cd74f9318a5b1e662a3a56503f065391b3ce314a51b6e3",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "tokens": [
+            "shi1"
+          ],
+          "tokenPosteriors": [
+            0.9302612543106079
+          ]
+        },
+        {
+          "clipId": "scsc-2100",
+          "sha256": "4e63ff24d142963834cbb65d46b5efdb2752c9101f631dabe8c4102541180b94",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "1"
+          },
+          "tokens": [
+            "shi1"
+          ],
+          "tokenPosteriors": [
+            0.9935712218284607
+          ]
+        },
+        {
+          "clipId": "scsc-3812",
+          "sha256": "71109cd91f29285d962e38ab45c3be0cd40600660d717dc3535b7d05c3f248f8",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.7915511727333069
+          ]
+        },
+        {
+          "clipId": "scsc-3421",
+          "sha256": "6683ecff8de3ac705b2ea5a089f74e18824a74642dbecf885df55cff8691406a",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.9991818070411682
+          ]
+        },
+        {
+          "clipId": "scsc-2146",
+          "sha256": "b47d891ba46811e716187345da7e4fd44088a73f8070fe3b7a3992af0d45aced",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.999725341796875
+          ]
+        },
+        {
+          "clipId": "scsc-3766",
+          "sha256": "e417a3a12b1bcd89be4c0605a2709211ee0fe700ec51a91916ae9d8e3c875521",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.999545156955719
+          ]
+        },
+        {
+          "clipId": "scsc-4672",
+          "sha256": "9842aa2c6f08b0da8259067d6f69dca054440aecc967d2c2e8f71d54ad067213",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.9909933805465698
+          ]
+        },
+        {
+          "clipId": "scsc-2515",
+          "sha256": "4e76572a5b385f6d9ab15149bbeee7666a54aa3b791a6212f0dc2a8451e0654f",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.999106764793396
+          ]
+        },
+        {
+          "clipId": "scsc-1240",
+          "sha256": "da7e03a74580017c271a872ec041544ef66add1667aa795ed9a1271f8da3e876",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "2"
+          },
+          "tokens": [
+            "shi2"
+          ],
+          "tokenPosteriors": [
+            0.9940750598907471
+          ]
+        },
+        {
+          "clipId": "scsc-4360",
+          "sha256": "9b81d7e0df6296ac9b3ece5ca3751b2648204180d7e0179bb01f62d7412b190f",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "shi4"
+          ],
+          "tokenPosteriors": [
+            0.9995420575141907
+          ]
+        },
+        {
+          "clipId": "scsc-2827",
+          "sha256": "2cdc53f379103d537a4f7575d86433e2735b16ef52aa804604f5cb7d0fba163b",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "shi4"
+          ],
+          "tokenPosteriors": [
+            0.9999746680259705
+          ]
+        },
+        {
+          "clipId": "scsc-1552",
+          "sha256": "519897e0d0e07606ef345cfab05826fd33c7b06054cdebbaa2ee6d37717d8fa3",
+          "components": {
+            "initial": "sh",
+            "final": "iii",
+            "tone": "4"
+          },
+          "tokens": [
+            "shi4"
+          ],
+          "tokenPosteriors": [
+            0.9945697784423828
+          ]
+        },
+        {
+          "clipId": "scsc-2367",
+          "sha256": "c24d5e264a54950aa6f17f478c9296c865b35d4ce3b971af590145aa1782edb5",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "tokens": [
+            "yi1"
+          ],
+          "tokenPosteriors": [
+            0.9894822239875793
+          ]
+        },
+        {
+          "clipId": "scsc-1092",
+          "sha256": "2541052fa748ebeb4c136b13aa9da7e6ae96c078dea19c070383e20224454ade",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        },
+        {
+          "clipId": "scsc-4820",
+          "sha256": "6f7d24d631e0fbf1f071b2dfa206bd07dd8176fd179de976ec5e424141576d69",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "tokens": [
+            "yi1"
+          ],
+          "tokenPosteriors": [
+            1
+          ]
+        },
+        {
+          "clipId": "scsc-2430",
+          "sha256": "f611978578b56f8ed19816ae0b1efafa612923e58265248cfe40b200f326610b",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "tokens": [
+            "yi1"
+          ],
+          "tokenPosteriors": [
+            0.8328009247779846
+          ]
+        },
+        {
+          "clipId": "scsc-1155",
+          "sha256": "5e4823b4d60f498624d59adaceaab45a1d2c17b5ea7ae6d5e4089119cf7dbe2e",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "3"
+          },
+          "tokens": [
+            "yi3"
+          ],
+          "tokenPosteriors": [
+            0.5221510529518127
+          ]
+        },
+        {
+          "clipId": "scsc-4757",
+          "sha256": "9b5e641dce6254d6dbf137173b57a58f11d05567df14d05117bbba900c51fca3",
+          "components": {
+            "initial": "",
+            "final": "u",
+            "tone": "3"
+          },
+          "tokens": [
+            "wu3"
+          ],
+          "tokenPosteriors": [
+            0.9983123540878296
+          ]
+        },
+        {
+          "clipId": "scsc-2396",
+          "sha256": "ebf0d8483e14716d15e7c559d18bbbe13cbb21032525ff41a383a90b44b6160c",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "3"
+          },
+          "tokens": [
+            "yi3"
+          ],
+          "tokenPosteriors": [
+            0.9922868609428406
+          ]
+        },
+        {
+          "clipId": "scsc-1121",
+          "sha256": "5c27a7f80d313086ad79509ea92e763b3e680fb00290879a90ecdbde19075ad1",
+          "components": {
+            "initial": "",
+            "final": "v",
+            "tone": "3"
+          },
+          "tokens": [
+            "yu3"
+          ],
+          "tokenPosteriors": [
+            0.993495523929596
+          ]
+        },
+        {
+          "clipId": "scsc-4791",
+          "sha256": "22c7a22c08fe607a344660351ffbc3d13bf5f05d4c71428822e5a44c00f577f7",
+          "components": {
+            "initial": "",
+            "final": "v",
+            "tone": "3"
+          },
+          "tokens": [
+            "yu3"
+          ],
+          "tokenPosteriors": [
+            0.8778374195098877
+          ]
+        },
+        {
+          "clipId": "scsc-2420",
+          "sha256": "4b86b6221f9e8a679ba3e839a151285f54aa808adab3a02204743813fc561fec",
+          "components": {
+            "initial": "",
+            "final": "i",
+            "tone": "1"
+          },
+          "tokens": [
+            "yi1"
+          ],
+          "tokenPosteriors": [
+            0.8011063933372498
+          ]
+        },
+        {
+          "clipId": "scsc-1145",
+          "sha256": "8d8c8894e038b9d6b9ff51b5911c87fe104650f734b1ad2ef17f93c14f799bab",
+          "components": {
+            "initial": "",
+            "final": "v",
+            "tone": "4"
+          },
+          "tokens": [
+            "yu4"
+          ],
+          "tokenPosteriors": [
+            0.5097750425338745
+          ]
+        },
+        {
+          "clipId": "scsc-4767",
+          "sha256": "d57e01b36a480519f0abd3b5cbd013b3a9063f675f57e810c1d83f6330bde43d",
+          "components": null,
+          "tokens": [],
+          "tokenPosteriors": []
+        }
+      ]
+    }
+  ]
+}

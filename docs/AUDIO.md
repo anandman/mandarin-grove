@@ -2,7 +2,8 @@
 
 This is release tooling. The student app remains static; it never downloads an
 assessment model or receives a provider key. Evaluation uses the existing TTS
-assets and synthetic pitch controls, without children's recordings or progress.
+assets, natural Mainland reference recordings and synthetic pitch controls,
+without children's recordings or progress.
 
 The workflow checks the assessor before trusting its judgments. A matching
 transcript cannot establish the consonant, vowel or tone. Neither an API score nor
@@ -147,10 +148,94 @@ contour, while the application uses its one filename for both jiǎ and jià. It
 needs reading-specific selection. Pitch analysis supports these tone-family
 observations; it does not certify consonants or vowels.
 
-The next acceptance path uses published pronunciation-reference audio with exact
-reading labels, reuse rights, immutable hashes and independent source checks.
-Signal analysis checks mappings and corruption rather than imposing artificial
-contours on native speech. Unverified synthesis remains a candidate.
+Published labels, reuse rights and immutable hashes do not finish pronunciation
+verification. The acceptance method itself needs independently reviewed natural
+references and real near-miss controls. The following benchmark tests that step;
+it does not establish a release-capable method. Unverified synthesis remains a
+candidate.
+
+### Natural Mainland benchmark and complete recording scan
+
+An additional experiment evaluated **87 actual natural recordings**, 29 readings
+from each of three Beijing speakers in the Chinese Academy of Social Sciences'
+[Syllable Corpus of Standard Chinese (SCSC)](https://multi.ucass.edu.cn/resources/detail/3).
+M01/M02 were designated development speakers and M03 a held-out speaker before
+inference. Only waveform features went into either model; expected characters,
+pinyin and filenames were not model inputs. The models and extraction methods
+are fixed in [the captured observations](../data/audio-reference-observations.json).
+
+| Acoustic method | Whole-reading agreement with published label | Held-out speaker |
+|---|---:|---:|
+| Charsiu frame classifier, dominant initial/final | 45/87 | 14/29 |
+| SenseVoice dual pinyin CTC, one decoded syllable | 60/87 | 17/29 |
+| Both agree on every component | 33/87 | 8/29 |
+
+The same blind outputs were tested against **222 deliberately wrong references**:
+156 tone contrasts, 36 initial contrasts, 24 final contrasts and six zhi/zi
+contrasts whose apical vowel changes along with the consonant. Charsiu accepted
+13 wrong references and SenseVoice nine. Requiring both to agree accepted none
+of these wrong references, but supported only eight of 29 held-out positive
+references. The controls reuse recordings and overlap in their contrasts; they
+are not 222 independent samples and do not establish a general error rate.
+SenseVoice can give nearly 1.0 token posterior to a reading that disagrees with
+the source, including zhi2 for the held-out zhi3 and ke4 for ke1. No posterior or
+consensus score is treated as a correctness probability.
+
+This is **reference-label agreement, not independently established accuracy**.
+SCSC describes selected professional Standard Mandarin recordings, but we have
+not obtained independent auditory review records for these individual files.
+Its public metadata also maps 狗 to `gao3`, across all 15 speakers; we excluded
+that entry rather than relabeling the sound or claiming gǒu coverage. The
+[benchmark manifest](../data/audio-reference-benchmark.json) retains that missing
+contrast and the corpus's access/reuse limits. No SCSC audio or model weights are
+redistributed. The benchmark covers only adult male speakers and no neutral tones.
+
+Both models also processed **all 557 actual optional CNS recording files**.
+SenseVoice matched the expected reading on 434; Charsiu on 248; both on 207.
+Those are diagnostics, not a claim that the other recordings are wrong or that
+the agreeing recordings are verified Mainland teaching models. All remain
+unverified for that purpose. The scan did not change any audio, playback defaults,
+curriculum answers or child progress.
+
+Michigan State's separate university
+[Tone Perfect corpus production paper](https://ideah.pubpub.org/pub/hh90jpsu/release/5)
+documents a stronger reference process: native specialists independently
+listened to complete sets without seeing production error logs, problematic
+tokens were re-recorded, and mastered sets were reviewed again. This is evidence
+of actual listening review rather than a pinyin label alone. Its current
+[access and citation terms](https://tone.lib.msu.edu/cite) must be checked before
+reuse; automated access is blocked in this environment. It is **not** the
+commercial TonePerfect assessment API used in the earlier trial.
+
+Two further live **free-credit** assessments used one natural Beijing zhǐ
+recording with correct `zhi3` and wrong `zhi4` references. Both responses heard
+tone 3; the correct target received display score 85 and the wrong one 61.8.
+This is useful evidence but one recording cannot calibrate the service. The
+arbitrary 90-point threshold was not lowered to make it pass. Five trial credits
+remain after these two requests; no paid credits were used.
+
+Reproduce the natural benchmark report from the committed observations without
+models, services or network requests:
+
+```bash
+node scripts/audio-natural-benchmark.cjs data/audio-reference-benchmark.json data/audio-reference-observations.json /tmp/grove-natural-benchmark.json
+node tests/audio-natural-benchmark.test.cjs
+```
+
+Optionally retrieve the exact original research audio through its intended
+public player path. This does not grant redistribution rights. Omit `--download`
+to verify an existing local copy without making requests. Changed or missing
+bytes fail explicitly; they are never replaced with a similarly named clip.
+
+```bash
+python3 scripts/fetch-audio-references.py --out /tmp/grove-natural-references --download
+```
+
+**Pronunciation verification remains unfinished.** The next step is obtaining
+the independently reviewed Mainland reference set, then either using reviewed,
+permitted originals directly or calibrating a conservative acoustic method
+against them. Neutral readings and any uncovered contrasts must remain explicit
+gaps. No model agreement, filename or source's nationality closes that gap.
 
 ## Local tools
 

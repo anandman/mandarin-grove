@@ -1,5 +1,16 @@
 # Change history
 
+## Pronunciation research checkpoint — 2026-10-22
+
+- Added a reproducible natural-reference benchmark with 87 SHA-bound Mainland
+  research clips, a separate speaker, blind observations from two acoustic models
+  and 222 wrong-reading controls. No source audio or model weights are included.
+- Scanned all 557 optional recording files with both models. These checks do not
+  establish Mainland pronunciation certification; no recordings were promoted.
+- Documented actual disagreements, source metadata problems, remaining reference
+  access and coverage gaps, and the difference between the university corpus and
+  commercial assessment service. App behavior and child progress are unchanged.
+
 ## Mainland pronunciation target — 20261022-mainland-35
 
 Make Mainland Standard Mandarin (Putonghua), Hanyu Pinyin and simplified Chinese explicit. Restore a zh-CN browser request for new/unset voice preferences, and label CNS11643 audio Taiwan Mandarin recordings · optional. Preserve saved voice choices and all child progress. Clarify that reading/file provenance does not establish a Mainland accent; verified Mainland static audio remains unfinished. Curriculum characters, pinyin and grading stay unchanged.
