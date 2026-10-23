@@ -1,11 +1,9 @@
 // Immutable synthetic snapshots: never replace these with a child's backup.
 const test=require('node:test'),assert=require('node:assert/strict');
-const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {createRepository}=require('../adapters/web-storage.js');
 const directory=path.join(__dirname,'fixtures/backups');
 const manifest=JSON.parse(fs.readFileSync(path.join(directory,'manifest.json'),'utf8'));
-const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
-const exporter=source.match(/^function backup\(\).*$/m)?.[0];
-assert.ok(exporter,'The web backup entry point must remain available through replacement');
 for(const fixture of manifest.fixtures){
  test(fixture.path+': frozen full-profile export is lossless and leaves storage untouched',()=>{
   const bytes=fs.readFileSync(path.join(directory,fixture.path));
@@ -13,10 +11,10 @@ for(const fixture of manifest.fixtures){
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),fixture.sha256);
   const snapshot=JSON.parse(bytes),store=new Map(Object.entries(snapshot.data).map(([id,raw])=>['zh_p_'+id,raw]));
   store.set('unrelated','keep');
+  store.set('zh_profiles',JSON.stringify(snapshot.PR));
   const before=JSON.stringify([...store]),profiles=JSON.stringify(snapshot.PR);
-  const context=vm.createContext({PR:snapshot.PR,localStorage:{getItem:key=>store.get(key)??null},btoa:value=>Buffer.from(value,'binary').toString('base64'),unescape,encodeURIComponent});
-  vm.runInContext(exporter,context);
-  const decoded=JSON.parse(Buffer.from(context.backup(),'base64').toString('utf8'));
+  const repository=createRepository({storage:{getItem:key=>store.get(key)??null},codec:{decodeUtf8:code=>Buffer.from(code,'base64').toString('utf8'),encodeUtf8:text=>Buffer.from(text,'utf8').toString('base64')}});
+  const decoded=JSON.parse(Buffer.from(repository.exportBackup(),'base64').toString('utf8'));
   assert.deepEqual(decoded,snapshot,'Every raw child record and unknown registry/profile field survives export');
   assert.equal(JSON.stringify([...store]),before);
   assert.equal(JSON.stringify(snapshot.PR),profiles);

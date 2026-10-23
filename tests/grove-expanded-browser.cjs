@@ -7,22 +7,22 @@ const assert=require('node:assert/strict');
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
   await page.evaluate(()=>{PR={cur:'expanded',list:[{id:'expanded',name:'Learner',gr:'K',av:'🐳'},{id:'other',name:'Other',gr:'4',av:'🐼'}]};savePR();S=blank();S.cfg.set=['一','二'];S.pts={一:5,二:5};S.stars=149;localStorage.setItem('zh_p_expanded',JSON.stringify(S));loadS();home();});
-  assert.equal(await page.locator('[data-unit-readiness]').count(),1,'Home must explain how to add a unit');
+  assert.equal(await page.getByRole('button',{name:'Practice',exact:true}).count(),1,'Home keeps the shared Practice entry');
   await page.evaluate(()=>{for(const char of ['一','二'])for(let i=0;i<2;i++)recordSkill(S,char,'listen','correct');save();home()});
-  assert.match(await page.locator('[data-unit-readiness]').innerText(),/Ready for more/);
+  assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二'],'Readiness never silently adds units');
-  await page.getByRole('button',{name:'Add another unit',exact:true}).click();
+  await page.evaluate(()=>showGroveUnitChooser());
   await page.getByRole('button',{name:'Add Unit 3',exact:true}).click();
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   await page.reload();assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   // Even actual spaced mastery must leave the school unit selection alone.
   await page.evaluate(()=>{const start=Date.now()-4*REVIEW_DAY;for(const char of ['三','十'])for(const skill of ['listen','memory']){let time=start;for(let i=0;i<3;i++){recordSkill(S,char,skill,'correct',time);time=skillState(S,char,skill).due;}}save();home()});
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
-  await page.getByRole('button',{name:'Add another unit',exact:true}).click();
+  await page.evaluate(()=>showGroveUnitChooser());
   await page.getByRole('button',{name:'Add Unit 7',exact:true}).click();
   assert.ok(await page.evaluate(()=>[...QU('K').find(([n])=>n===7)[1]].every(c=>SET().includes(c))),'School units can be added out of order');
   await page.evaluate(()=>showGroveRewards());
-  assert.equal(await page.locator('[data-reward]').count(),20);
+  assert.equal(await page.evaluate(()=>GROVE_REWARD_CATALOG.length),20);await page.getByRole('tab',{name:'Build',exact:true}).click();
   assert.equal(await page.locator('[data-project]').count(),2);
   const startingBalance=await page.evaluate(()=>groveWallet(S).balance);
   await page.getByRole('tab',{name:'Ground',exact:true}).click();
@@ -83,14 +83,14 @@ const assert=require('node:assert/strict');
     for(const char of SET())for(let i=0;i<2;i++)for(const skill of ['listen','memory',...(Number(grade)>=2&&characterNeedsPinyin(char)?['pinyin']:[])])recordSkill(S,char,skill,'correct');
     save();setCards();home();return {set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test};
    },grade);
-   assert.match(await page.locator('[data-unit-readiness]').innerText(),/Ready for more/);
+   assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
    assert.deepEqual(await page.evaluate(()=>[...SET()]),before.set);
-   await page.getByRole('button',{name:'Add another unit',exact:true}).click();
+   await page.evaluate(()=>showGroveUnitChooser());
    await page.getByRole('button',{name:'Add Unit 7',exact:true}).click();
    const after=await page.evaluate(()=>({set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test}));
    assert.equal(after.quiz,before.quiz);assert.equal(after.test,before.test);assert.ok(before.set.every(c=>after.set.includes(c)));
   }
-  await page.evaluate(()=>{groveWallet(S).balance=100;save();showGroveRewards()});
+  await page.evaluate(()=>{groveWallet(S).balance=100;save();showGroveRewards()});await page.getByRole('tab',{name:'Build',exact:true}).click();
   for(const [piece,cost]of [['Ladder',3],['Platform',3],['Window walls',4],['Treehouse roof',4]]){
    await page.locator('[data-project="treehouse"]').getByRole('button',{name:`Build ${piece} · 🍊 ${cost}`,exact:true}).click();
   }

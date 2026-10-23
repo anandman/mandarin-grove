@@ -3,9 +3,10 @@ const assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:4173');
+ page.on('pageerror',e=>errors.push(e.message));await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
  await page.evaluate(()=>{
   localStorage.setItem('zh_profiles',JSON.stringify({cur:'reward',list:[{id:'reward',name:'Learner',gr:'K',av:'🐻'},{id:'sibling',name:'Sibling',gr:'2',av:'🐳'}]}));
+  localStorage.setItem('zh_p_sibling',JSON.stringify(blank()));
   const s={stars:120,streak:0,last:'',pts:{},box:{},due:{},cfg:{}};
   for(let i=0;i<120;i++)recordSkill(s,'狗','trace','assisted');
   localStorage.setItem('zh_p_reward',JSON.stringify(s));

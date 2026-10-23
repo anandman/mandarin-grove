@@ -17,6 +17,7 @@ const assert = require('node:assert/strict');
       return page.evaluate(mode => {
         PR = { cur: 'study-attempt', list: [{ id: 'study-attempt', name: 'Learner', gr: '2', av: '🐼' }] };
         savePR();
+        loadS();
         S = blank();
         S.stars = 11;
         S.pts = { 狗: 2 };

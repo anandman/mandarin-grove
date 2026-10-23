@@ -14,7 +14,7 @@ test('published reference set covers every curriculum reading with verified sour
  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
  const ctx=vm.createContext({});
  vm.runInContext(fs.readFileSync(path.join(root,'practice.js'),'utf8'),ctx);
- const all=JSON.parse(fs.readFileSync(path.join(root,'app.js'),'utf8').match(/const ALL=(\[.*?\]),ORIG=/s)[1]);
+ const all=require('../content/curriculum.js').cards;
  const expected=[...new Set(all.flatMap(c=>c.p.split(/\s*\/\s*/).map(p=>numberedPinyin(p).replaceAll('ü','v'))))].sort();
  assert.equal(expected.length,557);
  assert.deepEqual(Object.keys(manifest.readings).sort(),Array.from(expected));

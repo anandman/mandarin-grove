@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
- await page.evaluate(()=>{localStorage.setItem('zh_profiles',JSON.stringify({list:[{id:'learning',name:'Learner',av:'🐳',gr:'4'},{id:'other',name:'Sibling',av:'🐻',gr:'2'}],cur:'learning'}));localStorage.setItem('zh_p_learning',JSON.stringify({stars:100,pts:{狗:5},box:{},due:{},cfg:{}}))});await page.reload();await page.evaluate(()=>home());
+ await page.evaluate(()=>{localStorage.setItem('zh_profiles',JSON.stringify({list:[{id:'learning',name:'Learner',av:'🐳',gr:'4'},{id:'other',name:'Sibling',av:'🐻',gr:'2'}],cur:'learning'}));localStorage.setItem('zh_p_other',JSON.stringify(blank()));localStorage.setItem('zh_p_learning',JSON.stringify({stars:100,pts:{狗:5},box:{},due:{},cfg:{}}))});await page.reload();await page.evaluate(()=>home());
  await page.evaluate(()=>{showCram();selectCramUnits(true);startCram();SESS.q.sort((a,b)=>(a[0]==='listen'?-1:0)-(b[0]==='listen'?-1:0));SESS.i=0;nextItem()});
  assert.equal(await page.evaluate(()=>SESS.q.length),30);
  const q=await page.evaluate(()=>SESS.q.map(([m,c])=>[m,c.c]));

@@ -3,9 +3,10 @@ const assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:4173');
+ await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
  await page.evaluate(()=>{
   localStorage.setItem('zh_profiles',JSON.stringify({list:[{id:'a',name:'A',gr:'4'},{id:'b',name:'B',gr:'4'}],cur:'a'}));
+  localStorage.setItem('zh_p_b',JSON.stringify(blank()));
   localStorage.setItem('zh_p_a',JSON.stringify({stars:10,pts:{},box:{},due:{},cfg:{set:['查','狗','猫']}}));
  });await page.reload();await page.evaluate(()=>showCram());
  await page.locator('[data-unit="2"]').check();await page.locator('[data-unit="6"]').check();

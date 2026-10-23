@@ -1,14 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('app.js','utf8');
+const {buildUnitGroups}=require('../core/units.js');
+const curriculum=require('../content/curriculum.js');
 const expected=JSON.parse(fs.readFileSync('tests/fixtures/better-immersion-k5.json'));
-function groups(grade,chars){
- const ctx=vm.createContext({MASTER:5,PR:{list:[{id:'test',gr:grade}],cur:'test'},S:{pts:{}}});
- vm.runInContext(source.split('\n').find(l=>l.startsWith('const ALL=')),ctx);
- vm.runInContext(source.slice(source.indexOf('function gList('),source.indexOf('function GLB(')),ctx);
- vm.runInContext(source.slice(source.indexOf('function HSETS('),source.indexOf('let HO=')),ctx);
- vm.runInContext(`CARDS.splice(0,CARDS.length,...ALL.filter(c=>${JSON.stringify(chars)}.includes(c.c)))`,ctx);
- return JSON.parse(vm.runInContext('JSON.stringify(HSETS().o)',ctx));
-}
+function groups(grade,chars){return buildUnitGroups({units:curriculum.units,cards:curriculum.cards,grade,selection:chars}).groups;}
 test('My Characters current-grade units exactly match PDF numbers and full character order',()=>{
  for(const [grade,units] of Object.entries(expected)){
   const actual=groups(grade,[...units[0][1]]).filter(h=>h.g===grade&&h.t.startsWith('Unit '));

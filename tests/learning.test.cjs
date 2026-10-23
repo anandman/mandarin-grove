@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const c=vm.createContext({Date,Math});
-vm.runInContext(fs.readFileSync('app.js','utf8').split('\n').find(l=>l.startsWith('const ALL=')),c);
+vm.runInContext(fs.readFileSync('content/curriculum.js','utf8')+';const ALL=GroveCurriculum.cards,U=GroveCurriculum.units;function QU(g){return U[g]||[]}',c);
 if(fs.existsSync('learning.js'))vm.runInContext(fs.readFileSync('learning.js','utf8'),c);
 vm.runInContext(fs.readFileSync('rewards.js','utf8'),c);
 const day=864e5, now=new Date(2026,9,18,12).getTime();

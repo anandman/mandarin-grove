@@ -1,0 +1,32 @@
+{
+  "id": "cc-cedict-characters-2026-10-21",
+  "name": "CC-CEDICT",
+  "publisher": "MDBG and CC-CEDICT contributors",
+  "url": "https://www.mdbg.net/chinese/dictionary?page=cc-cedict",
+  "download": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
+  "license": "CC-BY-SA-4.0",
+  "licenseURL": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "sourceDate": "2026-10-21T05:46:59Z",
+  "retrieved": "2026-10-23T05:57:10.576685+00:00",
+  "sourceVersion": "1.0; format=ts; 125295 entries",
+  "compressedSha256": "f50281886b7cedc9be90aa923886710711c2a67853e350b848733f8a2f75db47",
+  "uncompressedSha256": "f6b2248b589a7f231952bbcb86db5206c089c69c9de06ded0f2a5569e962ec64",
+  "subset": {
+    "path": "vendor/cc-cedict/curriculum-characters.txt",
+    "sha256": "3f97b44b8f2dc962e2c5891ee3167e1b1c8b58f7ecad8b7b3a327ef05a6733aa",
+    "bytes": 128163,
+    "records": 1447
+  },
+  "changes": "Retain original header and all unmodified single-character records whose simplified headword is one of the 841 curriculum/supplemental IDs. Build meanings from the first two non-classifier/non-pronunciation-note definitions per matching lower-case lexical row, preferring substantive entries to redirects and retaining multiple same-reading senses for simplified mergers; preserve full selected source lines. No inherited catalog meaning or example text is reused. Exact lexical matching does not establish fluent instructional or acoustic review.",
+  "curriculum": {
+    "id": "better-immersion-k5-fixture",
+    "path": "tests/fixtures/better-immersion-k5.json",
+    "sha256": "28cbcc905bc521db071ccc9230154c47575f47ad60d5d3be1e935707f63d65c4",
+    "url": "https://www.pgcps.org/globalassets/schools/elementary/paint-branch/docs---paint-branch/better-immersion-chinese-character-list.pdf",
+    "retrieved": "2026-10-18",
+    "copyright": "Better Chinese LLC (a Better World LTD Company)",
+    "changes": "Unit number/character membership from the existing PDF fixture; compatibility radicals normalized with NFKC; K Unit 1 basic strokes omitted. No textbook examples or prose imported.",
+    "redistribution": "publication-permission-unresolved",
+    "scope": "Preserve the owner-authorized private curriculum compatibility. Source availability/fixture attribution is not a determination of permission for wider publication."
+  }
+}

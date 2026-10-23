@@ -22,7 +22,7 @@ function studyDefaults(s,grade,kind,fallback,allowed){
  const stored=s.cfg?.studyChoices?.[grade]?.[kind];
  return {units:[...(stored?.units||[])],chars:[...(stored?.chars||fallback)],modes:(stored?.modes||allowed.filter(m=>m!=='words')).filter(m=>allowed.includes(m)),limit:[5,10,20,30].includes(stored?.limit)?stored.limit:kind==='review'?30:10};
 }
-function addStudyResult(round,key,result){if(Object.hasOwn(round.results,key))return false;round.results[key]={...result};return true;}
+function addStudyResult(round,key,result){return GroveResults.recordFirstResult(round,key,result);}
 function studyScore(round){const all=Object.values(round.results||{}),rows=all.filter(r=>!r.ungraded),correct=rows.filter(r=>r.correct).length,total=rows.length;return {total,correct,percent:total?Math.round(1000*correct/total)/10:0,reached:total>0&&correct/total>=.9,selfRated:rows.filter(r=>r.selfRated).length,...(all.length>total?{ungraded:all.length-total}:{})};}
 function pruneStudyRound(round,excluded){
  const blocked=new Set(excluded),keep=(item)=>Object.hasOwn(round.results||{},item[0]+':'+item[1])||!blocked.has(item[1]);
@@ -112,7 +112,9 @@ function saveStudyRound(){
 function recordStudyAnswer(review,outcome){
  if(!SESS?.study)return;
  const [mode,c]=SESS.q[SESS.currentIndex],r=SESS.round;
- addStudyResult(r,mode+':'+c.c,{character:c.c,mode,correct:outcome==='correct',outcome,...(outcome==='unverified'?{ungraded:true}:{}),selfRated:mode==='flip'||mode==='dictation'});
+ const itemId=mode+':'+c.c;
+ const result=GroveResults.createResult({character:c.c,mode,sessionId:r.id,itemId,correct:outcome==='correct',outcome,...(outcome==='unverified'?{ungraded:true}:{}),selfRated:mode==='flip'||mode==='dictation',...(review?.evidence?{evidence:review.evidence}:{})},{makeId:()=>r.id+':'+itemId});
+ addStudyResult(r,itemId,result);
  r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);A.querySelector('.study-not-learned')?.setAttribute('disabled','');saveStudyRound();
 }
 function studyNextItem(){

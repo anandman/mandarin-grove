@@ -1,4 +1,4 @@
-const VER='20261022-mainland-35';
+const VER='20261023-independent-36';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

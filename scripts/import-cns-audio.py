@@ -75,8 +75,8 @@ def reading_key(pinyin):
 
 
 def curriculum_readings():
-    source = (ROOT / "app.js").read_text(encoding="utf-8")
-    cards, _ = json.JSONDecoder().raw_decode(source.split("const ALL=", 1)[1])
+    source = (ROOT / "content/curriculum.json").read_text(encoding="utf-8")
+    cards = json.loads(source)["cards"]
     readings = {}
     for card in cards:
         for label in re.split(r"\s*/\s*", card["p"]):

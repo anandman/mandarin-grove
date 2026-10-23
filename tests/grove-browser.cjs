@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
  await page.evaluate(()=>{PR={cur:'grove',list:[{id:'grove',name:'Learner',gr:'4',av:'🐳'}]};savePR();S=blank();S.stars=149;S.streak=1;S.last=today();S.cfg.quiz=QU()[0][1];for(let i=0;i<120;i++)recordSkill(S,'祖','trace','assisted');localStorage.setItem('zh_p_grove',JSON.stringify(S));loadS();home()});
  assert.equal(await page.evaluate(()=>groveWallet(S).balance),14);
  assert.ok(await page.locator('#sets').evaluate(e=>e.classList.contains('grove-trees')));
- assert.equal(await page.locator('.modes svg').count(),4);
+ assert.equal(await page.locator('.study-home-entries > button').count(),2);assert.equal(await page.getByRole('button',{name:'Practice',exact:true}).count(),1);assert.equal(await page.getByRole('button',{name:'Review',exact:true}).count(),1);
  await page.locator('#grove-view-list').click();assert.equal(await page.locator('#sets').evaluate(e=>e.classList.contains('grove-trees')),false);
  await page.reload();await page.evaluate(()=>home());assert.equal(await page.locator('#grove-view-list').getAttribute('aria-pressed'),'true');
  await page.locator('#grove-view-trees').click();
@@ -23,7 +23,7 @@ const assert=require('node:assert/strict');
    await page.evaluate(()=>dclose());
   }
  }
- await page.getByRole('button',{name:'4th grade · Unit 7, 0 of 9 reward milestones',exact:true}).click();assert.ok(await page.getByRole('button',{name:'▶ Practice this unit',exact:true}).count()>0);
+ await page.getByRole('button',{name:'Grade 4 · Unit 7, 0 of 9 reward milestones',exact:true}).click();assert.ok(await page.getByRole('button',{name:'▶ Practice this unit',exact:true}).count()>0);
  await page.screenshot({path:'/tmp/mandarin-grove-trees-ipad.png',fullPage:true});
  await page.getByRole('button',{name:'Grove rewards',exact:true}).click();
  await page.getByRole('tab',{name:'Trees',exact:true}).click();

@@ -3,8 +3,8 @@ const assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});
  const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:4173');
- await page.evaluate(()=>{localStorage.setItem('zh_profiles',JSON.stringify({cur:'test',list:[{id:'test',name:'Older',gr:'4',av:'🐳'},{id:'younger',name:'Younger',gr:'1',av:'🐻'}]}));localStorage.setItem('zh_p_test',JSON.stringify({stars:10,streak:0,last:'',pts:{},box:{},due:{},cfg:{}}));});
+ page.on('pageerror',e=>errors.push(e.message));await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
+ await page.evaluate(()=>{localStorage.setItem('zh_profiles',JSON.stringify({cur:'test',list:[{id:'test',name:'Older',gr:'4',av:'🐳'},{id:'younger',name:'Younger',gr:'1',av:'🐻'}]}));localStorage.setItem('zh_p_younger',JSON.stringify(blank()));localStorage.setItem('zh_p_test',JSON.stringify({stars:10,streak:0,last:'',pts:{},box:{},due:{},cfg:{}}));});
  await page.reload();await page.evaluate(()=>home());
  await page.getByRole('button',{name:'My progress',exact:true}).click();
  assert.ok(await page.getByRole('heading',{name:'My progress',exact:true}).isVisible());assert.equal(await page.locator('#dash-child').count(),0);
@@ -19,7 +19,7 @@ const assert=require('node:assert/strict');
  }
  await page.evaluate(()=>{PR.list[0].gr='4';savePR();home();grown()});await page.getByRole('button',{name:'Parent dashboard',exact:true}).click();assert.ok(await page.locator('#dash-child').isVisible());
  // Open stale tab before selection; its routine saves must preserve the fresh choice.
- const stale=await ctx.newPage();await stale.goto('http://127.0.0.1:4173');
+ const stale=await ctx.newPage();await stale.goto(process.env.APP_URL||'http://127.0.0.1:4173');
  await page.evaluate(()=>showCram());await page.locator('[data-unit="2"]').check();
  await stale.evaluate(()=>{S.stars++;save()});await page.reload();await page.evaluate(()=>showCram());assert.ok(await page.locator('[data-unit="2"]').isChecked());
  // A stale picker must reload the latest selection; clearing remains deliberate and persistent.
