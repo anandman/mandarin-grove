@@ -36,7 +36,7 @@ const assert=require('node:assert/strict');
   });assert.ok(contrast>=4.5,'Dark secondary actions must remain readable');
   await page.screenshot({path:'/tmp/mandarin-grove-dictation-dark.png',fullPage:true});
   await page.evaluate(async()=>{await new Promise(resolve=>SL('祖',resolve));detail(0,[ALL.find(c=>c.c==='祖')]);});
-  assert.equal(await page.locator('#dhw').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 253, 245)','Stroke ink needs opaque paper in dark mode');
+  assert.equal(await page.locator('#dhw').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(28, 37, 31)','Writing paper follows dark mode');
   await page.evaluate(()=>dclose());
   await page.evaluate(()=>home());await page.setViewportSize({width:390,height:844});
   for(const mode of ['Light','Dark']){

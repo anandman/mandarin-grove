@@ -8,6 +8,7 @@ function applyAppearance(){
  const mode=appearance==='system'?(appearanceMedia?.matches?'dark':'light'):appearance;
  document.documentElement.dataset.theme=mode;
  document.documentElement.style.colorScheme=mode;
+ document.dispatchEvent(new Event('appearancechange'));
  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='dark'?'#151916':'#F6F2E9');
  document.querySelectorAll('[data-appearance-setting]').forEach(el=>{el.value=appearance;});
  document.querySelectorAll('[name="appearance"]').forEach(el=>{el.checked=el.value===appearance;});

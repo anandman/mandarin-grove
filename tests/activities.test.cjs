@@ -36,7 +36,7 @@ test('Hanzi Writer loads local stroke data once and ignores a stale load callbac
   const data={strokes:['M0 0'],medians:[[[0,0],[1,1]]]};
   let options, requests=0, loaded=0;
   const box={clientWidth:300,innerHTML:'',isConnected:true};
-  const ctx=runtime({NAV:1,document:{getElementById:()=>box},getComputedStyle:()=>({getPropertyValue:()=>''}),HanziWriter:{create:(target,char,opts)=>{options=opts;return {cancelQuiz(){}};}},STROKES:{},fetch:async()=>{requests++;return {ok:true,json:async()=>data};}});
+  const ctx=runtime({NAV:1,document:{getElementById:()=>box},getComputedStyle:()=>({getPropertyValue:()=>''}),WritingSurface:{create:(target,char,opts)=>{options=opts;return {cancelQuiz(){}};}},STROKES:{},fetch:async()=>{requests++;return {ok:true,json:async()=>data};}});
   ctx.mkWriter({c:'祖'},true,()=>loaded++);
   assert.equal(options.showOutline,true);
   assert.equal(options.showCharacter,false);

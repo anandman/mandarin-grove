@@ -69,7 +69,8 @@ function renderRewards(){
  const strip=$('reward-strip');if(!strip)return;
  strip.hidden=!prof();if(!prof())return;
  const steps=practiceSteps(S),ribbons=S.rewards?.ribbons||0,count=Object.keys(S.rewards?.characters||{}).length;
- const char=feedbackQuestion?.card?.c;
+ // Reward details belong outside the active question; never expose a recall target.
+ const char=document.body.dataset.screen==='home'?feedbackQuestion?.card?.c:null;
  const tier=char?S.rewards?.characters?.[char]?.tier||0:0;
  strip.innerHTML=`<button class="reward-collection-link" onclick="rewardCollection()" aria-label="My badges"><b>🎗️ ${ribbons} · 🏅 ${count}</b><span>My badges ›</span></button><button class="reward-collection-link grove-wallet-link" onclick="showGroveRewards()" aria-label="Grove rewards"><b>🍊 ${groveWallet(S).balance}</b><span>Your grove ›</span></button><div class="reward-meter"><span class="reward-meter-caption">${steps%REWARD_POLICY.stepsPerRibbon}/${REWARD_POLICY.stepsPerRibbon} steps to your next ribbon</span><span class="reward-meter-count">${steps%REWARD_POLICY.stepsPerRibbon}/${REWARD_POLICY.stepsPerRibbon} steps</span><progress max="${REWARD_POLICY.stepsPerRibbon}" value="${steps%REWARD_POLICY.stepsPerRibbon}" aria-label="Practice steps toward next ribbon"></progress></div>${char?`<div class="reward-character"><b>${char} ${REWARD_ICONS[tier]} ${tier?REWARD_NAMES[tier]:'Build your badge'}</b><small>${tier?'Your badge stays yours. Reviews can earn upgrades!':rewardTargets(char)}</small></div>`:''}`;
 }

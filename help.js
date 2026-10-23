@@ -154,7 +154,7 @@ function showHomeworkLookup(){
      let data=STROKES[row.text];if(!data){const response=await fetch('strokes/'+encodeURIComponent(row.text)+'.json');if(!response.ok)throw Error('unavailable');data=await response.json();}
      if(!active()||!art.isConnected)return;
      art.replaceChildren();const size=Math.min(240,art.clientWidth||240),ink=getComputedStyle(document.body).getPropertyValue('--paper-ink').trim()||'#1F2937';
-     const guide=HanziWriter.create(art,row.text,{width:size,height:size,padding:14,strokeColor:ink,strokeAnimationSpeed:1.2,delayBetweenStrokes:130,charDataLoader:(_,done)=>done(data)});status.textContent='';guide.animateCharacter();
+     const guide=WritingSurface.create(art,row.text,{width:size,height:size,padding:14,strokeColor:ink,strokeAnimationSpeed:1.2,delayBetweenStrokes:130,charDataLoader:(_,done)=>done(data)});status.textContent='';guide.animateCharacter();
     }catch{if(active()&&art.isConnected)status.textContent='The stroke guide could not load. You can try again.';}
     finally{if(strokes.isConnected)strokes.disabled=false;}
    };

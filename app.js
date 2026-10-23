@@ -201,7 +201,7 @@ function detail(index,cards=CARDS){
  overlay.addEventListener('touchcancel',()=>touch=null,{passive:true});
  overlay.addEventListener('touchend',event=>{const start=touch;touch=null;if(!start||!overlay.isConnected)return;const end=[...event.changedTouches].find(point=>point.identifier===start.id);if(!end)return;const horizontal=end.clientX-start.x,vertical=end.clientY-start.y;if(Math.abs(horizontal)>60&&Math.abs(horizontal)>Math.abs(vertical))detail(DI+(horizontal<0?1:-1),DL);else if(vertical>90&&vertical>Math.abs(horizontal))dclose();},{passive:true});
  document.body.append(overlay);
- const size=$('dhw').clientWidth;dw=HanziWriter.create('dhw',card.c,{width:size,height:size,padding:14,strokeColor:'#1F2937',strokeAnimationSpeed:1.3,delayBetweenStrokes:120,charDataLoader:SL});$('dhw').onclick=()=>dw?.animateCharacter();$('detail-watch').onclick=()=>dw?.animateCharacter();$('detail-practice').onclick=()=>PRAC(card);overlay.querySelector('.detail-close').focus();say(card.c);
+ const size=$('dhw').clientWidth;dw=WritingSurface.create($('dhw'),card.c,{width:size,height:size,padding:14,strokeColor:'#1F2937',strokeAnimationSpeed:1.3,delayBetweenStrokes:120,charDataLoader:SL});$('dhw').onclick=()=>dw?.animateCharacter();$('detail-watch').onclick=()=>dw?.animateCharacter();$('detail-practice').onclick=()=>PRAC(card);overlay.querySelector('.detail-close').focus();say(card.c);
 }
 function PRAC(card){dclose();showStudySetup('practice',[card]);}
 function dclose(){detailRequest++;$('dov')?.remove();dw=null;if(detailReturnFocus?.isConnected)detailReturnFocus.focus();detailReturnFocus=null;}
@@ -211,7 +211,7 @@ function srch(value){
  if(!host.children.length){const note=document.createElement('p');note.className='mean';note.textContent='No match. Try just the letters, like "mai".';host.append(note);}
 }
 function backup(){return GROVE_REPOSITORY.exportBackup();}
-$('home').onclick=home;$('totop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});$('report-problem')?.addEventListener('click',()=>showFeedback());
+$('ttl').onclick=()=>{if(prof())home();};$('totop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});$('report-problem')?.addEventListener('click',()=>showFeedback());
 addEventListener('scroll',()=>$('totop')?.classList.toggle('show',scrollY>innerHeight*1.5),{passive:true});
 document.addEventListener('keydown',event=>{const overlay=$('dov');if(!overlay)return;if(event.key==='Escape'){event.preventDefault();dclose();}else if(event.key==='ArrowLeft')detail(DI-1,DL);else if(event.key==='ArrowRight')detail(DI+1,DL);else if(event.key==='Tab'){const controls=[...overlay.querySelectorAll('button')],first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
 let LAST=Date.now();for(const event of ['pointerdown','keydown'])addEventListener(event,()=>LAST=Date.now(),{capture:true});function idleChk(){if(PR.list.length>1&&Date.now()-LAST>30*60*1000){LAST=Date.now();who();}}setInterval(idleChk,60000);

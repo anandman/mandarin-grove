@@ -39,10 +39,10 @@ const ActivityUI = (() => {
     const token = NAV, width = box.clientWidth || 300;
     const style = getComputedStyle(box);
     const color = (name, fallback) => style.getPropertyValue(name).trim() || fallback;
-    const instance = HanziWriter.create(box, c.c, {
+    const instance = WritingSurface.create(box, c.c, {
       width, height: width, padding: 22, showCharacter: false, showOutline: !!outline,
-      strokeColor: color('--tx', '#242B24'), outlineColor: color('--paper-grid', '#DDD9CE'),
-      drawingColor: color('--tx', '#242B24'), highlightColor: color('--ac', '#F57727'),
+      strokeColor: color('--paper-ink', '#242B24'), outlineColor: color('--paper-outline', '#857E70'),
+      drawingColor: color('--paper-ink', '#242B24'), highlightColor: color('--ac', '#F57727'),
       charDataLoader: (char, complete, fail) => loadStrokes(char).then(complete, error => { fail?.(error); }),
       onLoadCharDataSuccess: guard(token, box, data => ready?.(data)),
       onLoadCharDataError: guard(token, box, () => {
@@ -89,7 +89,8 @@ const ActivityUI = (() => {
     canvas.addEventListener('pointermove', event => {
       if (!previous) return;
       event.preventDefault(); const end = point(event);
-      context.strokeStyle = getComputedStyle(canvas).getPropertyValue('--tx').trim() || '#242B24';
+      // Store dark canonical pixels; CSS maps both this canvas and its preview in dark mode.
+      context.strokeStyle = '#242B24';
       context.lineWidth = 6; context.lineCap = 'round'; context.lineJoin = 'round';
       context.beginPath(); context.moveTo(previous.x, previous.y); context.lineTo(end.x, end.y); context.stroke(); previous = end;
     });
