@@ -69,10 +69,10 @@ function groveHomeMarkup(dl){
  <details class="compact-help"><summary>More tools</summary><div class="study-more-tools"><button class="progress-link" onclick="qList()">All unit quizzes</button><button class="progress-link" onclick="catG=GR();cat()">All characters</button><button class="progress-link" onclick="zooScreen()">My Zoo</button></div></details>
  ${wallet.legacyCredit?.amount?`<p class="grove-legacy-link">🍊 ${wallet.legacyCredit.amount} oranges from earlier practice · Your original stars stay yours</p>`:''}</div>`;
 }
-function groveCharactersMarkup(grade=GR()){
- return `<section aria-label="My characters"> <div class="grove-section-heading"><h2>My characters</h2><span>${esc(GN[grade])} · Any unit, any order</span></div>
+function groveCharactersMarkup(grade=GR(),scope='All units · Any order'){
+ return `<section aria-label="My characters"> <div class="grove-section-heading"><h2>Browse characters</h2><span>${esc(GN[grade])} · ${esc(scope)}</span></div>
  ${grade==='K'?'<p class="reading-note grove-unit-help">Unit 1 teaches basic strokes. Characters start at Unit 2.</p>':''}
- <label class="character-search-label" for="srch">Find a character</label><input id="srch" type="search" placeholder="Character, pinyin or English meaning" autocomplete="off" autocapitalize="off" oninput="srch(this.value)"><p id="search-status" class="reading-note" role="status"></p><div id="sres" class="zoo"></div>
+ <label class="character-search-label" for="srch">Find a character</label><p id="character-search-help" class="reading-note">Use a character, pinyin or English meaning.</p><input id="srch" type="search" aria-describedby="character-search-help" placeholder="防, fang2 or protect" autocomplete="off" autocapitalize="off" oninput="srch(this.value)"><p id="search-status" class="reading-note" role="status"></p><div id="sres" class="zoo"></div>
  ${groveUnitControls()}<div class="sets" id="sets"></div></section>`;
 }
 function groveActivityHeading(mode){

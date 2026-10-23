@@ -83,14 +83,14 @@ function shuffle(values){const result=[...values];let remaining=result.length;wh
 function hdr(){
  const host=$('hd');host.replaceChildren();const profile=prof();
  const button=(label,text,action)=>{const item=document.createElement('button');item.className='pill';item.setAttribute('aria-label',label);item.textContent=text;item.onclick=action;host.append(item);return item;};
- if(profile){const switcher=button('Switch kid',profile.av||'🐼',who),name=document.createElement('span'),grade=document.createElement('span');name.className='nm';name.textContent=profile.name;grade.className='gb';grade.textContent=ORD(GR());switcher.append(' ',name,' ',grade);}
+ if(profile){const switcher=button(`${profile.av||'🐼'} ${profile.name} ${ORD(GR())}, Switch learner`,profile.av||'🐼',who),name=document.createElement('span'),grade=document.createElement('span');name.className='nm';name.textContent=profile.name;grade.className='gb';grade.textContent=ORD(GR());switcher.append(' ',name,' ',grade);}
  button('Appearance','◐',showAppearance).classList.add('appearance-toggle');button('Grown-ups settings, press and hold','⚙️',()=>{}).id='gear';
  const stats=document.createElement('span');stats.className='pill legacy-stats';stats.textContent=`⭐ ${S.stars}`;const streak=document.createElement('span');streak.className='legacy-streak';streak.textContent=` · 🔥 ${S.streak}`;stats.append(streak);host.append(stats);gearHold();renderRewards();
 }
 function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
-function screen(){
+function screen({scroll=true}={}){
  NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');renderRewards();
- requestAnimationFrame(()=>window.scrollTo(0,0));
+ const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
 function home(){
@@ -109,26 +109,26 @@ function browserCards(){const chars=new Set(HSETS(characterBrowserScope()).o.fla
 function homeSets(){
  const host=$('sets');if(!host)return;const {o,cur}=HSETS(characterBrowserScope()),key=homeUnitKey();
  HO[key]??=new Set(cur>=0?[o[cur].id]:characterBrowserScope()?.unit&&o[0]?[o[0].id]:[]);host.replaceChildren();const visitor=groveVisitorNote();if(visitor)host.insertAdjacentHTML('beforeend',visitor);
- if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Unit progress: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
+ if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Reward stars: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
  let previous='';
  o.forEach((group,index)=>{
   const sectionKey=[group.g,group.a,group.supplemental].join(':');
   if(sectionKey!==previous){previous=sectionKey;const heading=document.createElement('div');heading.className='gh';const title=document.createElement('h3');title.textContent=`${GN[group.g]||'Other'} · ${group.supplemental?'Supplemental practice':group.a?'Other selected units':'PDF units'}`;
-   const count=document.createElement('span'),peers=o.filter(row=>row.g===group.g&&row.a===group.a&&row.supplemental===group.supplemental);count.textContent=`${peers.filter(row=>row.c.every(char=>(S.pts[char]||0)>=MASTER)).length} of ${peers.length} ${group.supplemental?'sets':'units'} done`;heading.append(title,count);host.append(heading);
+   const count=document.createElement('span'),peers=o.filter(row=>row.g===group.g&&row.a===group.a&&row.supplemental===group.supplemental);count.textContent=`${peers.filter(row=>row.c.every(char=>(S.pts[char]||0)>=MASTER)).length} of ${peers.length} ${group.supplemental?'sets':'units'} with all stars`;heading.append(title,count);host.append(heading);
    if(group.supplemental||group.a){const note=document.createElement('p');note.className='reading-note';note.textContent=group.supplemental?'Extra characters outside the PDF unit list.':'Full PDF units containing your additional selected characters.';host.append(note);}
   }
   const complete=group.c.filter(char=>(S.pts[char]||0)>=MASTER).length,open=HO[key].has(group.id),growth=unitGroveGrowth(group.c);
   const row=document.createElement('div');row.className=['set',index===cur?'cur':'',complete===group.c.length?'done':'',open?'open':''].filter(Boolean).join(' ');
-  const toggle=document.createElement('button');toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',`${group.f}, ${complete} of ${group.c.length} reward milestones`);toggle.onclick=()=>HTG(group.id);
+  const toggle=document.createElement('button');toggle.setAttribute('aria-expanded',String(open));toggle.id='unit-'+encodeURIComponent(group.id);toggle.setAttribute('aria-description',`${group.f}. ${complete} of ${group.c.length} characters have five reward stars.`);toggle.onclick=()=>HTG(group.id);
   toggle.innerHTML=`<span class="unit-tree" aria-hidden="true">${groveTree('unit',growth.stage)}</span><span class="tt">${esc(group.t)}</span><span class="pv" aria-hidden="true">${open?'':group.c.map(esc).join(' ')}</span><span class="grove-growth">${growth.practiced}/${group.c.length} practiced · ${growth.badges} badges</span><span class="st">${complete}/${group.c.length} ${complete===group.c.length?'✓':'⭐'}</span><span class="cv" aria-hidden="true">⌄</span>`;row.append(toggle);
   if(open){const grid=document.createElement('div');grid.className='zoo';for(const [position,char]of group.c.entries()){
-    const card=ALL.find(card=>card.c===char);if(!card)continue;const points=S.pts[char]||0,tile=document.createElement('button');tile.className='z character-tile';tile.setAttribute('aria-label',`${char}, ${Math.min(points,MASTER)} of 5 stars`);tile.onclick=()=>DSET(index,position);
-    tile.innerHTML=`<span class="ch">${esc(char)}${asleep(card)?'<sup>💤</sup>':''}</span><span class="py">${esc(card.p)}</span><span class="dots">${Array.from({length:MASTER},(_,n)=>`<i class="${n<points?'on':''}"></i>`).join('')}</span>`;grid.append(tile);
+    const card=ALL.find(card=>card.c===char);if(!card)continue;const points=S.pts[char]||0,tile=document.createElement('button');tile.className='z character-tile';tile.setAttribute('aria-description',`${Math.min(points,MASTER)} of 5 reward stars`);tile.onclick=()=>DSET(index,position);
+    tile.innerHTML=`<span class="ch" lang="zh-Hans">${esc(char)}${asleep(card)?'<sup>💤</sup>':''}</span><span class="py" lang="zh-Latn-pinyin">${esc(card.p)}</span><span class="dots">${Array.from({length:MASTER},(_,n)=>`<i class="${n<points?'on':''}"></i>`).join('')}</span>`;grid.append(tile);
    }const practice=document.createElement('button');practice.className='pset';practice.textContent=`▶ Practice this ${group.supplemental?'set':'unit'}`;practice.onclick=()=>PSET(index);row.append(grid,practice);
   }host.append(row);
  });updateGroveView();
 }
-function HTG(id){const expanded=HO[homeUnitKey()]??=new Set();expanded.has(id)?expanded.delete(id):expanded.add(id);homeSets();}
+function HTG(id){const expanded=HO[homeUnitKey()]??=new Set();expanded.has(id)?expanded.delete(id):expanded.add(id);homeSets();const toggle=$('unit-'+encodeURIComponent(id));toggle?.focus({preventScroll:true});toggle?.scrollIntoView({block:'nearest'});}
 function PSET(index){const group=HS[index];if(group)showStudySetup('practice',group.c.map(char=>ALL.find(card=>card.c===char)).filter(Boolean));}
 function selectPractice(chars){S.cfg.set=[...new Set(chars)];save();setCards();lq=[];mq=[];}
 function next10(quiet=false){const group=NCH(),added=group?.c.filter(char=>!SET().includes(char))||[];if(added.length){const previous=SET();selectPractice(previous.concat(added));if(!quiet){cat();undoT(previous,'Added '+added.length);}}else if(!quiet)pop('Every character in this grade is already in practice.');return added.length;}
@@ -199,7 +199,7 @@ function detail(index,cards=CARDS){
  if(!STROKES[card.c]){SL(card.c,()=>{if(detailRequest===request&&NAV===navigation)detail(DI,DL);},()=>{if(detailRequest===request&&NAV===navigation)pop('Could not load strokes. Try opening this character again.');});return;}
  const existing=$('dov');if(!existing)detailReturnFocus=document.activeElement;existing?.remove();const overlay=document.createElement('div');overlay.id='dov';overlay.className='modal-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label',card.c+' character details');
  overlay.innerHTML='<div id="dcard"><button class="detail-close" aria-label="Close">✕</button><div class="detail-navigation"><button aria-label="Previous">‹</button><div id="dhw"></div><button aria-label="Next">›</button></div><p class="prog">Tap the character to see its strokes</p><div class="detail-reading"></div><div class="detail-meaning mean"></div><div class="detail-example"></div><p class="detail-progress prog"></p><div class="detail-actions"><button class="btn" id="detail-watch">▶ Watch strokes</button><button class="btn" id="detail-practice">✏️ Practice</button></div></div>';
- overlay.querySelector('.detail-reading').textContent=card.p;const sound=document.createElement('button');sound.className='btn gray detail-sound';sound.setAttribute('aria-label','Play sound');sound.textContent='🔊 Hear pronunciation';sound.onclick=()=>say(card.c);overlay.querySelector('.detail-reading').append(sound);overlay.querySelector('.detail-meaning').textContent=card.m;overlay.querySelector('.detail-example').innerHTML=wordLine(card);overlay.querySelector('.detail-progress').textContent=`${STROKES[card.c].strokes.length} strokes · ${'⭐'.repeat(Math.min(MASTER,S.pts[card.c]||0))}${'☆'.repeat(Math.max(0,MASTER-(S.pts[card.c]||0)))}`;
+ overlay.querySelector('.detail-reading').textContent=card.p;const sound=document.createElement('button');sound.className='btn gray detail-sound';sound.textContent='🔊 Hear pronunciation';sound.onclick=()=>say(card.c);overlay.querySelector('.detail-reading').append(sound);overlay.querySelector('.detail-meaning').textContent=card.m;overlay.querySelector('.detail-example').innerHTML=wordLine(card);overlay.querySelector('.detail-progress').textContent=`${STROKES[card.c].strokes.length} strokes · ${'⭐'.repeat(Math.min(MASTER,S.pts[card.c]||0))}${'☆'.repeat(Math.max(0,MASTER-(S.pts[card.c]||0)))}`;
  overlay.onclick=event=>{if(event.target===overlay)dclose();};overlay.querySelector('.detail-close').onclick=dclose;overlay.querySelector('[aria-label="Previous"]').onclick=()=>detail(DI-1,DL);overlay.querySelector('[aria-label="Next"]').onclick=()=>detail(DI+1,DL);
  let touch=null;
  overlay.addEventListener('touchstart',event=>{touch=null;if(event.touches.length!==1||event.target.closest('button,#dhw'))return;const point=event.touches[0];touch={id:point.identifier,x:point.clientX,y:point.clientY};},{passive:true});
@@ -214,7 +214,7 @@ function srch(value){
  const query=value.trim().toLowerCase(),key=pinyinBase(query).replace(/[1-5\s]/g,''),tone=/[1-4]/.exec(query)?.[0],host=$('sres'),status=$('search-status');
  host.replaceChildren();status.textContent='';if(!query)return;
  const pool=browserCards(),found=pool.filter(card=>card.c===query||card.m.toLowerCase().includes(query)||readings(card).some(reading=>pinyinBase(reading).startsWith(key)&&(!tone||pinyinTone(reading)===Number(tone))));
- for(const card of found){const button=document.createElement('button');button.className='z';button.textContent=card.c+' '+card.p;button.onclick=()=>detail(pool.indexOf(card),pool);host.append(button);}
+ for(const card of found){const button=document.createElement('button');button.className='z character-tile';button.innerHTML=`<span class="ch" lang="zh-Hans">${esc(card.c)}</span> <span class="py" lang="zh-Latn-pinyin">${esc(card.p)}</span>`;button.onclick=()=>detail(pool.indexOf(card),pool);host.append(button);}
  status.textContent=found.length?`${found.length} ${found.length===1?'character':'characters'} found in these units.`:'No characters found in these units. Try a character, pinyin or English meaning, or choose another Grade or Unit.';
 }
 function backup(){return GROVE_REPOSITORY.exportBackup();}

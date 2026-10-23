@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
  assert.ok(await page.locator('#reward-strip').isVisible());
  assert.equal(await page.evaluate(()=>S.rewards.ribbons),12);
  assert.equal(await page.evaluate(()=>S.stars),120);
- await page.getByRole('button',{name:'My badges',exact:true}).click();
+ await page.getByRole('button',{name:/My badges/}).click();
  assert.match(await page.locator('#app').innerText(),/120 practice steps/);
  assert.match(await page.locator('#app').innerText(),/Practice challenges/);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

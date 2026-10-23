@@ -18,15 +18,15 @@ const assert=require('node:assert/strict');
  for(const view of ['list','trees']){
   await page.locator('#grove-view-'+view).click();
   for(const key of ['Enter','Space']){
-   await page.getByRole('button',{name:'祖, 0 of 5 stars',exact:true}).focus();
+   await page.getByRole('button',{name:/祖.*zǔ/}).focus();
    await page.keyboard.press(key);
    assert.equal(await page.locator('#dov').count(),1,'Character tile must activate with '+key+' in '+view+' view');
    await page.evaluate(()=>dclose());
   }
  }
- await page.getByRole('button',{name:'Grade 4 · Unit 7, 0 of 9 reward milestones',exact:true}).click();assert.ok(await page.getByRole('button',{name:'▶ Practice this unit',exact:true}).count()>0);
+ await page.getByRole('button',{name:/^Unit 7 /}).click();assert.ok(await page.getByRole('button',{name:'▶ Practice this unit',exact:true}).count()>0);
  await page.screenshot({path:'/tmp/mandarin-grove-trees-ipad.png',fullPage:true});
- await page.getByRole('button',{name:'Grove rewards',exact:true}).click();
+ await page.getByRole('button',{name:/Your grove/}).click();
  await page.getByRole('tab',{name:'Trees',exact:true}).click();
  await page.locator('[data-reward="violet-leaves"]').getByRole('button',{name:'Unlock · 🍊 3',exact:true}).click();
  assert.equal(await page.evaluate(()=>groveWallet(S).balance),11);assert.equal(await page.evaluate(()=>S.stars),149);
@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
  await page.getByRole('tab',{name:'Visitors',exact:true}).click();await page.locator('[data-reward="butterfly"]').getByRole('button',{name:'Unlock · 🍊 4',exact:true}).click();await page.getByRole('button',{name:'Back home',exact:true}).click();await page.getByRole('button',{name:'My progress',exact:true}).click();await page.locator('#progress-characters > summary').click();assert.ok(await page.locator('.grove-visitor').isVisible());
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'/tmp/mandarin-grove-trees-phone.png',fullPage:true});
- await page.getByRole('button',{name:'Grove rewards',exact:true}).click();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.getByRole('button',{name:/Your grove/}).click();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'/tmp/mandarin-grove-fruit.png',fullPage:true});
  await page.evaluate(()=>{const data=JSON.parse(decodeURIComponent(escape(atob(backup()))));if(!JSON.parse(data.data.grove).groveRewards)throw Error('Rewards missing from backup')});
  assert.deepEqual(errors,[]);console.log('PASS: tree/list persistence, arbitrary unit access, retroactive fruit once, unlock/reload/refund, decoration, legacy stars, backup and mobile layout.');

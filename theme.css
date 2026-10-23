@@ -229,3 +229,16 @@ body[data-study] #reward-strip,body[data-study] .legacy-stats{display:none}
 /* Home has one progress shortcut; detailed unit browsing lives inside progress. */
 .grove-quick-links.home-progress-link{grid-template-columns:1fr}.home-progress-link button{border:0!important;text-align:left}
 #progress-characters{margin-top:24px}#progress-characters>summary{font-size:20px;min-height:44px;align-content:center;cursor:pointer}#progress-characters .grove-section-heading{margin-top:16px}
+
+/* Progress and catalog: one visible scope, stable targets and readable unit metadata. */
+.progress-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.progress-heading h1{margin:0;text-align:left}.progress-heading .progress-link{min-height:44px}
+.progress-filters{border:0;padding:0;margin:12px 0 18px}.progress-filters legend{padding:0;margin-bottom:8px;color:var(--mut);font-size:15px}.progress-filters select,#srch{border:1px solid var(--paper-outline);min-height:48px;max-width:100%;box-sizing:border-box}
+.progress-next{padding:18px}.progress-next h2{font-size:24px;margin-bottom:8px}.progress-next .reading-note{font-size:14px}.progress-week{font-size:14px;color:var(--mut)}
+.progress-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.progress-metrics>span{min-width:0;padding:10px;font-size:14px;overflow-wrap:anywhere}.progress-metrics b{font-size:25px}
+#progress-characters .grove-section-heading{display:block}#progress-characters .grove-section-heading>span{display:block;max-width:none;font-size:14px}.character-search-label{display:block;margin-top:16px;font-weight:600}#search-status:empty{display:none}#search-status{font-size:14px}
+#sets>.gh,#sets>.hsum,#sets>.reading-note,#sets>.grove-visitor{grid-column:1/-1;min-width:0}#sets>.gh{display:flex;gap:8px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}#sets>.gh h3{font-size:18px}#sets>.gh span,#sets>.hsum{font-size:14px}
+#progress-characters .grove-trees .grove-growth{font-size:13px}#progress-characters .grove-trees .st{font-size:14px}#progress-characters .grove-trees .tt{font-size:16px}#progress-characters .grove-trees .set>button:not(.pset){min-width:0;overflow-wrap:anywhere}#progress-characters .set .zoo .character-tile{min-width:0;min-height:72px}
+.detail-navigation>button{min-width:44px;min-height:44px}
+@media(max-width:680px){#progress-characters .grove-trees{grid-template-columns:repeat(2,minmax(0,1fr))}#progress-characters .grove-trees .set>button:not(.pset){padding:12px;min-height:200px}#progress-characters .grove-trees .set.open>button:not(.pset){min-height:112px}#progress-characters .grove-trees .set .zoo{grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.progress-heading h1{font-size:30px}.progress-next .btn{margin-left:0}}
+
+#progress-characters .grove-section-heading>span{text-align:left}#sres button.character-tile{background:var(--surface);color:var(--tx);border:1px solid var(--paper-outline);min-height:88px}#sres .ch{font-size:32px}#sres .py{font-size:16px;color:var(--mut)}

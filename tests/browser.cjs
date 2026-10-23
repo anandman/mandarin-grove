@@ -66,7 +66,7 @@ const assert=require('node:assert/strict');
  assert.ok(await page.getByRole('heading',{name:'4th grade · PDF units',exact:true}).isVisible());
  await page.locator('#dash-grade').selectOption('2');await page.locator('#progress-characters').evaluate(el=>el.open=true);
  assert.ok(await page.getByRole('heading',{name:'2nd grade · PDF units',exact:true}).isVisible());
- const tile=page.locator('#sets [aria-label="努, 3 of 5 stars"]');
+ const tile=page.locator('#sets .character-tile').filter({hasText:'努'});
  assert.equal(await tile.locator('.dots i.on').count(),3);
  assert.equal(await page.evaluate(()=>HS.filter(h=>h.g==='2').length),27);
  assert.deepEqual(await page.evaluate(()=>SET()),['查','狗','猫','买','卖'],'Shared browsing filters preserve the cross-grade practice selection');

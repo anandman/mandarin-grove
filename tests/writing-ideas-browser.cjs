@@ -55,7 +55,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('#writing-finish').isDisabled(),true,'Reopening must not let the same idea earn twice');
   await page.locator('#writing-another').click();assert.equal(await page.locator('#writing-finish').isDisabled(),false);
   await page.locator('#writing-finish').click();assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance+2);
-  await page.getByRole('button',{name:'Grove rewards',exact:true}).click();await page.getByRole('tab',{name:'Stamps',exact:true}).click();assert.match(await page.getByRole('tabpanel',{name:'Stamps',exact:true}).innerText(),/2 sentences celebrated/);
+  await page.getByRole('button',{name:/Your grove/}).click();await page.getByRole('tab',{name:'Stamps',exact:true}).click();assert.match(await page.getByRole('tabpanel',{name:'Stamps',exact:true}).innerText(),/2 sentences celebrated/);
   await page.reload();await page.evaluate(()=>home());
   assert.equal(await page.evaluate(()=>groveWallet(S).writingSentences),2);assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance+2);
   await page.evaluate(()=>{const data=JSON.parse(decodeURIComponent(escape(atob(backup()))));if(JSON.parse(data.data['writer-a']).groveRewards.writingSentences!==2)throw Error('Sentence rewards missing from backup');});
