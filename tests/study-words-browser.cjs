@@ -1,7 +1,8 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});try{
  const page=await browser.newPage({viewport:{width:390,height:740}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
+ async function openStudyChoices(){const editor=page.locator('#study-choice-editor');if(await editor.getAttribute('open')===null)await editor.locator(':scope > summary').click();}
+await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
  await page.evaluate(()=>{PR={cur:'word-round',list:[{id:'word-round',name:'Learner',gr:'4',av:'🐳'},{id:'other',name:'Other',gr:'2',av:'🐼'}]};savePR();S=blank();S.stars=149;S.pts={祖:5};S.cfg.set=['学','生','校'];localStorage.setItem('zh_p_word-round',JSON.stringify(S));loadS();window.say=()=>{};home()});
  // A missing words selector/dispatch must prevent a real scored word round.
  for(const kind of ['Practice','Review']){
@@ -29,21 +30,21 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  const before=await page.evaluate(()=>JSON.stringify([S.learning,S.stars,S.pts]));
  await page.locator('#word-input').fill('学甲乙丙');await page.locator('#word-check').click();assert.equal(await page.locator('#word-status').innerText(),'Not in our word bank yet.');
  await page.locator('#word-study-next').click();assert.equal(await page.evaluate(()=>JSON.stringify([S.learning,S.stars,S.pts])),before);
- assert.equal(await page.evaluate(()=>S.studyHistory.at(-1).score.reached),false);assert.equal(await page.getByRole('button',{name:'Practice missed questions',exact:true}).count(),0);assert.match(await page.locator('.study-finish').innerText(),/1 answer not checked/);
+ assert.equal(await page.evaluate(()=>S.studyHistory.at(-1).score.reached),false);assert.equal(await page.getByRole('button',{name:'Practice these again',exact:true}).count(),0);assert.match(await page.locator('.study-finish').innerText(),/1 answer not checked/);
  // Wrong target then Pause/reload cannot become a clean first attempt; a collected word is reusable.
  await page.evaluate(()=>{const c=ALL.find(c=>c.c==='学');startStudyRound('review',{units:[],chars:['学'],modes:['words'],limit:5},[c])});
  await page.waitForFunction(()=>!document.getElementById('word-check')?.disabled);await page.locator('#word-input').fill('小狗');await page.locator('#word-check').click();
  await page.getByRole('button',{name:'Pause',exact:true}).click();await page.reload();await page.evaluate(()=>{window.say=()=>{};resumeStudy('review')});
  await page.waitForFunction(()=>!document.getElementById('word-check')?.disabled);await page.locator('#word-input').fill('学校');await page.locator('#word-check').click();await page.locator('#word-study-next').click();
  assert.deepEqual(await page.evaluate(()=>[S.studyHistory.at(-1).score.correct,S.learning.chars.学.skills.words.misses,S.wordPractice.words.学]),[0,1,['学校']]);
- assert.equal(await page.getByRole('button',{name:'Practice missed questions',exact:true}).count(),1);
+ assert.equal(await page.getByRole('button',{name:'Practice these again',exact:true}).count(),1);
  // Don't know must finish honestly without inventing an expression or excluding the character.
  await page.evaluate(()=>{const c=ALL.find(c=>c.c==='学');startStudyRound('review',{units:[],chars:['学'],modes:['words'],limit:5},[c])});
  const unknownButton=page.getByRole('button',{name:'I don’t know a word yet',exact:true});assert.equal(await unknownButton.count(),1,'An unknown word has an honest miss action');await unknownButton.click();await page.locator('#word-study-next').click();
  assert.deepEqual(await page.evaluate(()=>[S.studyHistory.at(-1).score.correct,S.learning.chars.学.skills.words.misses,(S.cfg.notLearned||[]).includes('学')]),[0,2,false]);
  // Actual shared setup starts words only and choices survive refresh.
  await page.evaluate(()=>home());await page.getByRole('button',{name:'Practice',exact:true}).click();
- for(const input of await page.locator('[data-study-mode]').all()){if(await input.getAttribute('data-study-mode')==='words')await input.check();else await input.uncheck();}
+ await openStudyChoices();for(const input of await page.locator('[data-study-mode]').all()){if(await input.getAttribute('data-study-mode')==='words')await input.check();else await input.uncheck();}
  await page.locator('#study-start').click();await page.waitForFunction(()=>!document.getElementById('word-check')?.disabled);
  await page.getByRole('button',{name:'Pause',exact:true}).click();await page.reload();await page.evaluate(()=>{window.say=()=>{};home()});await page.getByRole('button',{name:'Practice',exact:true}).click();assert.ok(await page.locator('[data-study-mode="words"]').isChecked());await page.getByRole('button',{name:'Close session choices',exact:true}).click();
  for(const [device,width,height]of [['phone',390,740],['ipad',820,1060]])for(const theme of ['light','dark']){

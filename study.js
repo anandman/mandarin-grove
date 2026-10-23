@@ -40,25 +40,32 @@ function studyUnitChoices(){
 }
 function currentStudyRound(kind){const r=S.cfg.studyRounds?.[GR()]?.[kind];return r&&r.cursor<r.q.length?r:null;}
 let STUDY_DRAFT=null,STUDY_LAST=null;
-function showStudySetup(kind='practice',pool){
+function studyGoalText(total){return `90% goal: ${Math.ceil(total*.9)} of ${total} first attempts`; }
+function studyScopeText(config){
+ const groups=new Map();for(const u of studyUnitChoices().filter(u=>(config.units||[]).includes(u.id))){if(!groups.has(u.grade))groups.set(u.grade,[]);groups.get(u.grade).push(u.label.replace('Unit ',''));}
+ return [...groups].map(([grade,units])=>`${GN[grade]} · ${units.length>6?units.length+' selected units':'Unit'+(units.length===1?'':'s')+' '+units.join(', ')}`).join(' · ')||'Individually selected characters';
+}
+function showStudySetup(kind='practice',pool,restoredDraft=null){
  const existing=$('study-setup');if(existing?.open)return;
- const allowed=studyActivities().map(x=>x[0]),fallback=(pool||CARDS).map(c=>c.c),config=studyDefaults(S,GR(),kind,fallback,allowed);
+ const allowed=studyActivities().map(x=>x[0]),fallback=(pool||CARDS).map(c=>c.c),config=restoredDraft?JSON.parse(JSON.stringify(restoredDraft.config)):studyDefaults(S,GR(),kind,fallback,allowed);
  if(pool){config.chars=[...new Set(fallback)];config.units=[];}
  const valid=new Set(ALL.map(c=>c.c));config.chars=config.chars.filter(c=>valid.has(c));
  const units=studyUnitChoices();config.units=config.units.filter(id=>units.some(u=>u.id===id));
  if(!config.units.length)config.units=units.filter(u=>u.grade===GR()&&u.chars.every(c=>config.chars.includes(c))).map(u=>u.id);
- STUDY_DRAFT={kind,config,excluded:new Set(S.cfg.notLearned||[]),extras:config.chars.slice(),units};
+ STUDY_DRAFT={kind,config,owner:PR.cur,excluded:new Set(restoredDraft?.excluded||S.cfg.notLearned||[]),extras:restoredDraft?.extras.slice()||config.chars.slice(),units};
  const draft=STUDY_DRAFT;
  const previous=document.activeElement,dialog=document.createElement('dialog');dialog.id='study-setup';dialog.setAttribute('aria-labelledby','study-title');
  const saved=currentStudyRound(kind);
  dialog.innerHTML=`<div class="study-setup-title"><h2 id="study-title">${kind==='review'?'Review':'Practice'}</h2><button class="study-close" aria-label="Close session choices">✕</button></div>
  <p class="study-explanation">${kind==='review'?'Check what you remember from your selection.':'Build skills with help. Due skills come first within each activity; up to 3 new characters per round.'}</p>
- ${saved?`<button class="btn gray study-resume" onclick="closeStudySetup();resumeStudy('${kind}')">Resume ${saved.cursor} / ${saved.q.length}</button>`:''}
+ ${saved?`<section class="study-saved"><p id="study-saved-scope">Paused · ${saved.cursor} of ${saved.q.length} finished · ${saved.config.chars.length} characters · ${saved.config.modes.length} activit${saved.config.modes.length===1?'y':'ies'}<br>${voiceEscape(studyScopeText(saved.config))}</p><button class="btn study-resume" id="study-continue">Continue this round</button></section>`:''}
+ <section class="study-ready"><b id="study-count" role="status"></b><p id="study-scope" class="reading-note"></p><p id="study-round-goal" class="reading-note"></p><button class="btn ${saved?'gray':''}" id="study-start">Start</button></section>
  ${kind==='review'?'<button type="button" id="study-recent-mistakes" class="progress-link" onclick="showRecentMistakes()">Things to practice</button>':''}
- <div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
+ <details id="study-choice-editor"><summary>Change choices</summary><div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
  <section><div class="study-subheading"><h3>Characters</h3><button class="progress-link" id="study-all-chars">Select all taught</button></div><div class="study-characters" id="study-characters"></div><small>Leave out characters you haven’t learned yet.</small><details id="study-deferred"><summary>Not learned yet <span id="study-deferred-count"></span></summary><div id="study-deferred-list"></div></details></section>
  <section><h3>Activities</h3><div class="study-activities">${studyActivities().map(([m,label])=>`<label><input type="checkbox" data-study-mode="${m}" ${config.modes.includes(m)?'checked':''}>${label}</label>`).join('')}</div></section></div>
- <div class="study-start"><label>Questions <select id="study-limit">${[5,10,20,30].map(n=>`<option ${config.limit===n?'selected':''}>${n}</option>`).join('')}</select></label><div><b id="study-count" role="status"></b><small>Goal: 90% on first attempts</small></div><button class="btn" id="study-start">${SESS?.study?'Start new round':'Start'}</button></div>`;
+ <div class="study-question-limit"><label>Questions <select id="study-limit">${[5,10,20,30].map(n=>`<option ${config.limit===n?'selected':''}>${n}</option>`).join('')}</select></label><p class="reading-note">Goal: 90% of graded first attempts. Unchecked answers stay ungraded.</p></div></details>
+ <div id="study-replace" hidden role="group" aria-label="Replace paused round"><p>A ${kind==='review'?'Review':'Practice'} round is paused. A new round replaces only that paused round. Finished history and earned progress stay saved.</p><button class="btn" id="study-confirm-replace">Replace paused round</button><button class="btn gray" id="study-keep">Keep paused round</button></div>`;
  document.body.append(dialog);dialog.showModal();
  dialog.querySelector('.study-close').onclick=closeStudySetup;
  dialog.onclose=()=>{dialog.remove();if(STUDY_DRAFT===draft)STUDY_DRAFT=null;if(previous?.isConnected)previous.focus({preventScroll:true});};
@@ -71,7 +78,10 @@ function showStudySetup(kind='practice',pool){
  dialog.querySelectorAll('[data-study-mode]').forEach(input=>input.onchange=()=>{STUDY_DRAFT.config.modes=[...dialog.querySelectorAll('[data-study-mode]:checked')].map(e=>e.dataset.studyMode);updateStudyCount();});
  $('study-limit').onchange=()=>{STUDY_DRAFT.config.limit=Number($('study-limit').value);updateStudyCount();};
  $('study-all-chars').onclick=()=>{STUDY_DRAFT.config.chars=studyDraftCharacters().filter(c=>!STUDY_DRAFT.excluded.has(c));renderStudyCharacters();};
- $('study-start').onclick=startStudyDraft;
+ $('study-start').onclick=()=>{if(currentStudyRound(kind)){$('study-replace').hidden=false;$('study-keep').focus();}else startStudyDraft();};
+ $('study-confirm-replace').onclick=startStudyDraft;
+ $('study-keep').onclick=()=>{$('study-replace').hidden=true;($('study-continue')||$('study-start')).focus();};
+ if(saved)$('study-continue').onclick=()=>{closeStudySetup();resumeStudy(kind);};
  renderStudyCharacters();
 }
 function closeStudySetup(){const dialog=$('study-setup');if(dialog){dialog.close();dialog.remove();}STUDY_DRAFT=null;}
@@ -85,9 +95,15 @@ function renderStudyCharacters(){
  $('study-deferred-list').querySelectorAll('button').forEach(button=>button.onclick=()=>{const c=button.dataset.studyRestore;d.excluded.delete(c);d.config.chars=[...new Set([...d.config.chars,c])];renderStudyCharacters();});updateStudyCount();
 }
 function studyDraftPool(){return ALL.filter(c=>STUDY_DRAFT.config.chars.includes(c.c)&&!STUDY_DRAFT.excluded.has(c.c));}
-function updateStudyCount(){const d=STUDY_DRAFT,pool=studyDraftPool(),count=Math.min(d.config.limit,pool.length*d.config.modes.length);$('study-count').textContent=`${pool.length} character${pool.length===1?'':'s'} · ${d.config.modes.length} activit${d.config.modes.length===1?'y':'ies'}`;const b=$('study-start');b.disabled=!count;b.textContent=(SESS?.study?'Start new round':'Start')+(count?' · up to '+count:'');const recent=$('study-recent-mistakes');if(recent)recent.textContent='Things to practice · '+recentMistakeCount();}
+function updateStudyCount(){
+ const d=STUDY_DRAFT,pool=studyDraftPool(),count=d.config.modes.length?studyQueue({...S,cfg:{...S.cfg,notLearned:[...d.excluded]}},pool,d.config.modes,d.config.limit,d.kind,a=>a).length:0;
+ $('study-count').textContent=`${pool.length} character${pool.length===1?'':'s'} · ${d.config.modes.length} activit${d.config.modes.length===1?'y':'ies'}`;
+ $('study-scope').textContent=studyScopeText(d.config)+'\n'+studyActivities().filter(([mode])=>d.config.modes.includes(mode)).map(([,label])=>label).join(' · ');$('study-round-goal').textContent=count?`${count} question${count===1?'':'s'} · ${studyGoalText(count)}. Unchecked answers do not count.`:'Choose characters and at least one activity.';
+ const b=$('study-start');b.disabled=!count;b.textContent=(currentStudyRound(d.kind)?'Start a new round':'Start')+(count?' · '+count+' question'+(count===1?'':'s'):'');
+ const recent=$('study-recent-mistakes');if(recent)recent.textContent='Things to practice · '+recentMistakeCount();
+}
 function startStudyDraft(){
- const d=STUDY_DRAFT,pool=studyDraftPool();if(!pool.length||!d.config.modes.length)return;
+ const d=STUDY_DRAFT;if(!d||d.owner!==PR.cur){closeStudySetup();return;}const pool=studyDraftPool();if(!pool.length||!d.config.modes.length)return;
  const kind=d.kind,config=JSON.parse(JSON.stringify(d.config));S.cfg.notLearned=[...d.excluded];
  ((S.cfg.studyChoices||={})[GR()]||={})[kind]=JSON.parse(JSON.stringify(config));save();closeStudySetup();startStudyRound(kind,config,pool);
 }
@@ -123,11 +139,11 @@ function studyNextItem(){
  const index=SESS.i;SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;saveStudyRound();
  const [mode,c]=SESS.q[index];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
  document.body.dataset.study=SESS.kind;
- if(mode==='dictation')A.insertAdjacentHTML('afterbegin',studySessionBar());
+ if(mode==='dictation')A.querySelector('.grove-activity-heading').insertAdjacentHTML('afterend',studySessionBar());
 }
 function studySessionBar(){
  if(!SESS?.study)return '';
- return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${SESS.pool.filter(c=>!(S.cfg.notLearned||[]).includes(c.c)).length} characters · ${SESS.round.config.modes.length} activities · 90% goal</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
+ return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${SESS.pool.filter(c=>!(S.cfg.notLearned||[]).includes(c.c)).length} characters · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
 }
 function pauseStudy(){if(SESS?.study){if(SESS.round.cursor>=SESS.q.length){finishStudyRound();return;}saveStudyRound();}home();}
 function studyNotLearned(){
@@ -140,7 +156,7 @@ function finishStudyRound(){
  const round=SESS.round;round.cursor=round.q.length;completeStudyRound(S,round);saveStudyRound();STUDY_LAST=JSON.parse(JSON.stringify(round));
  const score=studyScore(round),misses=Object.entries(round.results).filter(([,r])=>!r.correct&&!r.ungraded);
  SESS=null;CRAM=null;delete document.body.dataset.study;screen();
- A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="study-score">${score.correct} / ${score.total}</p><p>${score.total?score.percent+'% correct · Goal 90%':'No checked answers this round'}</p>${score.ungraded?`<p>${score.ungraded} answer${score.ungraded===1?'':'s'} not checked · excluded from the score and missed questions.</p>`:''}<p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' self-rated answer'+(score.selfRated===1?'':'s'):''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b>${r.character}</b> · ${studyActivities().find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="retryStudyMisses()">Practice missed questions</button>`:''}<button class="btn gray" onclick="home()">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
+ A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="reading-note">${round.q.length} question${round.q.length===1?'':'s'} finished. Your work is saved.</p><p class="study-score">${score.correct} / ${score.total}</p><p>${score.total?score.percent+'% correct · '+studyGoalText(score.total):'No checked answers this round'}</p>${score.ungraded?`<p>${score.ungraded} answer${score.ungraded===1?'':'s'} not checked · left out of the score and Things to practice.</p>`:''}<p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' self-rated answer'+(score.selfRated===1?'':'s'):''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b>${r.character}</b> · ${studyActivities().find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="retryStudyMisses()">Practice these again</button>`:''}<button class="btn gray" onclick="home()">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
 }
 function retryStudyMisses(){
  if(!STUDY_LAST)return;const r=STUDY_LAST,by=new Map(ALL.map(c=>[c.c,c])),q=Object.values(r.results).filter(x=>!x.correct&&!x.ungraded&&!(S.cfg.notLearned||[]).includes(x.character)).map(x=>[x.mode,by.get(x.character)]).filter(([,c])=>c);

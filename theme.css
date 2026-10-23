@@ -195,3 +195,20 @@ body[data-study] .word-practice .writing-heading{margin-bottom:8px}body[data-stu
 header #ttl{border:0;background:transparent;padding:0;min-height:48px;text-align:left;gap:0}
 header #home{display:none;margin-left:12px;padding:3px 8px;border:1px solid var(--ln);border-radius:8px;font:600 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 @media(max-width:680px){header #ttl{flex-shrink:0}header #ttl img{margin-right:0!important}header #home{margin-left:5px;padding:3px 5px}header{gap:8px}.legacy-stats{display:none}}
+
+/* Compact child entry, with the full scope editor one disclosure away. */
+header #home{min-height:0;line-height:1.4}
+body[data-study] #reward-strip,body[data-study] .legacy-stats{display:none}
+.study-setup-title{position:sticky;top:-20px;background:var(--bg);padding:8px 0;z-index:2}
+.study-ready,.study-saved{padding:16px;border:1px solid var(--ln);border-radius:16px;background:var(--surface);margin:12px 0}
+.study-ready>.btn,.study-saved>.btn{display:block;width:100%;margin:12px 0 0;min-height:48px;font-size:18px}
+.study-saved{background:var(--success-soft)}.study-saved p{margin:0 0 8px;font-size:15px}
+#study-choice-editor>summary,#recent-mistakes-filters>summary{min-height:48px;align-content:center;cursor:pointer;font-weight:650}
+.study-settings{display:block}.study-settings>section{margin:16px 0}.study-unit-picker,.study-characters{max-height:none;overflow:visible}
+.study-unit-picker details>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.study-settings>section>small{font-size:14px}
+.study-question-limit{padding:12px 0;border-top:1px solid var(--ln)}#study-replace{padding:16px;border:2px solid var(--ac);border-radius:14px;background:var(--surface)}
+#study-replace button{min-height:48px}#study-recent-mistakes{display:block;width:100%;text-align:left;font-size:17px}
+.study-sessionbar small{font-size:14px}.study-not-learned{font-size:14px}.study-score{font-size:46px;margin:10px 0}.study-finish .reading-note{font-size:15px}
+@media(max-width:680px){.study-setup-title{top:-16px}.study-settings{display:block}.study-unit-picker,.study-characters{max-height:none}.study-sessionbar{flex-wrap:wrap}.study-sessionbar>span{flex-basis:100%}.study-sessionbar button{flex:1;font-size:15px}.study-activities label{font-size:15px}.study-explanation{font-size:15px}}
+
+#study-scope{white-space:pre-line}

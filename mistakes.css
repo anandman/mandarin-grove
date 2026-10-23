@@ -8,3 +8,5 @@
 .recent-mistakes-actions{position:sticky;bottom:-20px;background:var(--bg);border-top:1px solid var(--ln);padding:10px 0 0;margin-top:10px}.recent-mistakes-actions>.btn{width:100%;margin:0}.recent-mistakes-actions .btn{min-height:48px;font-size:16px}#recent-mistakes-replace p{font-size:14px;margin:4px 0 10px}#recent-mistakes-replace button{display:block;width:100%;margin:6px 0}
 #recent-mistakes .progress-link{min-height:44px;padding:8px;font-size:14px}
 @media(max-width:480px){#recent-mistakes{padding:16px}.recent-mistakes-heading h2{font-size:27px}.recent-mistakes-filters{grid-template-columns:1fr}.recent-mistakes-filters label:last-child{grid-column:auto;max-width:100%}.recent-mistakes-actions{bottom:-16px}.recent-mistake-evidence{margin-left:0}}
+
+#recent-mistakes-filters{margin:10px 0}#recent-mistakes-filters>summary{font-size:15px}.recent-mistake-evidence span{font-size:14px}.recent-mistakes-heading{position:sticky;top:-20px;padding:8px 0;background:var(--bg);z-index:2}.recent-mistakes-actions{position:static;padding-bottom:8px}@media(max-width:480px){.recent-mistakes-heading{top:-16px}}

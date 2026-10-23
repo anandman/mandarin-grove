@@ -104,7 +104,7 @@ function HSETS(){
 function homeSets(){
  const host=$('sets');if(!host)return;const {o,cur}=HSETS(),key=PR.cur||'_';
  HO[key]??=new Set(cur>=0?[o[cur].id]:[]);host.replaceChildren();const visitor=groveVisitorNote();if(visitor)host.insertAdjacentHTML('beforeend',visitor);
- if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Now: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
+ if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Unit progress: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
  let previous='';
  o.forEach((group,index)=>{
   const sectionKey=[group.g,group.a,group.supplemental].join(':');
