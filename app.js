@@ -97,13 +97,18 @@ function home(){
  screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
  archQ();$('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();checkBadges();after(1200,PF);
 }
-function HSETS(){
- const built=GroveUnits.buildUnitGroups({units:U,cards:ALL,grade:GR(),selection:SET(),points:S.pts});HS=built.groups;
- return {o:HS,cur:built.current,ix:new Map(CARDS.map((card,index)=>[card.c,index]))};
+function characterBrowserScope(){const el=$('progress-characters');return el?{grade:el.dataset.grade,unit:el.dataset.unit}:null;}
+function homeUnitKey(){const scope=characterBrowserScope();return [PR.cur||'_',scope?.grade||GR(),scope?.unit||''].join(':');}
+function HSETS(scope=null){
+ const grade=scope?.grade||GR();
+ const built=GroveUnits.buildUnitGroups({units:U,cards:ALL,grade,selection:SET(),points:S.pts});
+ HS=scope?built.groups.filter(g=>g.g===grade&&!g.a&&(!scope.unit||g.c.join('')===scope.unit)):built.groups;
+ return {o:HS,cur:HS.indexOf(built.groups[built.current]),ix:new Map(CARDS.map((card,index)=>[card.c,index]))};
 }
+function browserCards(){const chars=new Set(HSETS(characterBrowserScope()).o.flatMap(g=>g.c));return ALL.filter(c=>chars.has(c.c));}
 function homeSets(){
- const host=$('sets');if(!host)return;const {o,cur}=HSETS(),key=PR.cur||'_';
- HO[key]??=new Set(cur>=0?[o[cur].id]:[]);host.replaceChildren();const visitor=groveVisitorNote();if(visitor)host.insertAdjacentHTML('beforeend',visitor);
+ const host=$('sets');if(!host)return;const {o,cur}=HSETS(characterBrowserScope()),key=homeUnitKey();
+ HO[key]??=new Set(cur>=0?[o[cur].id]:characterBrowserScope()?.unit&&o[0]?[o[0].id]:[]);host.replaceChildren();const visitor=groveVisitorNote();if(visitor)host.insertAdjacentHTML('beforeend',visitor);
  if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Unit progress: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
  let previous='';
  o.forEach((group,index)=>{
@@ -123,7 +128,7 @@ function homeSets(){
   }host.append(row);
  });updateGroveView();
 }
-function HTG(id){const expanded=HO[PR.cur||'_']??=new Set();expanded.has(id)?expanded.delete(id):expanded.add(id);homeSets();}
+function HTG(id){const expanded=HO[homeUnitKey()]??=new Set();expanded.has(id)?expanded.delete(id):expanded.add(id);homeSets();}
 function PSET(index){const group=HS[index];if(group)showStudySetup('practice',group.c.map(char=>ALL.find(card=>card.c===char)).filter(Boolean));}
 function selectPractice(chars){S.cfg.set=[...new Set(chars)];save();setCards();lq=[];mq=[];}
 function next10(quiet=false){const group=NCH(),added=group?.c.filter(char=>!SET().includes(char))||[];if(added.length){const previous=SET();selectPractice(previous.concat(added));if(!quiet){cat();undoT(previous,'Added '+added.length);}}else if(!quiet)pop('Every character in this grade is already in practice.');return added.length;}
@@ -206,9 +211,11 @@ function detail(index,cards=CARDS){
 function PRAC(card){dclose();showStudySetup('practice',[card]);}
 function dclose(){detailRequest++;$('dov')?.remove();dw=null;if(detailReturnFocus?.isConnected)detailReturnFocus.focus();detailReturnFocus=null;}
 function srch(value){
- const query=value.trim().toLowerCase(),key=pinyinBase(query).replace(/[1-5\s]/g,''),tone=/[1-4]/.exec(query)?.[0];const host=$('sres');host.replaceChildren();if(!query)return;
- for(const card of CARDS.filter(card=>card.c===query||card.m.toLowerCase().includes(query)||readings(card).some(reading=>pinyinBase(reading).startsWith(key)&&(!tone||pinyinTone(reading)===Number(tone))))){const button=document.createElement('button');button.className='z';button.textContent=card.c+' '+card.p;button.onclick=()=>detail(CARDS.indexOf(card));host.append(button);}
- if(!host.children.length){const note=document.createElement('p');note.className='mean';note.textContent='No match. Try just the letters, like "mai".';host.append(note);}
+ const query=value.trim().toLowerCase(),key=pinyinBase(query).replace(/[1-5\s]/g,''),tone=/[1-4]/.exec(query)?.[0],host=$('sres'),status=$('search-status');
+ host.replaceChildren();status.textContent='';if(!query)return;
+ const pool=browserCards(),found=pool.filter(card=>card.c===query||card.m.toLowerCase().includes(query)||readings(card).some(reading=>pinyinBase(reading).startsWith(key)&&(!tone||pinyinTone(reading)===Number(tone))));
+ for(const card of found){const button=document.createElement('button');button.className='z';button.textContent=card.c+' '+card.p;button.onclick=()=>detail(pool.indexOf(card),pool);host.append(button);}
+ status.textContent=found.length?`${found.length} ${found.length===1?'character':'characters'} found in these units.`:'No characters found in these units. Try a character, pinyin or English meaning, or choose another Grade or Unit.';
 }
 function backup(){return GROVE_REPOSITORY.exportBackup();}
 $('ttl').onclick=()=>{if(prof())home();};$('totop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});$('report-problem')?.addEventListener('click',()=>showFeedback());

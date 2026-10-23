@@ -32,7 +32,7 @@ const assert=require('node:assert/strict');
    const tile=page.locator('#sets .character-tile').first();await tile.click();
    await page.locator('#dov').waitFor();assert.ok(await page.getByRole('button',{name:'Play sound',exact:true}).isVisible());
    await page.locator('#dov').getByRole('button',{name:'Close',exact:true}).click();
-   if(grade==='2'){await page.getByRole('searchbox',{name:'Search by pinyin',exact:true}).fill('nu');await page.locator('#sres button').first().click();await page.locator('#dov').waitFor();await page.locator('#dov').getByRole('button',{name:'Close',exact:true}).click();}
+   if(grade==='2'){await page.getByRole('searchbox',{name:'Find a character',exact:true}).fill('nu');await page.locator('#sres button').first().click();await page.locator('#dov').waitFor();await page.locator('#dov').getByRole('button',{name:'Close',exact:true}).click();}
    await page.locator('#sets .pset').first().click();
    assert.ok(await page.locator('#study-continue').isVisible(),'Unit practice retains explicit saved-round choices');
    await page.getByRole('button',{name:'Close session choices',exact:true}).click();
