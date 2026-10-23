@@ -1,5 +1,13 @@
 # Change history
 
+## Additional pronunciation model evaluation — 2026-10-22
+
+- Retained the actual blind outputs from an additional isolated-syllable model
+  and its pinned weight identity. It matched 10/29 readings for the separate
+  speaker and accepted 18 wrong-reading controls; it cannot approve recordings.
+- Documented the model-selection limitation. No app behavior, audio files,
+  playback settings or child progress changed.
+
 ## Pronunciation research checkpoint — 2026-10-22
 
 - Added a reproducible natural-reference benchmark with 87 SHA-bound Mainland

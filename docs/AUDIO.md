@@ -170,7 +170,21 @@ are fixed in [the captured observations](../data/audio-reference-observations.js
 | SenseVoice dual pinyin CTC, one decoded syllable | 60/87 | 17/29 |
 | Both agree on every component | 33/87 | 8/29 |
 
-The same blind outputs were tested against **222 deliberately wrong references**:
+An exploratory follow-up tested a third local model,
+[`asolanki/distilhubert-finetuned-mandarin`](https://huggingface.co/asolanki/distilhubert-finetuned-mandarin/tree/12b383b74f5561b7060ff300bcee663fa4af9f74),
+which classifies 1,640 isolated syllable/tone combinations. It matched **28/87**
+whole readings, including **10/29** for M03. Its initial, final and tone labels
+matched 53, 66 and 57 of the 87 references respectively. It accepted **18/222**
+wrong-reading controls, including 17 wrong-tone references. The model therefore
+does not supply a dependable approval check either. Its published preprocessing
+was used, and its exact weight revision, hash and audio-only outputs are retained
+in a [separate capture](../data/audio-reference-observations-distilhubert.json).
+Its training corpus and reuse license were not established; no weights are
+redistributed. This follow-up was chosen after inspecting the earlier results,
+so M03 is not a fresh untouched holdout for this model-selection step. The
+two-model joint results above retain their original meaning.
+
+The original two models' blind outputs were tested against **222 deliberately wrong references**:
 156 tone contrasts, 36 initial contrasts, 24 final contrasts and six zhi/zi
 contrasts whose apical vowel changes along with the consonant. Charsiu accepted
 13 wrong references and SenseVoice nine. Requiring both to agree accepted none
@@ -220,6 +234,12 @@ models, services or network requests:
 ```bash
 node scripts/audio-natural-benchmark.cjs data/audio-reference-benchmark.json data/audio-reference-observations.json /tmp/grove-natural-benchmark.json
 node tests/audio-natural-benchmark.test.cjs
+```
+
+Reproduce the separate follow-up using the same benchmark and scorer:
+
+```bash
+node scripts/audio-natural-benchmark.cjs data/audio-reference-benchmark.json data/audio-reference-observations-distilhubert.json /tmp/grove-distilhubert-benchmark.json
 ```
 
 Optionally retrieve the exact original research audio through its intended
