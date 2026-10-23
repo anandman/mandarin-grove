@@ -67,7 +67,7 @@ function groveHomeMarkup(dl){
  <nav class="grove-quick-links home-progress-link" aria-label="Your progress"><button aria-label="My progress" onclick="kidProgress()">My progress ↗</button></nav>
  ${groveGoalMarkup()}
  <details class="compact-help"><summary>More tools</summary><div class="study-more-tools"><button class="progress-link" onclick="qList()">All unit quizzes</button><button class="progress-link" onclick="catG=GR();cat()">All characters</button><button class="progress-link" onclick="zooScreen()">My Zoo</button></div></details>
- ${wallet.legacyCredit?.amount?`<button class="grove-legacy-link" onclick="showGroveRewards()">🍊 ${wallet.legacyCredit.amount} oranges from earlier practice · Your original stars stay yours ↗</button>`:''}</div>`;
+ ${wallet.legacyCredit?.amount?`<p class="grove-legacy-link">🍊 ${wallet.legacyCredit.amount} oranges from earlier practice · Your original stars stay yours</p>`:''}</div>`;
 }
 function groveCharactersMarkup(){
  return `<section aria-label="My characters"> <div class="grove-section-heading"><h2>My characters</h2><span>${esc(GN[GR()])} · Any unit, any order</span></div>

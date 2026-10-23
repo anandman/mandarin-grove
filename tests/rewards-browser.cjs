@@ -34,11 +34,11 @@ const assert=require('node:assert/strict');
  for(const grade of ['K','1','2','3','4','5']){
   await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
   assert.ok(await page.locator('#reward-strip').isVisible());
-  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),Number(grade)>=2?1:0);
+  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),1);
  }
  await page.evaluate(()=>{PR.cur='sibling';savePR();loadS();home()});
  assert.equal(await page.evaluate(()=>S.rewards.ribbons),0);
  assert.equal(await page.evaluate(()=>Object.keys(S.rewards.characters).length),0);
  assert.deepEqual(errors,[]);await browser.close();
- console.log('PASS: retroactive ribbons, same-day badge through real listening UI, permanent awards, reload, all-grade reward visibility, Grade2 dashboard, profile isolation and mobile layout.');
+ console.log('PASS: retroactive ribbons, same-day badge through real listening UI, permanent awards, reload, all-grade reward visibility, all-grade dashboard, profile isolation and mobile layout.');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -25,6 +25,19 @@ assert.equal(lifecycle.replacedActive,false,'A replaced pending guide cannot sta
 assert.equal(lifecycle.currentActive,true,'The current connected guide still starts normally');
 assert.equal(lifecycle.sameTurnActive,false,'Same-turn detach and data delivery cannot start a discarded quiz');
 assert.equal(lifecycle.currentDisposed,true,'An already active detached quiz is cancelled');
+const pendingAnimation=await page.evaluate(async()=>{
+ const data=await fetch('strokes/十.json').then(r=>r.json()),results={};
+ for(const kind of ['native','shared']){
+  const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);let finish;
+  const options={charDataLoader:(_,done)=>{finish=done;},showCharacter:false,delayBetweenStrokes:0,strokeAnimationSpeed:100,strokeFadeDuration:0};
+  const w=kind==='native'?HanziWriter.create(box,'十',options):WritingSurface.create(box,'十',options);
+  const quiz=w.quiz();w.cancelQuiz();const animation=w.animateCharacter();finish(data);const [,result]=await Promise.all([quiz,animation]);
+  results[kind]=result.canceled;w.cancelQuiz();box.remove();
+ }
+ return results;
+});
+assert.equal(pendingAnimation.native,false,'Native Watch strokes cancels a pending quiz');
+assert.equal(pendingAnimation.shared,false,'Shared cleanup preserves Watch strokes ordering while data is pending');
 const palettes=await page.evaluate(async()=>{
  const data=await fetch('strokes/林.json').then(r=>r.json());const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);setAppearance('light');
  const guide=WritingSurface.create(box,'林',{charDataLoader:(_,done)=>done(data)});await guide.getCharacterData();

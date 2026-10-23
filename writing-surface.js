@@ -15,11 +15,9 @@ const WritingSurface = (() => {
   const quiz=writer.quiz.bind(writer),current=()=>!entry.disposed&&box.isConnected&&guides.get(box)===entry;
   writer.quiz=async options=>{
    if(!current())return;
-   // The engine queues quiz creation until data arrives; cancellation before loading
-   // finishes cannot cancel that queued creation. Check ownership after loading.
-   const data=await writer.getCharacterData();if(!data||!current())return;
+   // Keep the engine's queue order so a later Watch strokes request still wins.
+   // Its queued quiz may start after disposal; cancel it as soon as loading settles.
    await quiz(options);
-   // Also cover detachment between our check and the engine's queued continuation.
    if(!current())writer.cancelQuiz();
   };
   if(typeof ResizeObserver!=='undefined'){

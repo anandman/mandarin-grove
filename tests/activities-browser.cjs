@@ -23,11 +23,13 @@ const assert = require('node:assert/strict');
     await page.locator('[data-c="狗"]').click();
     assert.equal(await page.evaluate(()=>S.studyHistory[0].results['listen:狗'].outcome),'miss');
     // A detached writer must never change a later question or award progress.
-    await page.evaluate(()=>{home();memory(ALL.find(c=>c.c==='狗'));window.oldActivityQuiz=activityQuizzes.at(-1);home();listen(ALL.find(c=>c.c==='猫'));window.beforeStale=JSON.stringify([S.learning,S.stars,S.pts]);oldActivityQuiz.onComplete({totalMistakes:0})});
+    await page.evaluate(()=>{home();memory(ALL.find(c=>c.c==='狗'))});await page.waitForFunction(()=>writer?._quiz);
+    await page.evaluate(()=>{window.oldActivityQuiz=activityQuizzes.at(-1);home();listen(ALL.find(c=>c.c==='猫'));window.beforeStale=JSON.stringify([S.learning,S.stars,S.pts]);oldActivityQuiz.onComplete({totalMistakes:0})});
     assert.equal(await page.evaluate(()=>JSON.stringify([S.learning,S.stars,S.pts])===beforeStale),true);
     assert.ok(await page.locator('.choices').isVisible());
     // Guided completion records one attempt even if the engine calls twice.
-    await page.evaluate(()=>{home();trace(practiceCards().findIndex(c=>c.c==='狗'));activityQuizzes.at(-1).onComplete({totalMistakes:2});activityQuizzes.at(-1).onComplete({totalMistakes:0})});
+    await page.evaluate(()=>{home();trace(practiceCards().findIndex(c=>c.c==='狗'))});await page.waitForFunction(()=>writer?._quiz);
+    await page.evaluate(()=>{activityQuizzes.at(-1).onComplete({totalMistakes:2});activityQuizzes.at(-1).onComplete({totalMistakes:0})});
     assert.equal(await page.evaluate(()=>skillState(S,'狗','trace').attempts),1);
     assert.equal(await page.evaluate(()=>skillState(S,'狗','trace').correct),1,'Tracing retains the two-mistake tolerance');
     // Watching strokes remains assistance after Pause, even with no later mistakes.
@@ -35,7 +37,8 @@ const assert = require('node:assert/strict');
     await page.locator('#watch').click();
     assert.equal(await page.evaluate(()=>studyAttemptInfo().help),true);
     await page.getByRole('button',{name:'Pause',exact:true}).click();
-    await page.evaluate(()=>{resumeStudy('review');activityQuizzes.at(-1).onComplete({totalMistakes:0})});
+    await page.evaluate(()=>resumeStudy('review'));await page.waitForFunction(()=>writer?._quiz);
+    await page.evaluate(()=>activityQuizzes.at(-1).onComplete({totalMistakes:0}));
     assert.equal(await page.evaluate(()=>S.studyHistory.at(-1).results['trace:狗'].outcome),'assisted');
     assert.equal(await page.evaluate(()=>skillState(S,'狗','trace').correct),1);
     // Flip rating is available by keyboard and remains a self-report.

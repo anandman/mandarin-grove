@@ -43,6 +43,11 @@ const assert=require('node:assert/strict');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    assert.ok(baseline.length>0);
   }
+  await page.evaluate(()=>{home();S.groveRewards.legacyCredit={version:1,amount:4,stars:S.stars,rate:10,ribbonFruit:0,at:Date.now()};S.groveRewards.balance+=4;save();home();});
+  const legacyBackup=await page.evaluate(()=>backup());
+  assert.equal(await page.locator('#app [onclick="showGroveRewards()"], #app [onclick="rewardCollection()"]').count(),0,'Legacy credit cannot add another Home rewards shortcut');
+  assert.match(await page.locator('#app').innerText(),/4 oranges from earlier practice/,'Original earned-credit information stays available');
+  assert.equal(await page.evaluate(()=>backup()),legacyBackup);
   await page.evaluate(()=>parentDashboard('sibling','4'));
   assert.equal(await page.locator('#progress-characters').count(),0,'Sibling dashboard cannot operate the active learner unit browser');
   assert.equal(await page.evaluate(()=>PR.cur),'home-test');
