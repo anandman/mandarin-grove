@@ -64,13 +64,16 @@ function groveHomeMarkup(dl){
  <div class="study-home-entries"><button class="grove-daily" aria-label="Practice" onclick="showStudySetup('practice')"><b>Practice</b><small>Build skills with help</small><span>${practice?'Continue · '+practice.cursor+'/'+practice.q.length+' finished':'Start with your saved choices'} ↗</span></button><button class="study-review-entry" aria-label="Review" onclick="showStudySetup('review')"><b>Review</b><small>Check what you remember</small><span>${review?'Continue · '+review.cursor+'/'+review.q.length+' finished':'Start or revisit Things to practice'} ↗</span></button></div>
  <div class="grove-resume-links">${recentMistakeCount()?`<button class="progress-link" onclick="showRecentMistakes()">Things to practice · ${recentMistakeCount()}</button>`:''}${RS()?'<button onclick="resume()">Continue earlier practice ↗</button>':''}${S.cfg.cramDict?'<button aria-label="Continue earlier Listen & Write" onclick="resumeCramDict()">Continue earlier Listen & Write ↗</button>':''}${S.cfg.cram&&S.cfg.cram.i<S.cfg.cram.q.length?'<button aria-label="Continue earlier unit review" onclick="resumeCram()">Continue earlier unit review ↗</button>':''}</div>
  <button class="study-help-entry" aria-label="Help" onclick="showHomeworkHelp()"><span aria-hidden="true">${writingBook()}</span><span><b>Help</b><small>Ideas for your homework</small></span><span aria-hidden="true">↗</span></button>
- <nav class="grove-quick-links" aria-label="Your collections"><button onclick="showGroveRewards()">Your grove ↗</button><button onclick="rewardCollection()">My badges ↗</button>${Number(GR())>=2?'<button aria-label="My progress" onclick="kidProgress()">My progress ↗</button>':''}</nav>
+ <nav class="grove-quick-links home-progress-link" aria-label="Your progress"><button aria-label="My progress" onclick="kidProgress()">My progress ↗</button></nav>
  ${groveGoalMarkup()}
  <details class="compact-help"><summary>More tools</summary><div class="study-more-tools"><button class="progress-link" onclick="qList()">All unit quizzes</button><button class="progress-link" onclick="catG=GR();cat()">All characters</button><button class="progress-link" onclick="zooScreen()">My Zoo</button></div></details>
- <div class="grove-section-heading"><h2>My characters</h2><span>${esc(GN[GR()])} · Any unit, any order</span></div>
+ ${wallet.legacyCredit?.amount?`<button class="grove-legacy-link" onclick="showGroveRewards()">🍊 ${wallet.legacyCredit.amount} oranges from earlier practice · Your original stars stay yours ↗</button>`:''}</div>`;
+}
+function groveCharactersMarkup(){
+ return `<section aria-label="My characters"> <div class="grove-section-heading"><h2>My characters</h2><span>${esc(GN[GR()])} · Any unit, any order</span></div>
  ${GR()==='K'?'<p class="reading-note grove-unit-help">Unit 1 teaches basic strokes. Characters start at Unit 2.</p>':''}
  <input id="srch" ${KG()?'hidden':''} type="search" placeholder="Search pinyin, like mai or chang" autocomplete="off" autocapitalize="off" aria-label="Search by pinyin" oninput="srch(this.value)"><div id="sres" class="zoo"></div>
- ${groveUnitControls()}<div class="sets" id="sets"></div>${wallet.legacyCredit?.amount?`<button class="grove-legacy-link" onclick="showGroveRewards()">🍊 ${wallet.legacyCredit.amount} oranges from earlier practice · Your original stars stay yours ↗</button>`:''}</div>`;
+ ${groveUnitControls()}<div class="sets" id="sets"></div></section>`;
 }
 function groveActivityHeading(mode){
  const labels={trace:'Trace',listen:'Listen & Tap',flip:'Flip Cards',memory:'Draw from Memory',dictation:'Listen & Write'};

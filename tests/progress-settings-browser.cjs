@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
  await page.screenshot({path:'/tmp/hanzi-kid-progress.png'});
  for(const grade of ['K','1','2','3','4','5']){
   await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
-  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),Number(grade)>=2?1:0);
+  assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),1);
  }
  await page.evaluate(()=>{PR.list[0].gr='4';savePR();home();grown()});await page.getByRole('button',{name:'Parent dashboard',exact:true}).click();assert.ok(await page.locator('#dash-child').isVisible());
  // Open stale tab before selection; its routine saves must preserve the fresh choice.
@@ -25,5 +25,5 @@ const assert=require('node:assert/strict');
  // A stale picker must reload the latest selection; clearing remains deliberate and persistent.
  await stale.evaluate(()=>showCram());assert.ok(await stale.locator('[data-unit="2"]').isChecked());
  await page.evaluate(()=>selectCramUnits(false));await stale.evaluate(()=>{S.stars++;save()});await page.reload();await page.evaluate(()=>showCram());assert.equal(await page.locator('[data-unit]:checked').count(),0);
- assert.deepEqual(errors,[]);await browser.close();console.log('PASS: kid dashboard grade gate, read-only child scope, parent access, mobile layout, stale-tab saves, picker reload and intentional Clear.');
+ assert.deepEqual(errors,[]);await browser.close();console.log('PASS: kid dashboard all-grade access, read-only child scope, parent access, mobile layout, stale-tab saves, picker reload and intentional Clear.');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -95,7 +95,7 @@ function screen(){
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
 function home(){
  screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
- archQ();$('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();checkBadges();homeSets();after(1200,PF);
+ archQ();$('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();checkBadges();after(1200,PF);
 }
 function HSETS(){
  const built=GroveUnits.buildUnitGroups({units:U,cards:ALL,grade:GR(),selection:SET(),points:S.pts});HS=built.groups;

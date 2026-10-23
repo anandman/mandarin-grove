@@ -62,7 +62,7 @@ const assert=require('node:assert/strict');
  assert.match(await page.locator('#app').innerText(),/nǚ ✅/);
  await page.screenshot({path:'/tmp/hanzi-pinyin-mobile.png',fullPage:true});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
- await page.evaluate(()=>{PR.list[0].gr='4';S.cfg.set=['查','狗','猫','买','卖'];S.pts['努']=3;setCards();home();const h=HS.find(h=>h.g==='2'&&h.t==='Unit 1');HTG(h.id)});
+ await page.evaluate(()=>{PR.list[0].gr='4';S.cfg.set=['查','狗','猫','买','卖'];S.pts['努']=3;setCards();home();kidProgress();document.getElementById('progress-characters').open=true;const h=HS.find(h=>h.g==='2'&&h.t==='Unit 1');HTG(h.id)});
  assert.ok(await page.getByRole('heading',{name:'4th grade · PDF units',exact:true}).isVisible());
  assert.ok(await page.getByRole('heading',{name:'2nd grade · Other selected units',exact:true}).isVisible());
  const tile=page.locator('#sets [aria-label="努, 3 of 5 stars"]');
