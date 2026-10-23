@@ -5,12 +5,23 @@ const WritingSurface = (() => {
   strokeColor:read('--paper-ink','#242B24'),radicalColor:read('--paper-ink','#242B24'),drawingColor:read('--paper-ink','#242B24'),
   outlineColor:read('--paper-outline','#857E70'),highlightColor:read('--ac','#F57727')
  };};
- function disposeDetached(){for(const [box,entry]of guides)if(!box.isConnected){entry.observer?.disconnect();entry.writer.cancelQuiz();guides.delete(box);}}
+ function dispose(entry){entry.disposed=true;entry.observer?.disconnect();entry.writer.cancelQuiz();}
+ function disposeDetached(){for(const [box,entry]of guides)if(!box.isConnected){dispose(entry);guides.delete(box);}}
  function create(box,char,options={}){
-  disposeDetached();const previous=guides.get(box);previous?.observer?.disconnect();previous?.writer.cancelQuiz();
+  disposeDetached();const previous=guides.get(box);if(previous)dispose(previous);
   const width=box.clientWidth||300,height=box.clientHeight||width;
   const writer=HanziWriter.create(box,char,{...options,...palette(box),width,height});
-  const entry={writer,width,height,observer:null};guides.set(box,entry);
+  const entry={writer,width,height,observer:null,disposed:false};guides.set(box,entry);
+  const quiz=writer.quiz.bind(writer),current=()=>!entry.disposed&&box.isConnected&&guides.get(box)===entry;
+  writer.quiz=async options=>{
+   if(!current())return;
+   // The engine queues quiz creation until data arrives; cancellation before loading
+   // finishes cannot cancel that queued creation. Check ownership after loading.
+   const data=await writer.getCharacterData();if(!data||!current())return;
+   await quiz(options);
+   // Also cover detachment between our check and the engine's queued continuation.
+   if(!current())writer.cancelQuiz();
+  };
   if(typeof ResizeObserver!=='undefined'){
    entry.observer=new ResizeObserver(()=>{
     if(!box.isConnected){disposeDetached();return;}
