@@ -38,7 +38,7 @@ header .ttl{display:flex;align-items:center;white-space:nowrap;font-family:var(-
 header .ttl img{width:42px!important;height:42px!important;border-radius:12px!important;margin-right:12px!important}
 header button{background:var(--surface);border:1px solid var(--ln);box-shadow:none;color:var(--tx)}
 #hd{align-items:center;gap:8px}.pills .pill{background:transparent;border:1px solid var(--ln);padding:8px 12px;font-size:15px;border-radius:12px;min-height:44px}.pills button.pill:hover{background:var(--surface-soft)}
-#hd button[aria-label="Switch kid"]{background:var(--surface)}#gear{font-size:21px}.appearance-toggle{font-size:24px!important;min-width:44px;padding:2px!important}.gb{color:var(--violet-ink);background:var(--violet-soft);font-size:12px}.nm{max-width:10ch}.legacy-stats{white-space:nowrap;color:var(--mut);font-size:14px!important}
+#hd button[aria-label="Switch kid"]{background:var(--surface)}#gear{font-size:21px}.appearance-toggle{font-size:24px!important;min-width:44px;padding:2px!important;justify-content:center;line-height:1}.gb{color:var(--violet-ink);background:var(--violet-soft);font-size:12px}.nm{max-width:10ch}.legacy-stats{white-space:nowrap;color:var(--mut);font-size:14px!important}
 .wrap{max-width:1120px;padding:24px;margin:auto}.mean{color:var(--mut);font-size:22px;line-height:1.55}.reading-note,.prog,.cnote{color:var(--mut);line-height:1.6}.prog{font-size:17px}.pin{color:var(--ac-ink);font-size:36px}.big{font-family:"Kaiti SC",STKaiti,"PingFang SC",serif;color:var(--tx)}
 /* A compact reward ledger replaces the original blocky badge bar. */
 #reward-strip{padding:14px 24px;gap:18px;border-bottom:1px solid var(--ln);align-items:center}#reward-strip[hidden]{display:none}

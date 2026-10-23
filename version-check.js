@@ -1,4 +1,4 @@
-const VER='20261023-home-42';
+const VER='20261023-icon-43';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
