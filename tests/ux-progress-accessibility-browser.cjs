@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
   page.setDefaultTimeout(4000);page.on('pageerror',e=>errors.push(e.message));
   try{
    await page.goto(process.env.APP_URL||'http://127.0.0.1:4194');
-   await page.evaluate(()=>{PR={cur:'access-test',list:[{id:'access-test',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S=blank();S.stars=42;S.cfg.set=['狗','努','猫','牛','像'];S.opaque={keep:['original']};save();setCards();say=()=>{};home();kidProgress();});
+   await page.evaluate(()=>{PR={cur:'access-test',list:[{id:'access-test',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S=blank();S.stars=42;S.cfg.groveView='trees';S.cfg.set=['狗','努','猫','牛','像'];S.opaque={keep:['original']};save();setCards();say=()=>{};home();kidProgress();});
    const before=await page.evaluate(()=>backup());await test(page);
    assert.equal(await page.evaluate(()=>backup()),before,'Navigation and accessibility actions preserve the entire backup');
    assert.deepEqual(errors,[]);console.log('PASS:',name);
@@ -75,6 +75,28 @@ const assert=require('node:assert/strict');
    assert.ok(Math.max(...rgb(colors.bg))<100,'Dark mode search results must not use the old light widget background');
    await page.locator('#dash-unit').selectOption({label:'Unit 27'});
    assert.match(await page.locator('#progress-characters h2 + span').innerText(),/Unit 27/);
+  });
+  await run('unit keyboard focus indicator remains visible inside clipped cards',async page=>{
+   await page.locator('#progress-characters > summary').click();
+   const unit=page.locator('#sets .set > button[aria-expanded]').nth(1);
+   for(const view of ['list','trees']){await page.locator('#grove-view-'+view).click();
+   for(const theme of ['light','dark'])for(const open of [false,true]){
+    await page.evaluate(theme=>setAppearance(theme),theme);
+    if((await unit.getAttribute('aria-expanded')==='true')!==open)await unit.press('Enter');
+    await unit.press('ArrowDown');
+    const visibleArea=await unit.evaluate(el=>{
+     const style=getComputedStyle(el),width=parseFloat(style.outlineWidth),offset=parseFloat(style.outlineOffset),r=el.getBoundingClientRect();
+     let clip={left:0,top:0,right:innerWidth,bottom:innerHeight};
+     for(let parent=el.parentElement;parent;parent=parent.parentElement){
+      const s=getComputedStyle(parent),b=parent.getBoundingClientRect();
+      if(/hidden|clip|scroll|auto/.test(s.overflowX)){clip.left=Math.max(clip.left,b.left);clip.right=Math.min(clip.right,b.right);}
+      if(/hidden|clip|scroll|auto/.test(s.overflowY)){clip.top=Math.max(clip.top,b.top);clip.bottom=Math.min(clip.bottom,b.bottom);}
+     }
+     const area=outset=>Math.max(0,Math.min(clip.right,r.right+outset)-Math.max(clip.left,r.left-outset))*Math.max(0,Math.min(clip.bottom,r.bottom+outset)-Math.max(clip.top,r.top-outset));
+     return el.matches(':focus-visible')?area(offset+width)-area(offset):0;
+    });
+    assert.ok(visibleArea>100,'The unit outline must have visible painted area after ancestor clipping in '+theme);
+   }}
   });
  }finally{await browser.close();}
  assert.deepEqual(failures,[]);

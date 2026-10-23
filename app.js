@@ -102,12 +102,12 @@ function homeUnitKey(){const scope=characterBrowserScope();return [PR.cur||'_',s
 function HSETS(scope=null){
  const grade=scope?.grade||GR();
  const built=GroveUnits.buildUnitGroups({units:U,cards:ALL,grade,selection:SET(),points:S.pts});
- HS=scope?built.groups.filter(g=>g.g===grade&&!g.a&&(!scope.unit||g.c.join('')===scope.unit)):built.groups;
- return {o:HS,cur:HS.indexOf(built.groups[built.current]),ix:new Map(CARDS.map((card,index)=>[card.c,index]))};
+ const groups=scope?built.groups.filter(g=>g.g===grade&&!g.a&&(!scope.unit||g.c.join('')===scope.unit)):built.groups;
+ return {o:groups,cur:groups.indexOf(built.groups[built.current]),ix:new Map(CARDS.map((card,index)=>[card.c,index]))};
 }
 function browserCards(){const chars=new Set(HSETS(characterBrowserScope()).o.flatMap(g=>g.c));return ALL.filter(c=>chars.has(c.c));}
 function homeSets(){
- const host=$('sets');if(!host)return;const {o,cur}=HSETS(characterBrowserScope()),key=homeUnitKey();
+ const host=$('sets');if(!host)return;const {o,cur}=HSETS(characterBrowserScope()),key=homeUnitKey();HS=o;
  HO[key]??=new Set(cur>=0?[o[cur].id]:characterBrowserScope()?.unit&&o[0]?[o[0].id]:[]);host.replaceChildren();const visitor=groveVisitorNote();if(visitor)host.insertAdjacentHTML('beforeend',visitor);
  if(cur>=0){const note=document.createElement('p');note.className='hsum';note.textContent=`Reward stars: ${o[cur].f} · ${o[cur].c.filter(char=>(S.pts[char]||0)>=MASTER).length}/${o[cur].c.length} ⭐`;host.append(note);}
  let previous='';

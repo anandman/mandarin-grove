@@ -32,6 +32,16 @@ const assert=require('node:assert/strict');
    assert.equal(await page.locator('#study-continue').count(),1,'Existing round remains available');
    assert.deepEqual(await page.evaluate(()=>STUDY_DRAFT.config.chars),['断','寻','据','墙','块','拼','休','始','冲']);
    await page.getByRole('button',{name:'Close session choices',exact:true}).click();
+   await page.locator('#sets .character-tile').first().click();await page.locator('#dov').waitFor();
+   assert.equal(await page.locator('#dov').getAttribute('aria-label'),'断 character details','Returning from setup must keep visible tile identities');
+   await page.keyboard.press('Escape');
+   await page.locator('#sets .pset').click();
+   assert.deepEqual(await page.evaluate(()=>STUDY_DRAFT.config.chars),['断','寻','据','墙','块','拼','休','始','冲'],'Repeated unit Practice must keep the visible unit');
+   await page.getByRole('button',{name:'Close session choices',exact:true}).click();
+   await page.locator('#dash-needs').click();await page.getByRole('button',{name:'Close session choices',exact:true}).click();
+   await page.locator('#sets .character-tile').first().click();await page.locator('#dov').waitFor();
+   assert.equal(await page.locator('#dov').getAttribute('aria-label'),'断 character details','Dashboard Review setup must also preserve the rendered catalog mapping');
+   await page.keyboard.press('Escape');
    assert.equal(await page.evaluate(()=>GR()),'2');
   });
   await run('search the full shown curriculum by Hanzi, pinyin and meaning',async page=>{
@@ -55,6 +65,17 @@ const assert=require('node:assert/strict');
    await page.locator('#progress-characters').evaluate(el=>el.open=true);
    await page.locator('#srch').fill('防');
    assert.equal(await page.locator('#sres button').count(),0,'Search respects the same Unit filter');
+  });
+  await run('returning from character Practice preserves a filtered unit within the learner grade',async page=>{
+   await page.locator('#dash-unit').selectOption({label:'Unit 27'});
+   await page.locator('#progress-characters > summary').click();
+   await page.locator('#sets .character-tile').first().click();await page.locator('#dov').waitFor();
+   await page.locator('#detail-practice').click();assert.deepEqual(await page.evaluate(()=>STUDY_DRAFT.config.chars),['防']);
+   await page.getByRole('button',{name:'Close session choices',exact:true}).click();
+   await page.locator('#sets .character-tile').first().click();await page.locator('#dov').waitFor();
+   assert.equal(await page.locator('#dov').getAttribute('aria-label'),'防 character details');await page.keyboard.press('Escape');
+   await page.locator('#sets .pset').click();assert.deepEqual(await page.evaluate(()=>STUDY_DRAFT.config.chars),['防','倒','失','排','吹','跟']);
+   await page.getByRole('button',{name:'Close session choices',exact:true}).click();
   });
   await run('Kindergarten supplemental cards remain reachable and share assessed scope',async page=>{
    await page.locator('#dash-grade').selectOption('K');

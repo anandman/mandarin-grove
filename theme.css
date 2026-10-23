@@ -242,3 +242,4 @@ body[data-study] #reward-strip,body[data-study] .legacy-stats{display:none}
 @media(max-width:680px){#progress-characters .grove-trees{grid-template-columns:repeat(2,minmax(0,1fr))}#progress-characters .grove-trees .set>button:not(.pset){padding:12px;min-height:200px}#progress-characters .grove-trees .set.open>button:not(.pset){min-height:112px}#progress-characters .grove-trees .set .zoo{grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}.progress-heading h1{font-size:30px}.progress-next .btn{margin-left:0}}
 
 #progress-characters .grove-section-heading>span{text-align:left}#sres button.character-tile{background:var(--surface);color:var(--tx);border:1px solid var(--paper-outline);min-height:88px}#sres .ch{font-size:32px}#sres .py{font-size:16px;color:var(--mut)}
+#sets .set>button[aria-expanded]:focus-visible{outline-offset:-5px}
