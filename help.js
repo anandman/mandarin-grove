@@ -78,6 +78,7 @@ function createHelpLookup(cards,wordIndex=null,examples=[],vocabularyPack=null){
  const exampleWords=[...new Set([...cards.flatMap(c=>(c.w||'').split('|')),...examples])].filter(w=>/^\p{Script=Han}{2,8}$/u.test(w));
  return {rows,byText,byChar,exampleWords,curatedWords};
 }
+function helpSchoolResult(index,row){return row.kind==='character'||!!row.example||index.exampleWords.includes(row.text);}
 function searchHelpLookup(index,value,limit=24){
  const query=String(value).trim(),empty={query,items:[],total:0};if(!query||query.length>80)return empty;
  const han=/^\p{Script=Han}+$/u.test(query),pinyin=helpPinyinKey(query),english=query.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(),matches=[];
@@ -89,9 +90,9 @@ function searchHelpLookup(index,value,limit=24){
    for(const key of row.keys)if(helpPinyinMatches(key,pinyin))score=Math.min(score,key.base===pinyin.base?2:12+key.base.length);
    if(english&&row.english.includes(' '+english+' '))score=Math.min(score,row.english.trim()===english?4:8);
   }
-  if(Number.isFinite(score))matches.push({row,score:score+(row.kind==='word'?.1:0)});
+  if(Number.isFinite(score))matches.push({row,rank:row.aliases.includes(query)?0:row.kind==='character'?1:helpSchoolResult(index,row)?2:3,score:score+(row.kind==='word'?.1:0)});
  }
- matches.sort((a,b)=>a.score-b.score||a.row.text.length-b.row.text.length);
+ matches.sort((a,b)=>a.rank-b.rank||a.score-b.score||a.row.text.length-b.row.text.length);
  return {query,total:matches.length,items:matches.slice(0,Math.max(1,Math.min(240,limit))).map(x=>x.row)};
 }
 function helpLookupExamples(index,character){
@@ -127,17 +128,24 @@ function showHomeworkLookup(){
  }
  function renderResults(){
   const found=searchHelpLookup(index,state.query,state.limit);results.replaceChildren();
-  $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?'Showing '+found.items.length+' of '+found.total+' matches for “'+found.query+'”.':'No matches for “'+found.query+'”. Try another spelling or meaning.';
+  const school=document.createElement('section');school.id='lookup-school-results';
+  const general=document.createElement('details');general.id='lookup-dictionary';general.open=!!state.dictionaryOpen||!found.items.some(row=>helpSchoolResult(index,row));
+  general.ontoggle=()=>{if(general.isConnected)state.dictionaryOpen=general.open;};
+  const summary=document.createElement('summary');summary.textContent='Full dictionary · more words and meanings';
+  const dictionary=document.createElement('div');dictionary.id='lookup-dictionary-results';general.append(summary,dictionary);
+  if(found.items.some(row=>helpSchoolResult(index,row))){const heading=document.createElement('h2');heading.textContent='School characters & example words';school.append(heading);}results.append(school);
+  if(found.items.some(row=>!helpSchoolResult(index,row)))results.append(general);
+  $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?found.total+' match'+(found.total===1?'':'es')+' for “'+found.query+'”. School characters and examples appear first.':'No matches for “'+found.query+'”. Try another spelling or meaning.';
   $('lookup-more').hidden=found.items.length>=found.total||found.items.length>=240;
   for(const row of found.items){
    const button=document.createElement('button');button.type='button';button.className='lookup-result';button.dataset.lookupText=row.text;
    const word=document.createElement('b');word.lang='zh-Hans';word.textContent=row.text;
    const reading=document.createElement('span');reading.textContent=row.readings.map(r=>r.pinyin).join(' / ');
    const meaning=document.createElement('small');meaning.textContent=row.meaning;
-   const source=document.createElement('small');source.className='lookup-source';source.textContent=row.kind==='character'?'School character':'Word dictionary';button.append(word,reading,meaning,source);button.onclick=()=>openResult(row);results.append(button);
+   const source=document.createElement('small');source.className='lookup-source';source.textContent=row.kind==='character'?'School character':row.example?'Example · teaching review pending':helpSchoolResult(index,row)?'Writing ideas word':'Full dictionary';button.append(word,reading,meaning,source);button.onclick=()=>openResult(row);(helpSchoolResult(index,row)?school:dictionary).append(button);
   }
  }
- function search(value){shown=null;state.query=value.trim();state.limit=24;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();renderResults();}
+ function search(value){shown=null;state.query=value.trim();state.limit=24;state.dictionaryOpen=false;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();renderResults();}
  function openResult(row,focus=true){
   shown=row;if(focus)stopSpeech();detail.hidden=false;$('lookup-matches').hidden=true;detail.replaceChildren();
   const back=document.createElement('button');back.className='progress-link';back.textContent='Back to results';back.onclick=()=>{shown=null;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();input.focus({preventScroll:true});};

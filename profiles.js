@@ -81,19 +81,20 @@ function KDEL(id){
  try{const deleted=GROVE_REPOSITORY.deleteProfile(id);if(!deleted)return;profileRegistryRefresh();loadS();document.getElementById('kdel')?.remove();document.getElementById('gov')?.remove();home();grown();pop(child.name+' deleted');}
  catch(error){profileFailure(document.getElementById('kdel')||document.getElementById('gov')||A,error);}
 }
-function grown(){
+function grown(sectionName='child'){
  const child=PR.list.find(p=>p.id===PR.cur),childId=PR.cur,dialog=profileDialog('gov','⚙️ Grown-ups');
  const current=()=>{if(PR.cur===childId)return true;profileFailure(dialog,new Error('The active child changed. Close settings and open them again.'));return false;};
  if(child){
-  const section=profileSection(dialog,(child.name||'Friend')+"'s settings"),name=profileInput(section,"Kid's name",'gn',child.name),grade=profileElement('input',undefined,{id:'ggr',type:'hidden'});grade.value=GR();section.append(grade);
+  const section=profileSection(dialog,(child.name||'Friend')+"'s settings",'child-settings'),name=profileInput(section,"Kid's name",'gn',child.name),grade=profileElement('input',undefined,{id:'ggr',type:'hidden'});grade.value=GR();section.append(grade);
   const grades=profileElement('div',undefined,{class:'profile-grade grg',role:'group','aria-label':'Grade'});section.append(profileElement('p','Grade'),grades);
   for(const value of ['K','1','2','3','4','5']){const button=profileElement('button',undefined,{type:'button','data-grade':value,'aria-pressed':value===GR()});const count=gList(value).length;button.append(profileElement('b',value),profileElement('small',count+' characters'));button.onclick=()=>{grade.value=value;QSW(value);grades.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===button));};grades.append(button);}
+  section.append(profileElement('p','Name, grade, test date and quiz-character edits use Save below. Closing without Save leaves those fields unchanged.',{id:'child-save-note',class:'profile-notes'}));
   section.append(profileElement('p','Each grade remembers its selected characters. Quiz units follow the school character list.',{class:'profile-notes'}));
   const date=profileInput(section,'Next test date (leave empty to hide the countdown)','gt',S.cfg.test,'date');
   const unitLabel=profileElement('label','Next quiz',{id:'gul',class:'profile-label',for:'gu'}),units=profileElement('select',undefined,{id:'gu',class:'profile-input'});units.innerHTML=QOPT(GR());unitLabel.append(units);unitLabel.style.display=QU(GR()).length?'':'none';section.append(unitLabel);
-  if(S.cfg.quiz)profileButton(section,'✓ '+child.name+' took this quiz. Move to the next one.','gtook',()=>{
+  if(S.cfg.quiz){profileButton(section,'✓ '+child.name+' took this quiz. Move to the next one.','gtook',()=>{
    if(!current())return;try{const quiz=S.cfg.quiz,past=Array.isArray(S.cfg.past)?S.cfg.past:[],old=past.find(row=>row.q===quiz)||{};S.cfg.past=[{...old,q:quiz,d:S.cfg.test||''},...past.filter(row=>row.q!==quiz)];S.cfg.quiz=NXT(quiz);S.cfg.test='';save();profileClose(dialog);home();pop('Quiz recorded');}catch(error){profileFailure(dialog,error);}
-  },true);
+  },true);section.append(profileElement('p','Recording a completed quiz saves immediately and moves to the next quiz.',{id:'quiz-save-note',class:'profile-notes'}));}
   const quiz=profileInput(section,'Quiz characters','gq',S.cfg.quiz);quiz.placeholder='e.g. 买卖进常出';units.onchange=()=>{if(units.value)quiz.value=units.value;};
   profileButton(section,'Save','gsave',()=>{
    if(!current())return;try{const oldGrade=GR(),newGrade=grade.value,cfg={...S.cfg,test:date.value,quiz:quiz.value.replace(/[\s,，、]/g,'')};
@@ -104,15 +105,16 @@ function grown(){
  }
  profileButton(dialog,'Parent dashboard',null,()=>{profileClose(dialog);parentDashboard();});profileButton(dialog,'Feedback / saved reports',null,()=>{profileClose(dialog);showFeedback();},true);
  dialog.append(profileElement('p','App version: '+(typeof VER==='undefined'?'loading':VER),{class:'profile-notes'}));
- const appearanceSection=profileSection(dialog,'Appearance','appearance-settings');appearanceSection.insertAdjacentHTML('beforeend',appearanceSettingsMarkup());
- const voiceSection=profileSection(dialog,'Pronunciation','voice-settings');voiceSection.insertAdjacentHTML('beforeend',voiceSettingsMarkup());
+ const deviceSection=profileSection(dialog,'Device settings','device-settings');deviceSection.append(profileElement('p','Appearance and pronunciation choices save immediately on this device. They are separate from the child’s Save button.',{class:'profile-notes'}));
+ const appearanceSection=profileSection(deviceSection,'Appearance','appearance-settings');appearanceSection.insertAdjacentHTML('beforeend',appearanceSettingsMarkup());
+ const voiceSection=profileSection(deviceSection,'Pronunciation','voice-settings');voiceSection.insertAdjacentHTML('beforeend',voiceSettingsMarkup());
  // Summary reads must not refresh the repository's registry/progress merge baselines.
  const children=profileSection(dialog,'Kids','gkids');
  for(const item of PR.list){const row=profileElement('div',undefined,{class:'profile-child-row'}),text=profileElement('div'),title=profileElement('b',(item.name||'Friend')+(item.id===PR.cur?' · Playing now':''));text.append(title);let count='';try{const saved=JSON.parse(localStorage.getItem('zh_p_'+item.id)||'null');if(!saved)throw new Error('Missing saved profile');count=' · '+Object.values(saved.pts||{}).filter(n=>n>=5).length+' character stars';}catch{count=' · Saved progress unavailable';}text.append(profileElement('small',profileGradeName(item.gr||'2')+count));row.append(profileElement('span',item.av||'🐼'),text);
   if(PR.list.length>1){const remove=profileElement('button','Delete',{type:'button','aria-label':'Delete '+item.name});remove.onclick=()=>KASK(item.id);row.append(remove);}children.append(row);
  }
  if(PR.list.length===1)children.append(profileElement('p','Keep at least one kid on this device.',{class:'profile-notes'}));
- const transfers=profileSection(dialog,'Backup');transfers.append(profileElement('p',"Save every child's progress in one private code or file. Backups include names; keep them somewhere safe.",{class:'profile-notes'}),profileElement('p','Last copied: '+BKA(),{id:'glast'}));
+ const transfers=profileSection(dialog,'Backup','backup-settings');transfers.append(profileElement('p',"Save every child's progress in one private code or file. Backups include names; keep them somewhere safe.",{class:'profile-notes'}),profileElement('p','Last copied: '+BKA(),{id:'glast'}));
  const copy=profileButton(transfers,'','gcopy',async()=>{
   let code;try{code=backup();if(!navigator.clipboard?.writeText)throw new Error('Clipboard unavailable');await navigator.clipboard.writeText(code);if(!dialog.isConnected)return;try{localStorage.setItem('zh_bk',String(Date.now()));}catch{}document.getElementById('glast').textContent='Last copied: '+BKA();document.getElementById('gcl').textContent='Copied! Paste it somewhere safe.';document.getElementById('gcf').replaceChildren();}
   catch(error){if(dialog.isConnected){if(code!==undefined)backupCopyFallback(code);else profileFailure(transfers,error);}}
@@ -121,11 +123,17 @@ function grown(){
  const file=profileElement('input',undefined,{id:'gfile',type:'file',accept:'.txt,text/plain','aria-label':'Choose backup file'});file.hidden=true;file.onchange=()=>restoreBackupFile(file);
  const load=profileButton(transfers,'Restore from backup file','gload',()=>file.click(),true);load.setAttribute('aria-label','Restore from backup file');transfers.append(file,profileElement('p','',{id:'backup-status',role:'status',class:'reading-note'}));
  profileButton(transfers,'Restore from a backup code','grest',()=>openBackupRestore(dialog),true);transfers.append(profileElement('div',undefined,{id:'grx'}));
- const maintenance=profileSection(dialog,'Fix & reset');maintenance.append(profileElement('p','Save a backup before resetting or erasing progress.',{class:'profile-notes'}));
+ const maintenance=profileSection(dialog,'Fix & reset','maintenance-settings');maintenance.append(profileElement('p','Save a backup before resetting or erasing progress.',{class:'profile-notes'}));
  profileButton(maintenance,'Refresh app','gref',async()=>{try{if(window.caches)for(const key of await caches.keys())await caches.delete(key);if(navigator.serviceWorker)for(const registration of await navigator.serviceWorker.getRegistrations())await registration.unregister();}catch{}location.replace(location.pathname+'?v='+Date.now());},true);
  if(child)profileButton(maintenance,'Reset '+child.name+"'s progress",'grk',()=>{if(!current()||!confirm('Reset all of '+child.name+"'s stars and progress? This cannot be undone. Saved settings stay. Make a backup first if you may need them."))return;try{const cfg=JSON.parse(JSON.stringify(S.cfg));S=blank();S.cfg=cfg;save();profileClose(dialog);home();}catch(error){profileFailure(dialog,error);}},true);
  const erase=profileButton(maintenance,'Erase everything on this device','gerase',()=>{if(prompt('Delete every child and all progress on this device? Type ERASE to confirm. Save a backup first if you may need it.')!=='ERASE')return;try{for(const key of Object.keys(localStorage))if(key.startsWith('zh_')||key==='owenzh_v1')localStorage.removeItem(key);location.replace(location.pathname);}catch(error){profileFailure(dialog,error);}},true);erase.style.color='var(--danger)';
  if(typeof NOTES!=='undefined'&&Array.isArray(NOTES)){const news=profileSection(dialog,"What's new");for(const entry of NOTES){if(!Array.isArray(entry))continue;news.append(profileElement('p',entry[0]+' · '+entry[1],{class:'profile-notes'}));}}
- const credits=profileSection(dialog,'About & credits');credits.append(profileElement('p','Mandarin Grove practices Putonghua and simplified Chinese. Progress stays in this browser. Device voices may use the device speech service.',{class:'profile-notes'}));
- const notices=profileElement('a','Third-party source and license notices',{href:'vendor/SOURCE-NOTICES.md',target:'_blank',rel:'noopener'});credits.append(notices);document.body.append(dialog);dialog.showModal();bindVoiceSettings();dialog.querySelector('[aria-label="Close"]').focus();
+ const credits=profileSection(dialog,'About & credits','about-settings');credits.append(profileElement('p','Mandarin Grove practices Putonghua and simplified Chinese. Progress stays in this browser. Device voices may use the device speech service.',{class:'profile-notes'}));
+ const notices=profileElement('a','Third-party source and license notices',{href:'vendor/SOURCE-NOTICES.md',target:'_blank',rel:'noopener'});credits.append(notices);
+ const navigation=profileElement('nav',undefined,{'aria-label':'Grown-ups sections',class:'parent-section-nav'});
+ const destinations={child:'child-settings',device:'device-settings',kids:'gkids',backup:'backup-settings',maintenance:'maintenance-settings',about:'about-settings'};
+ const jump=(key)=>{const section=dialog.querySelector('#'+destinations[key]);if(!section)return;section.tabIndex=-1;section.scrollIntoView({block:'start'});section.focus({preventScroll:true});};
+ for(const [key,label]of [['child','Child'],['device','Device'],['kids','Kids'],['backup','Backup'],['maintenance','Fix & reset'],['about','About']])if(key!=='child'||child){const button=profileElement('button',label,{type:'button'});button.onclick=()=>jump(key);navigation.append(button);}
+ dialog.querySelector('header').append(navigation);document.body.append(dialog);dialog.showModal();bindVoiceSettings();dialog.querySelector('[aria-label="Close"]').focus();
+ if(sectionName!=='child')jump(sectionName);
 }

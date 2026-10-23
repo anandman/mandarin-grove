@@ -84,3 +84,9 @@ for(const operation of ['exportBackup','readProfile'])test(operation+' cannot re
  if(operation==='readProfile')first.readProfile(local.cur);else first.exportBackup();
  const result=first.saveRegistry(local);assert.equal(result.list.some(p=>p.id===added.id),true);assert.equal(result.cur,added.id);assert.equal(result.localNote,local.localNote);assert.ok(s.getItem('zh_p_'+added.id));
 });
+test('fresh registry summary reads validate and clone without refreshing the edit baseline',()=>{
+ const s=storage(seed()),r=repo(s),local=r.readRegistry(),remote=JSON.parse(s.getItem('zh_profiles'));
+ remote.list[0].name='Remote name';s.setItem('zh_profiles',JSON.stringify(remote));
+ assert.equal(typeof r.peekRegistry,'function');const summary=r.peekRegistry();assert.equal(summary.list[0].name,'Remote name');summary.list[0].name='Unpersisted summary';assert.equal(JSON.parse(s.getItem('zh_profiles')).list[0].name,'Remote name');
+ local.list[0].name='Conflicting local name';assert.throws(()=>r.saveRegistry(local),/conflict|changed/i,'Summary cannot move the merge baseline past an unseen remote edit');
+});

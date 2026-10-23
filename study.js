@@ -40,7 +40,7 @@ function studyUnitChoices(){
 }
 function currentStudyRound(kind){const r=S.cfg.studyRounds?.[GR()]?.[kind];return r&&r.cursor<r.q.length?r:null;}
 let STUDY_DRAFT=null,STUDY_LAST=null;
-function studyGoalText(total){return `90% goal: ${Math.ceil(total*.9)} of ${total} first attempts`; }
+function studyGoalText(total){return `90% goal: ${Math.ceil(total*.9)} of ${total} first attempt${total===1?'':'s'}`; }
 function studyScopeText(config){
  const groups=new Map();for(const u of studyUnitChoices().filter(u=>(config.units||[]).includes(u.id))){if(!groups.has(u.grade))groups.set(u.grade,[]);groups.get(u.grade).push(u.label.replace('Unit ',''));}
  return [...groups].map(([grade,units])=>`${GN[grade]} · ${units.length>6?units.length+' selected units':'Unit'+(units.length===1?'':'s')+' '+units.join(', ')}`).join(' · ')||'Individually selected characters';
@@ -58,7 +58,7 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  const saved=currentStudyRound(kind);
  dialog.innerHTML=`<div class="study-setup-title"><h2 id="study-title">${kind==='review'?'Review':'Practice'}</h2><button class="study-close" aria-label="Close session choices">✕</button></div>
  <p class="study-explanation">${kind==='review'?'Check what you remember from your selection.':'Build skills with help. Due skills come first within each activity; up to 3 new characters per round.'}</p>
- ${saved?`<section class="study-saved"><p id="study-saved-scope">Paused · ${saved.cursor} of ${saved.q.length} finished · ${saved.config.chars.length} characters · ${saved.config.modes.length} activit${saved.config.modes.length===1?'y':'ies'}<br>${voiceEscape(studyScopeText(saved.config))}</p><button class="btn study-resume" id="study-continue">Continue this round</button></section>`:''}
+ ${saved?`<section class="study-saved"><p id="study-saved-scope">Paused · ${saved.cursor} of ${saved.q.length} finished · ${saved.config.chars.length} character${saved.config.chars.length===1?'':'s'} · ${saved.config.modes.length} activit${saved.config.modes.length===1?'y':'ies'}<br>${voiceEscape(studyScopeText(saved.config))}</p><button class="btn study-resume" id="study-continue">Continue this round</button></section>`:''}
  <section class="study-ready"><b id="study-count" role="status"></b><p id="study-scope" class="reading-note"></p><p id="study-round-goal" class="reading-note"></p><button class="btn ${saved?'gray':''}" id="study-start">Start</button></section>
  ${kind==='review'?'<button type="button" id="study-recent-mistakes" class="progress-link" onclick="showRecentMistakes()">Things to practice</button>':''}
  <details id="study-choice-editor"><summary>Change choices</summary><div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
@@ -143,7 +143,8 @@ function studyNextItem(){
 }
 function studySessionBar(){
  if(!SESS?.study)return '';
- return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${SESS.pool.filter(c=>!(S.cfg.notLearned||[]).includes(c.c)).length} characters · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
+ const characterCount=SESS.pool.filter(c=>!(S.cfg.notLearned||[]).includes(c.c)).length;
+ return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${characterCount} character${characterCount===1?'':'s'} · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
 }
 function pauseStudy(){if(SESS?.study){if(SESS.round.cursor>=SESS.q.length){finishStudyRound();return;}saveStudyRound();}home();}
 function studyNotLearned(){

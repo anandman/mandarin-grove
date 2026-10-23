@@ -127,7 +127,7 @@
    registry.list=registry.list.filter(p=>p.id!==id);if(registry.cur===id)registry.cur=registry.list[0].id;
    commit([['zh_p_'+id,null],[REGISTRY,JSON.stringify(registry)]]);bases.delete(id);registryBase=state.copy(registry);return state.copy(registry);
   }
-  return {readRegistry,readProfile,saveProfile,saveRegistry,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile};
+  return {peekRegistry:()=>state.copy(registrySnapshot()),readRegistry,readProfile,saveProfile,saveRegistry,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile};
  }
  return {createRepository};
 });
