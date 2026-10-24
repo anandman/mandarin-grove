@@ -12,14 +12,14 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二'],'Readiness never silently adds units');
   await page.evaluate(()=>showGroveUnitChooser());
-  await page.getByRole('button',{name:'Add Unit 3',exact:true}).click();
+  await page.getByRole('button',{name:/^Add .*Unit 3$/}).click();
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   await page.reload();assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   // Even actual spaced mastery must leave the school unit selection alone.
   await page.evaluate(()=>{const start=Date.now()-4*REVIEW_DAY;for(const char of ['三','十'])for(const skill of ['listen','memory']){let time=start;for(let i=0;i<3;i++){recordSkill(S,char,skill,'correct',time);time=skillState(S,char,skill).due;}}save();home()});
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   await page.evaluate(()=>showGroveUnitChooser());
-  await page.getByRole('button',{name:'Add Unit 7',exact:true}).click();
+  await page.getByRole('button',{name:/^Add .*Unit 7$/}).click();
   assert.ok(await page.evaluate(()=>[...QU('K').find(([n])=>n===7)[1]].every(c=>SET().includes(c))),'School units can be added out of order');
   await page.evaluate(()=>showGroveRewards());
   assert.equal(await page.evaluate(()=>GROVE_REWARD_CATALOG.length),20);await page.getByRole('tab',{name:'Build',exact:true}).click();
@@ -86,7 +86,7 @@ const assert=require('node:assert/strict');
    assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
    assert.deepEqual(await page.evaluate(()=>[...SET()]),before.set);
    await page.evaluate(()=>showGroveUnitChooser());
-   await page.getByRole('button',{name:'Add Unit 7',exact:true}).click();
+   await page.getByRole('button',{name:/^Add .*Unit 7$/}).click();
    const after=await page.evaluate(()=>({set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test}));
    assert.equal(after.quiz,before.quiz);assert.equal(after.test,before.test);assert.ok(before.set.every(c=>after.set.includes(c)));
   }

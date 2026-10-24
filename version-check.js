@@ -1,4 +1,4 @@
-const VER='20261023-accessibility-50';
+const VER='20261023-accessibility-51';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

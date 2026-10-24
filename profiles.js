@@ -61,7 +61,7 @@ function setup(first=false){
 }
 function who(){
  screen();profileStyles();const view=profileElement('section',undefined,{class:'profile-switcher'}),children=profileElement('div',undefined,{class:'profile-children'});view.append(profileElement('h1',"Who's practicing?"),children);
- for(const child of PR.list){const grade=child.gr||'2',button=profileElement('button',undefined,{type:'button',class:'profile-child','aria-label':(child.av||'🐼')+' '+(child.name||'Friend')+' '+ORD(grade)+', '+profileGradeName(grade)});button.append(profileElement('span',child.av||'🐼'),profileElement('b',child.name||'Friend'),profileElement('small',ORD(grade)));button.onclick=()=>{try{PR.cur=child.id;savePR();loadS();home();}catch(error){profileFailure(view,error);}};children.append(button);}
+ for(const child of PR.list){const grade=child.gr||'2',button=profileElement('button',undefined,{type:'button',class:'profile-child','aria-label':(child.av||'🐼')+' '+(child.name||'Friend')+' '+ORD(grade)+', '+profileGradeName(grade)});button.append(profileElement('span',child.av||'🐼'),' ',profileElement('b',child.name||'Friend'),' ',profileElement('small',ORD(grade)));button.onclick=()=>{try{PR.cur=child.id;savePR();loadS();home();}catch(error){profileFailure(view,error);}};children.append(button);}
  const add=profileElement('button','＋ Add kid',{type:'button',class:'profile-child'});add.onclick=()=>setup(false);children.append(add);A.replaceChildren(view);
 }
 function parenthold(button){

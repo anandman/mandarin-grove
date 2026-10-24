@@ -247,3 +247,21 @@ body[data-study] #reward-strip,body[data-study] .legacy-stats{display:none}
 /* Entry boundaries remain identifiable when fields are empty. */
 input:not([type=checkbox]):not([type=radio]),textarea,select{border-color:var(--input-edge)!important}
 .dictation-tones{flex-wrap:wrap;min-width:0}.dictation-pinyin{min-width:0}
+
+/* Repeated navigation can be bypassed; route headings expose their focus. */
+.skip-main{position:fixed;z-index:300;top:8px;left:8px;transform:translateY(-160%);padding:12px 18px;background:var(--surface);border:2px solid var(--violet-ink);border-radius:12px}
+.skip-main:focus{transform:none}
+#app h1[tabindex="-1"]:focus-visible{outline:3px solid var(--violet-ink);outline-offset:4px}
+#reward-notice{position:static;transform:none;width:auto;max-width:min(90vw,800px);margin:12px auto;display:flex;align-items:center;justify-content:center;gap:12px}
+#reward-notice .progress-link{flex:none}
+
+@media(max-width:400px){
+ .study-home-entries{grid-template-columns:minmax(0,1fr)}
+ .study-home-entries>button{min-width:0;min-height:124px}
+ .study-home-hero{grid-template-columns:minmax(0,1fr)}
+ .study-home-hero .grove-hero-art{display:block;position:static;grid-column:1;grid-row:2;width:min(100%,180px);height:100px;min-height:100px;justify-self:end}
+ .study-home-hero .grove-hero-copy>p{max-width:none}
+ .study-home-hero .hello{white-space:normal;overflow:visible;text-overflow:clip}
+}
+
+.study-home-hero .hello .hello-greeting{display:inline;font:inherit;color:inherit}

@@ -193,7 +193,7 @@ function listen(preferred) {
     if (option.dataset.c !== c.c) {
       missed = true; ACTIVE_REVIEW.missed = true;
       if (SESS?.study) studyAttempt('miss');
-      option.classList.add('no'); option.disabled = true; ui.message('Try again'); return;
+      option.classList.add('no'); option.disabled = true; ui.message('Try again');A.querySelector('.choices button:not(:disabled)')?.focus(); return;
     }
     done = true; option.classList.add('ok');
     A.querySelectorAll('[data-c]').forEach(choice => { choice.disabled = true; });

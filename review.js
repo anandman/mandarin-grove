@@ -92,12 +92,11 @@ function renderRewards(){
  const tier=char?S.rewards?.characters?.[char]?.tier||0:0;
  strip.innerHTML=`<button class="reward-collection-link" onclick="rewardCollection()" aria-description="Practice ribbons and character badges"><b>🎗️ ${ribbons} · 🏅 ${count}</b><span>My badges ›</span></button><button class="reward-collection-link grove-wallet-link" onclick="showGroveRewards()" aria-description="Oranges and grove decorations"><b>🍊 ${groveWallet(S).balance}</b><span>Your grove ›</span></button><div class="reward-meter"><span class="reward-meter-caption">${steps%REWARD_POLICY.stepsPerRibbon}/${REWARD_POLICY.stepsPerRibbon} steps to your next ribbon</span><span class="reward-meter-count">${steps%REWARD_POLICY.stepsPerRibbon}/${REWARD_POLICY.stepsPerRibbon} steps</span><progress max="${REWARD_POLICY.stepsPerRibbon}" value="${steps%REWARD_POLICY.stepsPerRibbon}" aria-label="Practice steps toward next ribbon"></progress></div>${char?`<div class="reward-character"><b>${char} ${REWARD_ICONS[tier]} ${tier?REWARD_NAMES[tier]:'Build your badge'}</b><small>${tier?'Your badge stays yours. Reviews can earn upgrades!':rewardTargets(char)}</small></div>`:''}`;
 }
-let rewardNoticeTimer;
 function announceRewards(earned){
  if(!earned.length)return;
- let notice=$('reward-notice');if(!notice){notice=document.createElement('div');notice.id='reward-notice';notice.setAttribute('role','status');document.body.append(notice);}
- notice.textContent=earned.map(e=>e.kind==='fruit'?`🍊 ${e.amount} orange${e.amount===1?'':'s'} grown!`:e.kind==='ribbon'?'🎗️ New practice ribbon!':e.kind==='challenge'?`${e.icon} ${e.name} earned!`:`${REWARD_ICONS[e.tier]} ${e.char} — ${REWARD_NAMES[e.tier]} earned!`).join(' ');
- notice.hidden=false;clearTimeout(rewardNoticeTimer);rewardNoticeTimer=setTimeout(()=>notice.hidden=true,4000);
+ let notice=$('reward-notice');if(!notice){notice=document.createElement('div');notice.id='reward-notice';notice.setAttribute('role','status');$('reward-strip').after(notice);}
+ notice.replaceChildren();const text=document.createElement('span');text.textContent=earned.map(e=>e.kind==='fruit'?`🍊 ${e.amount} orange${e.amount===1?'':'s'} grown!`:e.kind==='ribbon'?'🎗️ New practice ribbon!':e.kind==='challenge'?`${e.icon} ${e.name} earned!`:`${REWARD_ICONS[e.tier]} ${e.char} — ${REWARD_NAMES[e.tier]} earned!`).join(' ');
+ const close=document.createElement('button');close.type='button';close.className='progress-link';close.textContent='Dismiss';close.setAttribute('aria-label','Dismiss reward message');close.onclick=()=>{notice.hidden=true;focusMain();};notice.append(text,close);notice.hidden=false;
 }
 function rewardCollection(){
  screen();SESS=null;CRAM=null;renderRewards();

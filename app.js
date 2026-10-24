@@ -12,6 +12,21 @@ const blank=()=>GroveState.emptyProfile();
 let PR={cur:null,list:[]},S=blank(),GROVE_SAVED_REGISTRY={cur:null,list:[]},GROVE_STATE_OWNER=null,GROVE_PROGRESS_READY=false,GROVE_SAVED_STATE=null;
 let NAV=0,SESS=null,HS=[],HO=Object.create(null),catG='',catQ='',DI=-1,DL=[],dw=null,detailRequest=0,detailReturnFocus=null;
 const STROKES={},strokeRequests=new Map();
+let viewNavigation=null;
+function focusMain(){const target=A.querySelector('h1')||A;target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'start'});}
+// Wait for the replacement DOM, respecting explicit form/modal/filter focus.
+new MutationObserver(()=>{
+ const heading=A.querySelector('h1');if(!heading)return;
+ document.title=(document.body.dataset.screen==='home'?'Home':heading.textContent.trim())+' · Mandarin Grove';
+ const pending=viewNavigation,token=NAV;
+ requestAnimationFrame(()=>{
+  if(NAV!==token||!heading.isConnected||document.querySelector('dialog[open],.modal-overlay'))return;
+  const active=document.activeElement;
+  if(active===document.body||active===document.documentElement||active===A||(pending&&pending.origin===active&&!A.contains(active))){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+  if(viewNavigation===pending)viewNavigation=null;
+ });
+}).observe(A,{childList:true});
+$('skip-main').onclick=event=>{event.preventDefault();focusMain();};
 function prof(){return PR.list.find(profile=>profile.id===PR.cur);}
 function GR(){return prof()?.gr||'2';}
 function KG(){return GR()==='K';}
@@ -77,7 +92,7 @@ function badgeShow(badge){
  const notice=document.createElement('div');notice.className='bdg';notice.setAttribute('role','dialog');notice.setAttribute('aria-label','New badge');
  const symbol=document.createElement('div');symbol.className='medal';symbol.textContent=badge[1];
  const title=document.createElement('h1');title.textContent='New badge!';const note=document.createElement('p');note.textContent=badge[3];
- const close=document.createElement('button');close.className='btn';close.textContent='Yay!';close.onclick=()=>notice.remove();notice.append(symbol,title,note,close);document.body.append(notice);close.focus();say('太棒了');
+ const close=document.createElement('button');close.className='btn';close.textContent='Yay!';close.onclick=()=>{notice.remove();focusMain();};notice.append(symbol,title,note,close);document.body.append(notice);close.focus();say('太棒了');
 }
 function win(card,amount=1){
  const count=S.pts[card.c]||0,sleeping=asleep(card);touchStreak();S.stars+=amount;S.pts[card.c]=count+1;S.ok??={};S.ok[card.c]=Date.now();save();
@@ -93,7 +108,8 @@ function hdr(){
 }
 function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
 function screen({scroll=true}={}){
- NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');renderRewards();
+ viewNavigation={origin:document.activeElement};
+ NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');$('reward-notice')?.setAttribute('hidden','');renderRewards();
  const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}

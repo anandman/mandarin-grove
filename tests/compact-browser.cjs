@@ -60,7 +60,7 @@ const assert=require('node:assert/strict');
   await page.reload();await page.evaluate(()=>{window.say=()=>{};showGroveRewards()});
   assert.equal(await page.getByRole('tab',{name:'Ground',exact:true}).getAttribute('aria-selected'),'true');
   await page.getByRole('tab',{name:'Visitors',exact:true}).click();
-  await page.getByRole('button',{name:'Invite zoo friend 2',exact:true}).click();
+  await page.getByRole('button',{name:'Invite Cat, Friend 2',exact:true}).click();
   assert.equal(await page.getByRole('tab',{name:'Visitors',exact:true}).getAttribute('aria-selected'),'true','Purchases and selections retain the current category');
   await page.evaluate(()=>{delete S.groveRewards.equipped.visitors;save()});
   assert.equal(await page.evaluate(()=>JSON.stringify([S.pts,S.stars,S.learning,S.groveRewards])),before,'Layout navigation must preserve learning and balances');

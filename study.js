@@ -92,7 +92,7 @@ function renderStudyCharacters(){
  $('study-characters').querySelectorAll('input').forEach(input=>input.onchange=()=>{const c=input.dataset.studyChar;d.config.chars=input.checked?[...new Set([...d.config.chars,c])]:d.config.chars.filter(x=>x!==c);updateStudyCount();});
  $('study-deferred-count').textContent=d.excluded.size?'('+d.excluded.size+')':'';
  $('study-deferred-list').innerHTML=[...d.excluded].map(c=>`<button class="btn gray" data-study-restore="${voiceEscape(c)}">Add ${voiceEscape(c)}</button>`).join('')||'<p>No characters set aside.</p>';
- $('study-deferred-list').querySelectorAll('button').forEach(button=>button.onclick=()=>{const c=button.dataset.studyRestore;d.excluded.delete(c);d.config.chars=[...new Set([...d.config.chars,c])];renderStudyCharacters();});updateStudyCount();
+ $('study-deferred-list').querySelectorAll('button').forEach(button=>button.onclick=()=>{const c=button.dataset.studyRestore;d.excluded.delete(c);d.config.chars=[...new Set([...d.config.chars,c])];renderStudyCharacters();[...$('study-characters').querySelectorAll('input')].find(input=>input.dataset.studyChar===c)?.focus();});updateStudyCount();
 }
 function studyDraftPool(){return ALL.filter(c=>STUDY_DRAFT.config.chars.includes(c.c)&&!STUDY_DRAFT.excluded.has(c.c));}
 function updateStudyCount(){
