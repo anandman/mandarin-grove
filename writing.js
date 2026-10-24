@@ -69,7 +69,7 @@ function showWritingIdeas(){
   const entries=writingBrowseEntries($('writing-browse-kind').value,$('writing-browse-search').value),list=$('writing-browse-list');
   list.replaceChildren();
   for(const entry of entries.slice(0,browseLimit)){
-   const button=document.createElement('button');button.type='button';button.setAttribute('aria-label','Use '+entry.value);
+   const button=document.createElement('button');button.type='button';button.setAttribute('aria-label','Use '+entry.value+(entry.meaning?' '+entry.meaning:''));
    const word=document.createElement('span');word.lang='zh-Hans';word.textContent=entry.value;button.append(word);
    if(entry.meaning){const meaning=document.createElement('small');meaning.textContent=entry.meaning;button.append(meaning);}
    button.onclick=()=>{input.value=entry.value;state.input=entry.value;generateWritingIdea();$('writing-browse').open=false;$('writing-another').focus();};

@@ -16,9 +16,13 @@ const ActivityUI = (() => {
   function card(preferred, mode) {
     return preferred?.c ? preferred : reviewPick(S, practiceCards(), mode);
   }
+  function languages(){
+    A.querySelectorAll('.pin,#pyout,[data-t]').forEach(el=>el.lang='zh-Latn-pinyin');
+    A.querySelectorAll('.big,[data-c]').forEach(el=>{if(/\p{Script=Han}/u.test(el.textContent))el.lang='zh-Hans';});
+  }
   function render(mode, content, session = true) {
     screen();
-    A.innerHTML = groveActivityHeading(mode) + (session ? sessBar() : '') + content;
+    A.innerHTML = groveActivityHeading(mode) + (session ? sessBar() : '') + content;languages();
     return { token: NAV, node: A.firstElementChild };
   }
   function loadStrokes(char) {
@@ -31,7 +35,7 @@ const ActivityUI = (() => {
     }
     return requests.get(char);
   }
-  function makeWriter(c, outline, ready) {
+  function makeWriter(c, outline, ready, retry) {
     const box = find('hw');
     if (!box) return null;
     writer?.cancelQuiz?.();
@@ -47,7 +51,9 @@ const ActivityUI = (() => {
       onLoadCharDataSuccess: guard(token, box, data => ready?.(data)),
       onLoadCharDataError: guard(token, box, () => {
         const message = find('m');
-        if (message) message.textContent = 'Writing guide unavailable. Try again or skip this character.';
+        if(message){message.textContent='Writing guide unavailable. Retry or skip this character.';
+          if(retry){const button=document.createElement('button');button.className='btn gray';button.textContent='Retry writing guide';button.onclick=guard(token,box,retry);message.append(button);}
+        }
       })
     });
     writer = instance;
@@ -97,7 +103,7 @@ const ActivityUI = (() => {
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stop);
     return () => { context.clearRect(0, 0, canvas.width, canvas.height); stop(); };
   }
-  return { escape, find, button, on, guard, current, speak, card, render, loadStrokes, makeWriter, next, success, message, nextButton, persistDictation, draw };
+  return { escape, find, button, on, guard, current, speak, card, languages, render, loadStrokes, makeWriter, next, success, message, nextButton, persistDictation, draw };
 })();
 
 function wordLine(c, hidden = false) {
@@ -105,9 +111,9 @@ function wordLine(c, hidden = false) {
   const text = String(c.w).split('|').map(part => hidden
     ? part.split(c.c).map(ActivityUI.escape).join('<span class="blank" aria-label="missing character"></span>')
     : ActivityUI.escape(part)).join(' / ');
-  return `<div class="mean">${text} <span style="color:var(--ac-ink)">${ActivityUI.escape((c.wp || '').replaceAll('|', ' / '))}</span></div>`;
+  return `<div class="mean"><span lang="zh-Hans">${text}</span> <span lang="zh-Latn-pinyin" style="color:var(--ac-ink)">${ActivityUI.escape((c.wp || '').replaceAll('|', ' / '))}</span></div>`;
 }
-function mkWriter(c, outline, onDone) { return ActivityUI.makeWriter(c, outline, onDone); }
+function mkWriter(c, outline, onDone, retry) { return ActivityUI.makeWriter(c, outline, onDone, retry); }
 function pyBase(p) { return pinyinBase(p); }
 function pyTone(p) { return pinyinTone(p); }
 function pyMark(base, tone) {
@@ -140,14 +146,14 @@ function trace(index = 0) {
   const c = cards[index], ui = ActivityUI;
   const view = ui.render('trace', `<div class="pin">${ui.escape(c.p)}</div><div class="mean">${ui.escape(c.m)}</div>${wordLine(c)}
     <div id="hw" role="group" aria-label="Trace ${ui.escape(c.c)}"></div><p class="msg" id="m" role="status"></p>
-    ${ui.button('◀ Back', 'prev')}${ui.button('🔊 Hear again', 'trp')}${ui.button('Watch strokes', 'watch')}${ui.button('Next ▶', 'sk')}<p class="reading-note" id="writing-help-note">Before you finish, watching strokes counts as practice with help. Your first attempt stays saved.</p>`);
+    ${ui.button('◀ Back', 'prev')}${ui.button('🔊 Hear again', 'trp')}${ui.button('Watch strokes', 'watch')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">Before you finish, watching strokes counts as practice with help. Your first attempt stays saved.</p>`);
   beginReview(c, 'trace');
   TLK = 1; after(700, () => { TLK = 0; });
   ui.on('trp', () => ui.speak(c));
   ui.on('prev', () => trNav(-1, index));
   if (SESS || !TH.length) ui.find('prev').disabled = true;
   ui.on('sk', () => trNav(1, index));
-  const instance = mkWriter(c, true);
+  const instance = mkWriter(c, true, undefined, () => trace(index));
   let complete = false, helped = !!(SESS?.study && studyAttemptInfo()?.help);
   const quiz = () => instance.quiz({
     showHintAfterMisses: 1, leniency: 1.2,
@@ -204,14 +210,14 @@ function flip(preferred) {
   const ui = ActivityUI, c = ui.card(preferred, 'flip');
   if (!c) return;
   const view = ui.render('flip', `<p class="reading-note">Can you remember the sound and meaning?</p>
-    <button type="button" class="card" id="cd" aria-label="Reveal card" style="color:var(--tx);border:0;font:inherit"><span class="big">${ui.escape(c.c)}</span><small>Tap to flip</small></button>
+    <button type="button" class="card" id="cd" aria-expanded="false" aria-controls="flip-rating" style="color:var(--tx);border:0;font:inherit"><span class="big">${ui.escape(c.c)}</span><small>Tap to flip</small></button>
     <div id="flip-rating" hidden>${ui.button('Not yet', 'no', 'r')}${ui.button('I knew it', 'yes', 'g')}</div>${ui.button('Skip ▶', 'sk')}`);
   beginReview(c, 'flip');
   let revealed = false;
   ui.on('cd', () => {
     if (revealed) return; revealed = true;
     ui.find('cd').innerHTML = `<span class="big" style="font-size:100px">${ui.escape(c.c)}</span><span class="pin">${ui.escape(c.p)}</span><span class="mean">${ui.escape(c.m)}</span>${wordLine(c)}`;
-    ui.find('flip-rating').hidden = false; ui.speak(c);
+    ui.find('flip-rating').hidden = false;ui.find('cd').setAttribute('aria-expanded','true');ui.languages(); ui.speak(c);
   });
   ui.on('sk', () => ui.next(flip));
   for (const [id, outcome] of [['yes','correct'],['no','miss']]) ui.on(id, ui.guard(view.token, view.node, () => {
@@ -231,7 +237,7 @@ function memory(preferred) {
     <div id="hw" role="group" aria-label="Write the character from memory"></div><p class="msg" id="m" role="status"></p>${ui.button('🔊 Hear again', 'mrp')}${ui.button('Peek', 'pk')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">Peek gives a clue. This answer will count as practice with help.</p>`);
   beginReview(c, 'memory');
   let helped = !!(SESS?.study && studyAttemptInfo()?.help), complete = false;
-  const instance = mkWriter(c, false);
+  const instance = mkWriter(c, false, undefined, () => memory(c));
   ui.on('mrp', () => ui.speak(c));
   ui.on('pk', () => {
     if (complete) return;
@@ -276,7 +282,7 @@ function dictItem() {
   }
   const c = round.q[round.i];
   // Study's dispatcher inserts its own session bar once the question is ready.
-  const view = ui.render('dictation', `<div class="dictation-prompt">${ui.button('🔊', 'drp', '')}<div><h2>Listen, then write and build the pinyin</h2><p class="mean" id="dictation-clue">Meaning: ${ui.escape(c.m)}</p></div></div>
+  const view = ui.render('dictation', `<div class="dictation-prompt">${ui.button('🔊 Hear again', 'drp', '')}<div><h2>Listen, then write and build the pinyin</h2><p class="mean" id="dictation-clue">Meaning: ${ui.escape(c.m)}</p></div></div>
     <div class="dictation-workspace"><section class="dictation-writing"><div class="dictation-paper"><canvas id="dc" width="600" height="600" aria-label="Write the character here" style="width:100%;height:100%;display:block"></canvas></div>${ui.button('Clear writing', 'dclr')}</section>
     <section class="dictation-pinyin"><div class="dictation-pinyin-heading"><h2>Pinyin</h2><output id="pyout" aria-label="Your pinyin">&nbsp;</output></div><div id="tiles"></div><div class="dictation-tones" role="group" aria-label="Tone">${[1,2,3,4,0].map(tone=>`<button class="btn gray" type="button" data-tn="${tone}" aria-label="${tone ? 'Tone '+tone : 'Neutral tone'}">${tone ? ['','ā','á','ǎ','à'][tone] : 'neutral'}</button>`).join('')}</div>${ui.button('Delete letter', 'py-delete')}${ui.button('Check', 'dchk', '')}</section></div>`, !SESS?.study);
   feedbackQuestion = {card:c, mode:'dictation'}; renderRewards();
@@ -304,7 +310,8 @@ function dictItem() {
     if (!right && round.session && SESS?.study) studyAttempt('pinyinMiss');
     const firstPinyin = right && !(round.session && SESS?.study && studyAttemptInfo()?.pinyinMiss);
     const picture = canvas.toDataURL();
-    A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="mean">Your pinyin: ${ui.escape(letters ? pyMark(letters,tone) : '—')}</p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Did you write the character correctly?</p>${ui.button('Yes, I got it', 'cy', 'g')}${ui.button('Not yet', 'cn', 'r')}</div></div>`;
+    A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="mean">Your pinyin: <span lang="zh-Latn-pinyin">${ui.escape(letters ? pyMark(letters,tone) : '—')}</span></p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Did you write the character correctly?</p>${ui.button('Yes, I got it', 'cy', 'g')}${ui.button('Not yet', 'cn', 'r')}</div></div>`;
+    ui.languages();
     let rated = false;
     const rate = chOk => {
       if (rated || NAV !== view.token || DQ !== round) return; rated = true;

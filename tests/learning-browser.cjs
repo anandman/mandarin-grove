@@ -32,8 +32,10 @@ const assert=require('node:assert/strict');
   save();parentDashboard(PR.cur,'2');
  });
  assert.equal(await page.evaluate(()=>characterStage(S,'狗')),'Mastered');
+ await page.getByText('Learning details · 151 characters',{exact:true}).click();
  assert.match(await page.locator('#app').innerText(),/狗 · Mastered/);
- assert.match(await page.locator('#app').innerText(),/elapsed days, not sessions/);
+ await page.getByText('How progress works',{exact:true}).click();
+ assert.match(await page.locator('#app').innerText(),/elapsed days, at most once per calendar day/);
 
  assert.match(await page.locator('#app').innerText(),/狗/);
  await page.locator('#dash-child').selectOption('other');assert.equal(await page.evaluate(()=>PR.cur),'learning');

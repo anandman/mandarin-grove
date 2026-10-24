@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
   await page.locator('#writing-input').fill('school');await page.locator('#writing-input').press('Enter');
   assert.match(await page.locator('#writing-status').textContent(),/Chinese character/);assert.equal(await page.locator('#writing-finish').count(),0);
   await page.locator('#writing-browse summary').click();await page.locator('#writing-browse-search').fill('school');
-  await page.getByRole('button',{name:'Use 学校',exact:true}).focus();await page.keyboard.press('Enter');
+  await page.getByRole('button',{name:'Use 学校 school',exact:true}).focus();await page.keyboard.press('Enter');
   assert.equal(await page.locator('.writing-word span').first().textContent(),'学校');
   assert.equal(await storage(),before,'Requesting and browsing ideas must not write profile progress or rewards');
   // Feedback records the idea, without a child's name or unrelated speech details.

@@ -44,7 +44,7 @@ const assert=require('node:assert/strict');
   await page.locator('[data-project="reading-nook"]').getByRole('button',{name:'Build Bookshelf · 🍊 3',exact:true}).click();
   assert.equal(await page.locator('.grove-reward-scene [data-project-scene="reading-nook"] [data-piece]').count(),2);
   await page.locator('#grove-undo').click();assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance-2);
-  await page.getByRole('tab',{name:'Visitors',exact:true}).click();await page.getByRole('button',{name:'Invite zoo friend 2',exact:true}).click();
+  await page.getByRole('tab',{name:'Visitors',exact:true}).click();await page.getByRole('button',{name:'Invite Cat, Friend 2',exact:true}).click();
   assert.equal(await page.evaluate(()=>groveEquipped(S).visitors),'zoo:1');
   await page.getByRole('button',{name:'Back home',exact:true}).click();
   assert.equal(await page.locator('.grove-hero-art [data-scene="flowers"]').count(),1);

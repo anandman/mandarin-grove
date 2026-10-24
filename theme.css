@@ -1,7 +1,7 @@
 /* Mandarin Grove: a paper field journal by day, a warm orchard after dark. */
 :root{
  --bg:#F6F2E9;--surface:#FFFCF6;--surface-soft:#EEE9DE;--surface-strong:#E4DECF;
- --surface-overlay:#fffcf6ed;--tx:#242B24;--mut:#626658;--ln:#DCDCCF;
+ --surface-overlay:#fffcf6ed;--tx:#242B24;--mut:#626658;--ln:#DCDCCF;--input-edge:#817E70;
  --ac:#F57727;--ac-ink:#984015;--ac-soft:#F8E4CE;--on-accent:#261E14;
  --violet:#B8A0D6;--violet-ink:#5A4277;--violet-soft:#ECE4F4;
  --success:#3C6346;--success-soft:#E5EDDD;--success-solid:#396344;
@@ -13,7 +13,7 @@
 }
 :root[data-theme=dark]{
  --bg:#151916;--surface:#202720;--surface-soft:#29322A;--surface-strong:#344037;
- --surface-overlay:#202720ed;--tx:#F2EDDF;--mut:#BDC2B1;--ln:#3D483D;
+ --surface-overlay:#202720ed;--tx:#F2EDDF;--mut:#BDC2B1;--ln:#3D483D;--input-edge:#8D9C89;
  --ac:#FF963F;--ac-ink:#FFB675;--ac-soft:#3E3022;--on-accent:#21190E;
  --violet:#BCA2DF;--violet-ink:#D4BCEE;--violet-soft:#342C41;
  --success:#BAD1AC;--success-soft:#2D3C2D;--success-solid:#396344;
@@ -243,3 +243,7 @@ body[data-study] #reward-strip,body[data-study] .legacy-stats{display:none}
 
 #progress-characters .grove-section-heading>span{text-align:left}#sres button.character-tile{background:var(--surface);color:var(--tx);border:1px solid var(--paper-outline);min-height:88px}#sres .ch{font-size:32px}#sres .py{font-size:16px;color:var(--mut)}
 #sets .set>button[aria-expanded]:focus-visible{outline-offset:-5px}
+
+/* Entry boundaries remain identifiable when fields are empty. */
+input:not([type=checkbox]):not([type=radio]),textarea,select{border-color:var(--input-edge)!important}
+.dictation-tones{flex-wrap:wrap;min-width:0}.dictation-pinyin{min-width:0}

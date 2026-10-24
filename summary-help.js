@@ -29,6 +29,8 @@ function showSummaryHelp(){
   try{
    save();status.textContent='Draft saved on this device, for this child. Included in your normal backup.';
   }catch{
+   // Keep the user's draft available to retry; failed destructive changes use save's durable rollback.
+   S.homeworkHelp={...homework(),summary:draft};
    status.textContent='Could not save on this device. Your text is still here. Keep this page open and type again to retry.';
   }
  });
