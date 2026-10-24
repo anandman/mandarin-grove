@@ -127,7 +127,7 @@ function showHomeworkLookup(){
   $('lookup-practice').disabled=!state.selected.size;$('lookup-practice').textContent='Practice selected · '+state.selected.size;$('lookup-clear').hidden=!state.selected.size;
  }
  function renderResults(){
-  const focused=results.contains(document.activeElement)?document.activeElement?.dataset.lookupText:null;
+  const focused=results.contains(document.activeElement)?{text:document.activeElement?.dataset.lookupText,summary:document.activeElement?.matches('#lookup-dictionary > summary')}:null;
   const found=searchHelpLookup(index,state.query,state.limit);results.replaceChildren();
   const school=document.createElement('section');school.id='lookup-school-results';
   const general=document.createElement('details');general.id='lookup-dictionary';general.open=!!state.dictionaryOpen||!found.items.some(row=>helpSchoolResult(index,row));
@@ -145,7 +145,7 @@ function showHomeworkLookup(){
    const meaning=document.createElement('small');meaning.textContent=row.meaning;
    const source=document.createElement('small');source.className='lookup-source';source.textContent=row.kind==='character'?'School character':row.example?'Example · teaching review pending':helpSchoolResult(index,row)?'Writing ideas word':'Full dictionary';button.append(word,reading,meaning,source);button.onclick=()=>openResult(row);(helpSchoolResult(index,row)?school:dictionary).append(button);
   }
-  if(focused)[...results.querySelectorAll('[data-lookup-text]')].find(el=>el.dataset.lookupText===focused)?.focus();
+  if(focused){const target=focused.summary?results.querySelector('#lookup-dictionary > summary'):[...results.querySelectorAll('[data-lookup-text]')].find(el=>el.dataset.lookupText===focused.text);(target||input).focus();}
  }
  function search(value){shown=null;state.query=value.trim();state.limit=24;state.dictionaryOpen=false;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();renderResults();}
  function openResult(row,focus=true){

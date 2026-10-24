@@ -6,7 +6,7 @@ const MASTER=5,DAY=86400000,SLEEP=7,K='owenzh_v1',PK='zh_profiles';
 // The ordered legacy collection is a saved-progress compatibility contract.
 const ANIMALS=['🐶','🐱','🐮','🐯','🐰','🐼','🐨','🦁','🐸','🐵','🐧','🐥','🦊','🐻','🐷','🐭','🐹','🦄','🐴','🦒','🐘','🦓','🐢','🐙','🦋','🐳','🐬','🦉','🦖','🐲'];
 const ANIMAL_NAMES=['Dog','Cat','Cow','Tiger','Rabbit','Panda','Koala','Lion','Frog','Monkey','Penguin','Chick','Fox','Bear','Pig','Mouse','Hamster','Unicorn','Horse','Giraffe','Elephant','Zebra','Turtle','Octopus','Butterfly','Whale','Dolphin','Owl','Dinosaur','Dragon'];
-const BADGES=[['m5','🥉','5 characters','Mastered 5 characters'],['m15','🥈','15 characters','Mastered 15 characters'],['m30','🥇','30 characters','Mastered 30 characters'],['s7','🔥','7-day streak','Practiced 7 days in a row'],['pq','📝','Perfect quiz','Every pinyin right on the weekly quiz']];
+const BADGES=[['m5','🥉','5 characters','Earned five reward stars for each of 5 characters'],['m15','🥈','15 characters','Earned five reward stars for each of 15 characters'],['m30','🥇','30 characters','Earned five reward stars for each of 30 characters'],['s7','🔥','7-day streak','Practiced 7 days in a row'],['pq','📝','Perfect quiz','Every pinyin right on the weekly quiz']];
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const blank=()=>GroveState.emptyProfile();
 let PR={cur:null,list:[]},S=blank(),GROVE_SAVED_REGISTRY={cur:null,list:[]},GROVE_STATE_OWNER=null,GROVE_PROGRESS_READY=false,GROVE_SAVED_STATE=null;
@@ -69,10 +69,18 @@ function save(cramSelectionChanged=false){
  const candidate=JSON.parse(JSON.stringify(S)),earned=refreshRewardState(candidate,GR());
  if(!cramSelectionChanged)candidate.cfg.cramUnits=storedCramSelections();
  try{S=PR.cur?GROVE_REPOSITORY.saveProfile(PR.cur,candidate):candidate;}
- catch(error){if(GROVE_SAVED_STATE){S=JSON.parse(JSON.stringify(GROVE_SAVED_STATE));setCards();}showStorageFailure(error);throw error;}
+ catch(error){if(GROVE_SAVED_STATE){S=JSON.parse(JSON.stringify(GROVE_SAVED_STATE));setCards();}error.groveSaveRejected=true;showStorageFailure(error);throw error;}
  GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));
  // Rendering failures cannot undo an already committed durable save.
  hdr();announceRewards(earned);clearStorageFailure();
+}
+function saveProfileSettings(registry,candidate){
+ if(!GROVE_PROGRESS_READY||GROVE_STATE_OWNER!==PR.cur)throw Error('Reload this child before saving settings.');
+ const profile=registry.list.find(p=>p.id===PR.cur),earned=refreshRewardState(candidate,profile.gr);
+ candidate.cfg.cramUnits=storedCramSelections();let saved;
+ try{saved=GROVE_REPOSITORY.saveChildSettings(PR.cur,registry,candidate);}catch(error){showStorageFailure(error);throw error;}
+ PR=saved.registry;S=saved.profile;GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));
+ clearStorageFailure();hdr();announceRewards(earned);
 }
 function today(date=new Date()){return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;}
 function touchStreak(){
@@ -89,15 +97,19 @@ function award(id){
 }
 function checkBadges(){for(const [id,threshold]of [['m5',5],['m15',15],['m30',30]])if(mastered()>=threshold)award(id);if(S.streak>=7)award('s7');}
 function badgeShow(badge){
- const notice=document.createElement('div');notice.className='bdg';notice.setAttribute('role','dialog');notice.setAttribute('aria-label','New badge');
- const symbol=document.createElement('div');symbol.className='medal';symbol.textContent=badge[1];
+ const previous=document.activeElement,notice=document.createElement('dialog');notice.className='bdg';notice.setAttribute('aria-label','New badge');
+ const symbol=document.createElement('div');symbol.className='badge-symbol';symbol.textContent=badge[1];
  const title=document.createElement('h1');title.textContent='New badge!';const note=document.createElement('p');note.textContent=badge[3];
- const close=document.createElement('button');close.className='btn';close.textContent='Yay!';close.onclick=()=>{notice.remove();focusMain();};notice.append(symbol,title,note,close);document.body.append(notice);close.focus();say('太棒了');
+ const close=document.createElement('button');close.className='btn';close.textContent='Yay!';close.onclick=()=>notice.close();notice.onclose=()=>{notice.remove();if(previous?.isConnected&&previous!==document.body&&previous.matches('button,a[href],input,select,textarea,summary,[tabindex]')&&!previous.matches(':disabled')&&previous.getClientRects().length)previous.focus();else focusMain();};notice.onkeydown=event=>{if(event.key==='Tab'){event.preventDefault();close.focus();}};notice.append(symbol,title,note,close);document.body.append(notice);notice.showModal();close.focus();say('太棒了');
 }
-function win(card,amount=1){
- const count=S.pts[card.c]||0,sleeping=asleep(card);touchStreak();S.stars+=amount;S.pts[card.c]=count+1;S.ok??={};S.ok[card.c]=Date.now();save();
- if(count<MASTER&&count+1>=MASTER){pop(ANIMALS[mastered()-1]||'🎉');after(500,()=>pop('New friend!'));say('太棒了');}else pop(sleeping?'☀️':'⭐');checkBadges();
+function creditWin(card,amount=1){
+ const prior={count:S.pts[card.c]||0,sleeping:asleep(card)};touchStreak();S.stars+=amount;S.pts[card.c]=prior.count+1;S.ok??={};S.ok[card.c]=Date.now();return prior;
 }
+function celebrateWin(card,prior){
+ if(prior.count<MASTER&&prior.count+1>=MASTER){pop(ANIMALS[mastered()-1]||'🎉');after(500,()=>pop('New friend!'));say('太棒了');}else pop(prior.sleeping?'☀️':'⭐');
+ try{checkBadges();}catch(error){showStorageFailure(error);}
+}
+function win(card,amount=1){const prior=creditWin(card,amount);save();celebrateWin(card,prior);}
 function shuffle(values){const result=[...values];let remaining=result.length;while(remaining>1){const index=Math.floor(Math.random()*remaining);remaining--;const value=result[remaining];result[remaining]=result[index];result[index]=value;}return result;}
 function hdr(){
  const host=$('hd');host.replaceChildren();const profile=prof();
@@ -109,7 +121,7 @@ function hdr(){
 function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
 function screen({scroll=true}={}){
  viewNavigation={origin:document.activeElement};
- NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');$('reward-notice')?.setAttribute('hidden','');renderRewards();
+ NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');$('reward-notice')?.setAttribute('hidden','');$('progress-action-retry')?.remove();renderRewards();
  const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
@@ -202,9 +214,11 @@ function resume(){
  if(!resumeLegacyRound('rs'))return showStudySetup('practice');const round=RS();if(!round)return startSession();const by=new Map(CARDS.map(card=>[card.c,card]));SESS={q:round.q.map(([mode,char])=>[mode,by.get(char)]),i:round.i,t:round.t||'',pool:(round.p||[]).map(char=>by.get(char)).filter(Boolean)};nextItem();
 }
 function nextItem(){
+ try{
  if(!SESS)return;if(SESS.study)return studyNextItem();
  if(SESS.i>=SESS.q.length){const session=SESS;delete S.cfg[session.cram?'cram':'rs'];save();SESS=null;screen();A.innerHTML='<div class="big">🎉</div><h1>Round done!</h1><p class="mean"></p><button class="btn" id="again">Practice again</button><button class="btn gray" id="round-choices">Choose units / mode</button><button class="btn gray" id="round-home">Back home</button>';A.querySelector('.mean').textContent=`You finished ${session.q.length} activities. Stars celebrate practice; the Parent dashboard shows learning mastery.`;$('again').onclick=()=>CRAM?startCram(CRAM.mode,true):startSession(session.pool,session.t);$('round-choices').onclick=()=>CRAM?showCram():showStudySetup('practice');$('round-home').onclick=home;return;}
  saveRound();const [mode,card]=SESS.q[SESS.i++],actions={trace:()=>trace(practiceCards().indexOf(card)),listen:()=>listen(card),flip:()=>flip(card),memory:()=>memory(card),dictation:()=>dictQuestion(card)};actions[mode]?.();
+ }catch(error){if(error.groveSaveRejected)error.groveRetryAction=nextItem;throw error;}
 }
 function go(action){skipReview();if(SESS)nextItem();else action();}
 function sessBar(){if(SESS?.study)return studySessionBar();return SESS?`<div class="sess">${SESS.i} / ${SESS.q.length}<div class="bar"><i style="width:${100*SESS.i/SESS.q.length}%"></i></div></div>`:'';}

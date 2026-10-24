@@ -122,21 +122,24 @@ function runStudyRound(round,pool){
  SESS={study:true,cram:round.kind==='review',kind:round.kind,round,q,i:round.cursor,pool:CRAM.pool};nextItem();
 }
 function resumeStudy(kind){const r=currentStudyRound(kind);if(r)runStudyRound(JSON.parse(JSON.stringify(r)));else showStudySetup(kind);}
-function saveStudyRound(){
+function saveStudyRound({persist=true}={}){
  const r=SESS.round;r.q=SESS.q.map(([m,c])=>[m,c.c]);
- ((S.cfg.studyRounds||={})[GR()]||={})[SESS.kind]=JSON.parse(JSON.stringify(r));save();
+ ((S.cfg.studyRounds||={})[GR()]||={})[SESS.kind]=JSON.parse(JSON.stringify(r));if(persist)save();
 }
-function recordStudyAnswer(review,outcome){
+function recordStudyAnswer(review,outcome,{persist=true}={}){
  if(!SESS?.study)return;
  const [mode,c]=SESS.q[SESS.currentIndex],r=SESS.round;
+ const before=persist?JSON.parse(JSON.stringify(r)):null,deferred=A.querySelector('.study-not-learned'),wasDisabled=deferred?.disabled;
  const itemId=mode+':'+c.c;
  const result=GroveResults.createResult({character:c.c,mode,sessionId:r.id,itemId,correct:outcome==='correct',outcome,...(outcome==='unverified'?{ungraded:true}:{}),selfRated:mode==='flip'||mode==='dictation',...(review?.evidence?{evidence:review.evidence}:{})},{makeId:()=>r.id+':'+itemId});
- addStudyResult(r,itemId,result);
- r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);A.querySelector('.study-not-learned')?.setAttribute('disabled','');saveStudyRound();
+ try{addStudyResult(r,itemId,result);
+ r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);deferred?.setAttribute('disabled','');saveStudyRound({persist});}
+ catch(error){if(before)SESS.round=before;if(deferred)deferred.disabled=wasDisabled;throw error;}
 }
 function studyNextItem(){
  if(SESS.i>=SESS.q.length){finishStudyRound();return;}
- const index=SESS.i;SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;saveStudyRound();
+ const index=SESS.i,previous={i:SESS.i,currentIndex:SESS.currentIndex,cursor:SESS.round.cursor};SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;
+ try{saveStudyRound();}catch(error){SESS.i=previous.i;SESS.currentIndex=previous.currentIndex;SESS.round.cursor=previous.cursor;throw error;}
  const [mode,c]=SESS.q[index];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
  document.body.dataset.study=SESS.kind;
  if(mode==='dictation')A.querySelector('.grove-activity-heading').insertAdjacentHTML('afterend',studySessionBar());
@@ -147,12 +150,15 @@ function studySessionBar(){
  return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${characterCount} character${characterCount===1?'':'s'} · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
 }
 function pauseStudy(){if(SESS?.study){if(SESS.round.cursor>=SESS.q.length){finishStudyRound();return;}saveStudyRound();}home();}
-function studyNotLearned(){
+function studyNotLearned(){return ActivityUI.run(()=>{
  if(!SESS?.study)return;const item=SESS.q[SESS.currentIndex],c=item?.[1];if(!c||Object.hasOwn(SESS.round.results,item[0]+':'+c.c))return;
+ const previous={q:SESS.q.slice(),i:SESS.i,round:JSON.parse(JSON.stringify(SESS.round)),review:ACTIVE_REVIEW};
  S.cfg.notLearned=[...new Set([...(S.cfg.notLearned||[]),c.c])];
  const before=SESS.q.slice(0,SESS.currentIndex),after=SESS.q.slice(SESS.currentIndex+1).filter(([,x])=>x.c!==c.c);
- SESS.q=before.concat(after);SESS.i=before.length;SESS.round.cursor=SESS.i;ACTIVE_REVIEW=null;NAV++;stopSpeech();saveStudyRound();nextItem();
-}
+ SESS.q=before.concat(after);SESS.i=before.length;SESS.round.cursor=SESS.i;
+ try{saveStudyRound();}catch(error){SESS.q=previous.q;SESS.i=previous.i;SESS.round=previous.round;ACTIVE_REVIEW=previous.review;throw error;}
+ ACTIVE_REVIEW=null;NAV++;stopSpeech();nextItem();
+});}
 function finishStudyRound(){
  const round=SESS.round;round.cursor=round.q.length;completeStudyRound(S,round);saveStudyRound();STUDY_LAST=JSON.parse(JSON.stringify(round));
  const score=studyScore(round),misses=Object.entries(round.results).filter(([,r])=>!r.correct&&!r.ungraded);
@@ -167,8 +173,8 @@ function retryStudyMisses(){
 // Keep the first attempt across Pause/reload, including hints and stroke tolerance.
 function studyAttemptInfo(){if(!SESS?.study)return null;const [mode,c]=SESS.q[SESS.currentIndex];return SESS.round.attempts?.[mode+':'+c.c]||null;}
 function studyAttempt(kind){
- if(!SESS?.study)return;const [mode,c]=SESS.q[SESS.currentIndex],all=SESS.round.attempts||={},r=all[mode+':'+c.c]||={};
- if(kind==='stroke')r.strokes=(r.strokes||0)+1;else r[kind]=true;saveStudyRound();
+ if(!SESS?.study)return;const before=JSON.parse(JSON.stringify(SESS.round)),[mode,c]=SESS.q[SESS.currentIndex],all=SESS.round.attempts||={},r=all[mode+':'+c.c]||={};
+ if(kind==='stroke')r.strokes=(r.strokes||0)+1;else r[kind]=true;try{saveStudyRound();}catch(error){SESS.round=before;throw error;}
 }
 function studyOutcome(outcome){const a=studyAttemptInfo();if(!a||outcome==='skip')return outcome;if(a.miss||a.pinyinMiss)return 'miss';if(a.help||a.strokes>2)return 'assisted';return outcome;}
 function resumeLegacyRound(kind){

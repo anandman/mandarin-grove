@@ -108,7 +108,7 @@ function grown(sectionName='child'){
   profileButton(section,'Save','gsave',()=>{
    if(!current())return;try{const oldGrade=GR(),newGrade=grade.value,cfg={...S.cfg,test:date.value,quiz:quiz.value.replace(/[\s,，、]/g,'')};
     if(newGrade!==oldGrade){cfg.sets={...(S.cfg.sets||{}),[oldGrade]:Array.isArray(S.cfg.set)?S.cfg.set.slice():null};cfg.set=Array.isArray(cfg.sets[newGrade])?cfg.sets[newGrade].slice():null;}
-    const target=PR.list.find(p=>p.id===childId);if(!target)throw new Error('This child is no longer available. Reload before saving.');target.name=name.value.trim()||target.name;target.gr=newGrade;savePR();S.cfg=cfg;save();setCards();lq=[];mq=[];profileClose(dialog);home();pop('Saved');
+    const registry=JSON.parse(JSON.stringify(PR)),target=registry.list.find(p=>p.id===childId);if(!target)throw new Error('This child is no longer available. Reload before saving.');target.name=name.value.trim()||target.name;target.gr=newGrade;const candidate=JSON.parse(JSON.stringify(S));candidate.cfg=cfg;saveProfileSettings(registry,candidate);setCards();lq=[];mq=[];profileClose(dialog);home();pop('Saved');
    }catch(error){profileFailure(dialog,error);}
   });
  }

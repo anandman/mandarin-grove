@@ -9,9 +9,17 @@ const ActivityUI = (() => {
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => `&#${char.charCodeAt(0)};`);
   const find = id => document.getElementById(id);
   const button = (label, id, extra = 'gray') => `<button type="button" class="btn ${extra}" id="${id}">${label}</button>`;
-  const on = (id, fn) => find(id)?.addEventListener('click', fn);
+  const on = (id, fn) => find(id)?.addEventListener('click', (...args)=>run(()=>fn(...args)));
   const current = (token, node) => NAV === token && node.isConnected;
-  const guard = (token, node, fn) => (...args) => { if (current(token, node)) return fn(...args); };
+  const guard = (token, node, fn) => (...args) => { if (current(token, node)) return run(()=>fn(...args)); };
+  function run(action){
+    try{return action();}catch(error){
+      if(!error.groveSaveRejected)throw error;
+      const status=find('progress-storage-status');if(!status)return false;find('progress-action-retry')?.remove();
+      const retry=document.createElement('button');retry.id='progress-action-retry';retry.className='btn gray';retry.textContent='Retry saving this answer';
+      const token=NAV;retry.onclick=()=>{if(token!==NAV)return;run(()=>{if(error.groveRetryAction)return error.groveRetryAction();const item=SESS?.study&&SESS.q[SESS.currentIndex],saved=item&&Object.hasOwn(SESS.round.results,item[0]+':'+item[1].c);if(SESS&&(ACTIVE_REVIEW?.done||saved))nextItem();else action();});};status.append(retry);retry.focus();retry.scrollIntoView({block:'center'});return false;
+    }
+  }
   function speak(card) { say(card.c); }
   function card(preferred, mode) {
     return preferred?.c ? preferred : reviewPick(S, practiceCards(), mode);
@@ -61,8 +69,7 @@ const ActivityUI = (() => {
   }
   function next(fn) { go(fn); }
   function success(c, outcome, stars = 1) {
-    if (!finishReview(outcome)) return false;
-    if (outcome === 'correct') win(c, stars);
+    if (!finishReview(outcome,outcome==='correct'?stars:0)) return false;
     return true;
   }
   function message(text, good = false) {
@@ -73,11 +80,11 @@ const ActivityUI = (() => {
     const element = find(id);
     if (element) { element.textContent = 'Next ▶'; element.classList.add('pulse'); }
   }
-  function persistDictation() {
+  function persistDictation({persist=true}={}) {
     if (!DQ || DQ.session || !CRAM) return;
     if (DQ.i >= DQ.q.length) delete S.cfg.cramDict;
     else S.cfg.cramDict = { ...DQ, q: DQ.q.map(c => c.c), pool: CRAM.pool.map(c => c.c) };
-    save();
+    if(persist)save();
   }
   function draw(canvas) {
     const context = canvas.getContext('2d');
@@ -103,7 +110,7 @@ const ActivityUI = (() => {
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stop);
     return () => { context.clearRect(0, 0, canvas.width, canvas.height); stop(); };
   }
-  return { escape, find, button, on, guard, current, speak, card, languages, render, loadStrokes, makeWriter, next, success, message, nextButton, persistDictation, draw };
+  return { escape, find, button, on, guard, run, current, speak, card, languages, render, loadStrokes, makeWriter, next, success, message, nextButton, persistDictation, draw };
 })();
 
 function wordLine(c, hidden = false) {
@@ -160,10 +167,10 @@ function trace(index = 0) {
     onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('Follow the highlighted stroke'); }),
     onCorrectStroke: ui.guard(view.token, view.node, () => ui.message('')),
     onComplete: ui.guard(view.token, view.node, summary => {
-      if (complete) return; complete = true;
+      if (complete) return;
       const outcome = traceOutcome(summary.totalMistakes, helped);
       const first = SESS?.study ? studyOutcome(outcome) : outcome;
-      if (finishReview(first)) win(c);
+      if(!finishReview(first,1))return;complete=true;
       ui.message('Great tracing! 🌟', true); instance.showCharacter(); ui.nextButton(); ui.speak(c);
     })
   });
@@ -195,10 +202,8 @@ function listen(preferred) {
       if (SESS?.study) studyAttempt('miss');
       option.classList.add('no'); option.disabled = true; ui.message('Try again');A.querySelector('.choices button:not(:disabled)')?.focus(); return;
     }
-    done = true; option.classList.add('ok');
-    A.querySelectorAll('[data-c]').forEach(choice => { choice.disabled = true; });
     const outcome = SESS?.study ? studyOutcome(missed ? 'miss' : 'correct') : missed ? 'miss' : 'correct';
-    ui.success(c, outcome); ui.message(missed ? 'Got it! Keep practicing 👍' : 'You got it! 🎉', !missed);
+    if(!ui.success(c,outcome))return;done=true;option.classList.add('ok');A.querySelectorAll('[data-c]').forEach(choice=>choice.disabled=true); ui.message(missed ? 'Got it! Keep practicing 👍' : 'You got it! 🎉', !missed);
     ui.nextButton(); after(1000, () => ui.next(listen));
   })));
   ui.speak(c);
@@ -222,10 +227,6 @@ function flip(preferred) {
   ui.on('sk', () => ui.next(flip));
   for (const [id, outcome] of [['yes','correct'],['no','miss']]) ui.on(id, ui.guard(view.token, view.node, () => {
     if (!revealed || !ui.success(c, outcome)) return;
-    if (!CRAM) {
-      const level = outcome === 'correct' ? Math.min((S.box[c.c] || 0) + 1, 4) : 0;
-      S.box[c.c] = level; S.due[c.c] = dayNum() + [0,1,2,4,7][level]; save();
-    }
     ui.next(flip);
   }));
 }
@@ -250,10 +251,10 @@ function memory(preferred) {
     onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('Hmm, not that stroke'); }),
     onCorrectStroke: ui.guard(view.token, view.node, () => ui.message('')),
     onComplete: ui.guard(view.token, view.node, summary => {
-      if (complete) return; complete = true;
+      if (complete) return;
       const outcome = helped || summary.totalMistakes > 2 ? 'assisted' : 'correct';
       const first = SESS?.study ? studyOutcome(outcome) : outcome;
-      ui.success(c, first, 2); instance.showCharacter(); ui.find('pk').disabled = true;
+      if(!ui.success(c,first,2))return;complete=true; instance.showCharacter(); ui.find('pk').disabled = true;
       ui.message(first === 'correct' ? 'You remembered it! 🎉' : 'Got it! Keep practicing 👍', first === 'correct');
       ui.nextButton(); ui.speak(c);
     })
@@ -314,15 +315,19 @@ function dictItem() {
     ui.languages();
     let rated = false;
     const rate = chOk => {
-      if (rated || NAV !== view.token || DQ !== round) return; rated = true;
+      if (rated || NAV !== view.token || DQ !== round) return;
+      const previous={...round},studyBefore=SESS?.study?JSON.parse(JSON.stringify(SESS.round)):null;let prior;
+      try{
       const pyOutcome = firstPinyin ? 'correct' : 'miss', writingOutcome = chOk ? 'correct' : 'miss';
       recordSkill(S,c.c,'pinyin',pyOutcome); recordSkill(S,c.c,'writing',writingOutcome);
       const outcome = firstPinyin && chOk ? 'correct' : 'miss';
-      if (round.session && SESS?.study) recordStudyAnswer({evidence:[{skill:'pinyin',method:'checked',outcome:pyOutcome},{skill:'writing',method:'self-rated',outcome:writingOutcome}]},outcome);
-      if (outcome === 'correct') win(c,2);
+      if (round.session && SESS?.study) recordStudyAnswer({evidence:[{skill:'pinyin',method:'checked',outcome:pyOutcome},{skill:'writing',method:'self-rated',outcome:writingOutcome}]},outcome,{persist:false});
+      if (outcome === 'correct') prior=creditWin(c,2);
       round.score += Number(right) + Number(chOk); round.n += 2; round.bad += Number(!firstPinyin || !chOk); round.i++;
       if (round.session && SESS && !SESS.study) { const key=SESS.cram?'cram':'rs'; if(S.cfg[key]) S.cfg[key].i=SESS.i; }
-      ui.persistDictation(); save();
+      ui.persistDictation({persist:false}); save();
+      }catch(error){Object.assign(round,previous);if(studyBefore&&SESS?.study)SESS.round=studyBefore;throw error;}
+      rated=true;if(prior)celebrateWin(c,prior);
       if (round.session) nextItem(); else dictItem();
     };
     ui.on('cy', () => rate(true)); ui.on('cn', () => rate(false));

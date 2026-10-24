@@ -1,12 +1,20 @@
 let ACTIVE_REVIEW=null;
 function beginReview(c,mode){feedbackQuestion={card:c,mode};renderRewards();ACTIVE_REVIEW={c,mode,done:false,help:false};}
-function finishReview(outcome){
- const r=ACTIVE_REVIEW;if(!r||r.done)return false;r.done=true;
- if(SESS?.study)outcome=studyOutcome(outcome);
- recordSkill(S,r.c.c,r.mode,outcome);
- if(SESS?.study)recordStudyAnswer(r,outcome);
- else if(SESS){const key=SESS.cram?'cram':'rs';if(S.cfg[key])S.cfg[key].i=SESS.i;}
- save();return true;
+function finishReview(outcome,stars=0){
+ const r=ACTIVE_REVIEW;if(!r||r.done)return false;
+ const round=SESS?.study?JSON.parse(JSON.stringify(SESS.round)):null;
+ const deferred=A.querySelector('.study-not-learned'),wasDisabled=deferred?.disabled;
+ let prior;
+ try{
+  if(SESS?.study)outcome=studyOutcome(outcome);
+  recordSkill(S,r.c.c,r.mode,outcome);
+  if(r.mode==='flip'&&!CRAM&&['correct','miss'].includes(outcome)){const level=outcome==='correct'?Math.min((S.box[r.c.c]||0)+1,4):0;S.box[r.c.c]=level;S.due[r.c.c]=dayNum()+[0,1,2,4,7][level];}
+  if(stars)prior=creditWin(r.c,stars);
+  if(SESS?.study)recordStudyAnswer(r,outcome,{persist:false});
+  else if(SESS){const key=SESS.cram?'cram':'rs';if(S.cfg[key])S.cfg[key].i=SESS.i;}
+  save();
+ }catch(error){if(round&&SESS?.study)SESS.round=round;if(deferred)deferred.disabled=wasDisabled;throw error;}
+ r.done=true;if(prior)celebrateWin(r.c,prior);return true;
 }
 function skipReview(){finishReview(ACTIVE_REVIEW?.missed?'miss':'skip');}
 function saveRound(){

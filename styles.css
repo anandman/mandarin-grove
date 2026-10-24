@@ -212,3 +212,5 @@ footer { padding: 16px; text-align: center; }
 .bdg .medal { position: static; width: auto; font-size: 100px; background: transparent; padding: 0; }
 /* A long child name must not expand the grid's flexible track past the artwork. */
 .study-home-hero > .grove-hero-copy { min-width: 0; }
+
+.bdg{width:100%;max-width:100vw;max-height:100dvh;margin:0;border:0;overflow:auto}.bdg .badge-symbol{font-size:84px}.bdg::backdrop{background:#0009}

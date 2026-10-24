@@ -93,6 +93,21 @@
    const merged=bases.has(id)?merge(bases.get(id),value,remote):state.copy(value);state.validateProfile(merged);
    storage.setItem(key,JSON.stringify(merged));bases.set(id,state.copy(merged));return state.copy(merged);
   }
+  // Commit learner metadata and its matching configuration under one journal.
+  function saveChildSettings(id,registry,value){
+   recoverImport();validateRegistry(registry);state.validateProfile(value);
+   const key='zh_p_'+id,registryRaw=read(REGISTRY),profileRaw=read(key);
+   if(!profileRaw)throw new Error('This child’s saved progress is missing.');
+   const remoteRegistry=validateRegistry(JSON.parse(registryRaw)),remote=state.validateProfile(JSON.parse(profileRaw));
+   const nextRegistry=registryBase?merge(registryBase,registry,remoteRegistry,'profiles'):state.copy(registry);
+   if(!remoteRegistry.list.some(p=>p.id===id)||!nextRegistry.list.some(p=>p.id===id))throw new Error('This child is no longer available. Reload before saving.');
+   const nextProfile=bases.has(id)?merge(bases.get(id),value,remote):state.copy(value);
+   validateRegistry(nextRegistry);state.validateProfile(nextProfile);
+   if(read(REGISTRY)!==registryRaw||read(key)!==profileRaw)throw new Error('Progress changed while saving settings. Reload before saving.');
+   commit([[key,JSON.stringify(nextProfile)],[REGISTRY,JSON.stringify(nextRegistry)]]);
+   registryBase=state.copy(nextRegistry);bases.set(id,state.copy(nextProfile));
+   return {registry:state.copy(nextRegistry),profile:state.copy(nextProfile)};
+  }
   function saveRegistry(value){
    recoverImport();validateRegistry(value);const raw=read(REGISTRY),remote=raw&&raw!=='null'?validateRegistry(JSON.parse(raw)):{cur:null,list:[]};
    const registry=registryBase?merge(registryBase,value,remote,'profiles'):state.copy(value);validateRegistry(registry);
@@ -127,7 +142,7 @@
    registry.list=registry.list.filter(p=>p.id!==id);if(registry.cur===id)registry.cur=registry.list[0].id;
    commit([['zh_p_'+id,null],[REGISTRY,JSON.stringify(registry)]]);bases.delete(id);registryBase=state.copy(registry);return state.copy(registry);
   }
-  return {peekRegistry:()=>state.copy(registrySnapshot()),readRegistry,readProfile,saveProfile,saveRegistry,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile};
+  return {peekRegistry:()=>state.copy(registrySnapshot()),readRegistry,readProfile,saveProfile,saveRegistry,saveChildSettings,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile};
  }
  return {createRepository};
 });
