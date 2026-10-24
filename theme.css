@@ -272,3 +272,6 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{border-color:var(--
 .dictation-prompt #drp{font-size:16px;line-height:1.3;flex:0 0 auto;max-width:100%}
 .dictation-prompt>div{min-width:0;flex:1 1 180px}
 @media(max-width:680px){.dictation-prompt{flex-wrap:wrap}}
+
+/* The celebration stays dark in both appearances, so its focus ring stays light. */
+.bdg .btn:focus-visible{outline-color:#FFF9E8}
