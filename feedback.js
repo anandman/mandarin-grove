@@ -1,7 +1,7 @@
 // Only an explicit Send or Retry sends a report. Learning/profile data stays local.
 let feedbackQuestion=null;
 const FEEDBACK_KEY='zh_feedback_v1';
-const FEEDBACK_CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work'};
+const FEEDBACK_CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};
 function feedbackReports(){try{const rows=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object').slice(-50):[]}catch{return []}}
 function feedbackStore(report){
  const rows=feedbackReports(),index=rows.findIndex(r=>r.id===report.id);
@@ -22,13 +22,13 @@ function feedbackContentMetadata(value){
  for(const [key,limit]of Object.entries(limits)){if(typeof value[key]!=='string'||!value[key].trim()||value[key].length>limit||/[\u0000-\u001f]/.test(value[key]))return null;content[key]=value[key];}
  return content;
 }
-function feedbackSnapshot(){
- const c=feedbackQuestion?.card||(feedbackQuestion?.c?feedbackQuestion:null);
- const writing=feedbackQuestion?.writing,content=feedbackContentMetadata(feedbackQuestion?.content);
+function feedbackSnapshot(context=feedbackQuestion){
+ const c=context?.card||(context?.c?context:null);
+ const writing=context?.writing,content=feedbackContentMetadata(context?.content);
  const voice=selectedMandarinVoice();
  const request=window.lastSpeechRequest?.character===c?.c?window.lastSpeechRequest:null;
  return {version:typeof VER==='undefined'?'unknown':VER,time:new Date().toISOString(),grade:GR(),
-  question:c?{character:c.c,pinyin:c.p,meaning:c.m,mode:feedbackQuestion.mode}:null,
+  question:c?{character:c.c,pinyin:c.p,meaning:c.m,mode:context.mode}:null,
   ...(writing?{writing:{...writing}}:{}),...(content?{content}:{}),
   session:SESS?{kind:SESS.kind||(SESS.cram?'cram':'daily'),question:SESS.i,total:SESS.q.length}:null,
   speech:writing?null:request||{preference:voicePreference(),voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,prompt:c?speechText(c):null},
@@ -56,16 +56,33 @@ async function feedbackSendReport(report){
   return {ok:false,message:error.message==='not-configured'?'Not sent yet. Sending is not set up. Your report is saved on this device. You can retry later.':'Not sent or confirmed. Your report is saved on this device. Check your connection and retry.'};
  }
 }
-function showFeedback(){
+function feedbackButtonKeydown(event){
+ if(event.repeat&&(event.key==='Enter'||event.key===' ')&&event.target.closest('button'))event.preventDefault();
+}
+function contentFeedbackOffer(container,offer=null,fallback=null){
+ if(!container)return;
+ const key=offer&&JSON.stringify([offer.label,offer.note]);
+ if(key&&container.dataset.feedbackKey===key&&container.firstChild)return;
+ const focused=container.contains(document.activeElement);container.replaceChildren();delete container.dataset.feedbackKey;
+ if(!offer){if(focused)fallback?.focus({preventScroll:true});return;}
+ container.dataset.feedbackKey=key;
+ const note=document.createElement('p');note.className='reading-note';note.textContent=offer.message;
+ const button=document.createElement('button');button.type='button';button.className='progress-link';button.textContent=offer.label;
+ button.onkeydown=feedbackButtonKeydown;
+ button.onclick=()=>showFeedback({category:'missing',note:offer.note,context:offer.context||null});
+ container.append(note,button);if(focused)button.focus({preventScroll:true});
+}
+function showFeedback({category:initialCategory=null,note:initialNote='',context=feedbackQuestion}={}){
  const existing=document.getElementById('feedback-dialog');
  if(existing?.open)return;existing?.remove();
- const snapshot=feedbackSnapshot(),previous=document.activeElement;
+ const snapshot=feedbackSnapshot(context),previous=document.activeElement;
  const dialog=document.createElement('dialog');dialog.id='feedback-dialog';dialog.setAttribute('aria-labelledby','feedback-title');
+ dialog.onkeydown=feedbackButtonKeydown;
  dialog.innerHTML=`<form method="dialog"><button class="feedback-close" aria-label="Close feedback">✕</button></form>
- <h2 id="feedback-title">Report a problem</h2>
+ <h2 id="feedback-title">${initialCategory==='missing'?'Suggest a word or idea':'Report a problem'}</h2>
  <fieldset class="feedback-categories"><legend>What happened?</legend>${Object.entries(FEEDBACK_CATEGORIES).map(([key,label])=>`<button type="button" class="btn gray feedback-category" data-category="${key}" aria-pressed="false">${label}</button>`).join('')}</fieldset>
- <label>Anything else? (optional)<textarea id="feedback-note" maxlength="2000" placeholder="You can tell us more, or just send."></textarea></label>
- <p class="reading-note">Send shares this problem and the activity and voice details privately with the app maker. Please leave out names or other personal information.</p>
+ <label>${initialCategory==='missing'?'Review or edit this message':'Anything else? (optional)'}<textarea id="feedback-note" maxlength="2000" placeholder="You can tell us more, or just send."></textarea></label>
+ <p class="reading-note">Send shares this message and the activity and voice details privately with the app maker. Please leave out names or other personal information.</p>
  <button class="btn" id="feedback-send" disabled>Send report</button><p id="feedback-status" role="status" aria-live="polite"></p>
  <div id="feedback-pending" hidden><p id="feedback-pending-count"></p><button class="btn gray" id="feedback-retry">Retry saved report</button></div>
  <details id="feedback-manual"><summary>Grown-ups: saved reports &amp; manual sharing</summary>
@@ -76,7 +93,10 @@ function showFeedback(){
  document.body.append(dialog);dialog.showModal();
  const note=dialog.querySelector('#feedback-note'),output=dialog.querySelector('#feedback-output'),status=dialog.querySelector('#feedback-status');
  const send=dialog.querySelector('#feedback-send'),retry=dialog.querySelector('#feedback-retry'),categories=[...dialog.querySelectorAll('[data-category]')];
- let id=feedbackId(),category=null,saved=false,all=false,locked=false,busy=false,delivered=false;
+ let id=feedbackId(),category=Object.hasOwn(FEEDBACK_CATEGORIES,initialCategory)?initialCategory:null,saved=false,all=false,locked=false,busy=false,delivered=false;
+ const suffix='\n[Text shortened for this report.]',raw=String(initialNote);
+ note.value=raw.length>note.maxLength?raw.slice(0,note.maxLength-suffix.length)+suffix:raw;
+ categories.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));send.disabled=!category;
  const current=()=>({...snapshot,id,category,note:note.value.trim()});
  const pending=()=>feedbackReports().filter(r=>r.id&&FEEDBACK_CATEGORIES[r.category]&&['pending','failed'].includes(r.delivery?.state));
  const refresh=()=>{
@@ -108,6 +128,6 @@ function showFeedback(){
  const share=dialog.querySelector('#feedback-share');share.hidden=!navigator.share;
  share.onclick=async()=>{refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
  dialog.querySelector('#feedback-download').onclick=()=>{refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
- dialog.onclose=()=>{dialog.remove();previous?.focus()};
- categories[0].focus();
+ dialog.onclose=()=>{dialog.remove();if(previous?.isConnected)previous.focus();else focusMain();};
+ (categories.find(button=>button.dataset.category===category)||categories[0]).focus();
 }

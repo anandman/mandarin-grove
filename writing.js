@@ -48,9 +48,9 @@ function showWritingIdeas(){
  const state=writingIdeasSession();
  A.innerHTML=`<section class="writing-ideas" aria-labelledby="writing-title">
   <div class="writing-heading"><span class="writing-tree">${groveTree('writing')}</span><div><h1 id="writing-title">Writing ideas</h1><p>A small idea to get your own sentence growing.</p></div></div>
-  <div class="writing-input-panel"><label for="writing-input">Character or word</label><div class="writing-input-row"><input id="writing-input" lang="zh-Hans" type="text" placeholder="雨、学校、检查" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="writing-input-help writing-status"><button class="btn" id="writing-generate">Give me an idea</button></div><p id="writing-input-help" class="reading-note">Type a character or a whole word, like 雨, 学校, or 检查.</p><p id="writing-status" role="status"></p></div>
+  <div class="writing-input-panel"><label for="writing-input">Character or word</label><div class="writing-input-row"><input id="writing-input" lang="zh-Hans" type="text" placeholder="雨、学校、检查" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="writing-input-help writing-status"><button class="btn" id="writing-generate">Give me an idea</button></div><p id="writing-input-help" class="reading-note">Type a character or a whole word, like 雨, 学校, or 检查.</p><p id="writing-status" role="status"></p><div id="writing-feedback-offer"></div></div>
   <div id="writing-result" aria-live="polite" aria-atomic="true"></div>
-  <details class="writing-browse" id="writing-browse"><summary>Browse available characters &amp; words</summary><div class="writing-browse-controls"><label>Browse <select id="writing-browse-kind"><option value="words">Words</option><option value="characters">Characters</option></select></label><label>Find <input type="search" id="writing-browse-search" placeholder="Character, word, or meaning" autocomplete="off"></label></div><p class="reading-note" id="writing-browse-count" role="status"></p><div id="writing-browse-list" class="writing-browse-list"></div><button class="btn gray" id="writing-browse-more">Show more</button></details>
+  <details class="writing-browse" id="writing-browse"><summary>Browse available characters &amp; words</summary><div class="writing-browse-controls"><label>Browse <select id="writing-browse-kind"><option value="words">Words</option><option value="characters">Characters</option></select></label><label>Find <input type="search" id="writing-browse-search" placeholder="Character, word, or meaning" autocomplete="off"></label></div><p class="reading-note" id="writing-browse-count" role="status"></p><div id="writing-browse-feedback"></div><div id="writing-browse-list" class="writing-browse-list"></div><button class="btn gray" id="writing-browse-more">Show more</button></details>
   <p class="reading-note writing-attribution">Local ideas from Writing Spark · <a href="vendor/writing-spark/LICENSE" target="_blank" rel="noopener">MIT license</a></p>
   <button class="progress-link" onclick="showHomeworkHelp()">Back to Help</button>
  </section>`;
@@ -58,7 +58,7 @@ function showWritingIdeas(){
  let composing=false;
  input.addEventListener('compositionstart',()=>{composing=true;});
  input.addEventListener('compositionend',()=>{composing=false;});
- input.addEventListener('input',()=>{state.input=input.value;state.card=null;state.claim=null;$('writing-status').textContent='';renderWritingIdea();});
+ input.addEventListener('input',()=>{state.input=input.value;state.card=null;state.claim=null;$('writing-status').textContent='';contentFeedbackOffer($('writing-feedback-offer'));renderWritingIdea();});
  input.addEventListener('keydown',event=>{
   if(event.key!=='Enter'||event.isComposing||composing||event.keyCode===229)return;
   event.preventDefault();generateWritingIdea();
@@ -76,6 +76,8 @@ function showWritingIdeas(){
    list.append(button);
   }
   $('writing-browse-count').textContent=entries.length?`Showing ${Math.min(entries.length,browseLimit)} of ${entries.length}. Choose one for an idea.`:'No matches. Try another search.';
+  const query=$('writing-browse-search').value.trim();
+  contentFeedbackOffer($('writing-browse-feedback'),query&&!entries.length?{label:'Suggest a writing idea',message:'You can suggest a character or word for Writing ideas.',note:'Writing ideas browse found no matches.\nBrowse search: '+query}:null,$('writing-browse-search'));
   $('writing-browse-more').hidden=entries.length<=browseLimit;
  };
  $('writing-browse-kind').onchange=()=>{browseLimit=30;browse();};
@@ -87,6 +89,7 @@ function generateWritingIdea(){
  const state=writingIdeasSession(),lookup=writingIdeasLookup($('writing-input').value);
  state.input=$('writing-input').value;state.card=null;state.claim=null;
  $('writing-status').textContent=lookup.error;
+ contentFeedbackOffer($('writing-feedback-offer'),lookup.error&&/^\p{Script=Han}+$/u.test(lookup.input)?{label:'Suggest a writing idea',message:'You can suggest a writing idea for this character or word.',note:'Writing ideas has no idea for this input.\nInput: '+lookup.input}:null,$('writing-input'));
  if(!lookup.error){
   state.card=state.decks.next(lookup.input,lookup.cards);
   state.claim={id:globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),done:false};

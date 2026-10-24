@@ -50,6 +50,7 @@ function showWordPractice(cards=CARDS,source='Your practice characters',inStudy=
   const messages={'input-help':/^\p{Script=Han}$/u.test(result.input)?'A single character can be a word. Here, use 2–8 characters and include '+card.c+'.':'Use 2–8 Chinese characters, without spaces or punctuation.','missing-target':'Use '+card.c+' somewhere in your answer.','unverified':'The app can’t check this answer yet. It is not marked wrong.','duplicate':'You already collected this word. Add a different answer, or choose Next character.','recognized':'A word for your collection! Add another, or choose Next character.'};
   $('word-status').textContent=study&&['recognized','duplicate'].includes(result.status)?'Word found! Choose Next question.':messages[result.status];$('word-result').replaceChildren();
   for(const entry of (result.entries||[]).slice(0,3)){const p=document.createElement('p');p.className='word-definition';const strong=document.createElement('strong');strong.lang='zh-Hans';strong.textContent=entry[0];const pronunciation=document.createElement('span');pronunciation.lang='zh-Latn-pinyin';pronunciation.textContent=pinyinWithMarks(entry[2]);const meaning=document.createElement('small');meaning.textContent=entry[3];p.append(strong,pronunciation,meaning);$('word-result').append(p);}
+  if(result.status==='unverified')contentFeedbackOffer($('word-result'),{label:'Suggest this answer',message:'You can suggest this answer for the word bank.',note:'Build words could not check this answer.\nCharacter: '+card.c+'\nAnswer: '+result.input,context:{c:card.c,p:card.p,m:card.m,mode:'word-practice'}});
   if(collectWord(S,card.c,result)){save();renderWordCollection(card.c);if(!study)input.select();}
   if(study){
    if(result.status==='missing-target'){studyAttempt('miss');ACTIVE_REVIEW.missed=true;}
@@ -58,6 +59,7 @@ function showWordPractice(cards=CARDS,source='Your practice characters',inStudy=
    $('word-study-next').hidden=!accepted&&result.status!=='unverified';
   }
  }
+ input.addEventListener('input',()=>{if(session.result?.status==='unverified')contentFeedbackOffer($('word-result'));});
  input.addEventListener('compositionstart',()=>{composing=true;});input.addEventListener('compositionend',()=>{composing=false;});input.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.isComposing||composing||event.keyCode===229))event.preventDefault();});$('word-form').onsubmit=event=>{event.preventDefault();ActivityUI.run(()=>submit(event));};
  function lockWordAnswer(){session.finished=true;root.querySelector('.word-collection').hidden=false;input.disabled=true;$('word-check').disabled=true;$('word-dont-know').hidden=true;$('word-dont-know-help').hidden=true;}
  if(study){$('word-dont-know').onclick=()=>ActivityUI.run(()=>{if(session.finished)return;session.result={status:'miss'};finishReview('miss');lockWordAnswer();$('word-status').textContent='Saved for more practice. Choose Next question.';$('word-result').replaceChildren();$('word-study-next').hidden=false;});

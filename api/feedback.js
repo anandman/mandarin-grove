@@ -3,7 +3,7 @@
 const GITHUB='https://api.github.com/repos/anandman/mandarin-grove';
 const ORIGIN='https://mandarin-grove.vercel.app';
 const MAX_BYTES=16384;
-const CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work'};
+const CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};
 const CONTENT_LIMITS={packId:100,itemId:160,version:100,sourceId:120,reviewStatus:100};
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 function object(value,fields){

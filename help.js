@@ -112,12 +112,12 @@ function showHomeworkLookup(){
  screen();SESS=null;CRAM=null;delete document.body.dataset.study;
  if(!HELP_LOOKUP_SESSION||HELP_LOOKUP_SESSION.owner!==PR.cur)HELP_LOOKUP_SESSION={owner:PR.cur,query:'',selected:new Set(),limit:24};
  const state=HELP_LOOKUP_SESSION,owner=PR.cur,examples=CHARACTER_IDEAS.map(e=>e.words[0]);
- let index=HELP_DICTIONARY_CACHE||createHelpLookup(ALL,null,examples,HELP_VOCABULARY_PACK),composing=false,shown=null;
+ let index=HELP_DICTIONARY_CACHE||createHelpLookup(ALL,null,examples,HELP_VOCABULARY_PACK),composing=false,shown=null,bankReady=!!HELP_DICTIONARY_CACHE;
  A.innerHTML=`<section class="homework-lookup" id="homework-lookup" aria-labelledby="lookup-title"><div class="writing-heading"><span class="writing-tree">${groveTree('unit')}</span><div><h1 id="lookup-title">Find a character or word</h1><p>Look it up, then try it yourself.</p></div></div>
  <form id="lookup-form"><label for="lookup-input">Character, word, pinyin or English meaning</label><div class="lookup-search-row"><input id="lookup-input" type="search" maxlength="80" placeholder="学 · 学校 · xue2 · school" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="lookup-input-help"><button class="btn" id="lookup-search">Search</button></div><p class="reading-note" id="lookup-input-help">School characters from every grade, plus a word dictionary. Try nǚ, nv3 or nu:3 for 女.</p></form>
  <p class="reading-note" id="lookup-bank-status" role="status"></p><button class="progress-link" id="lookup-retry" hidden>Try loading the word dictionary again</button>
  <p class="reading-note" id="lookup-examples-status" role="status"></p><button class="progress-link" id="lookup-examples-retry" hidden>Try loading examples again</button>
- <section id="lookup-detail" tabindex="-1" hidden></section><div id="lookup-matches"><p id="lookup-results-status" role="status"></p><div id="lookup-results"></div><button class="btn gray" id="lookup-more" hidden>Show more results</button></div>
+ <section id="lookup-detail" tabindex="-1" hidden></section><div id="lookup-matches"><p id="lookup-results-status" role="status"></p><div id="lookup-feedback-offer"></div><div id="lookup-results"></div><button class="btn gray" id="lookup-more" hidden>Show more results</button></div>
  <div class="lookup-practice-bar"><span id="lookup-selection-count" role="status"></span><button class="btn" id="lookup-practice" disabled>Practice selected · 0</button><button class="progress-link" id="lookup-clear" hidden>Clear selection</button></div>
  <details class="compact-help"><summary>About this lookup</summary><p>Looking things up does not change your score, mastery or rewards. Practice selected opens the usual choices for a new round. Examples include a small CC-CEDICT vocabulary pack and Writing ideas vocabulary. Dictionary-sourced examples are awaiting teaching review. Optional draft ideas are ungraded; they do not check a child’s sentence.</p><p>The word dictionary is CC-CEDICT, a general dictionary rather than a school vocabulary list. A missing entry does not mean a word is wrong. Dictionary searches run on this device after the bundled data loads; there is no live dictionary or model request. Audio uses your existing pronunciation setting.</p><a href="vendor/cc-cedict/LICENSE" target="_blank" rel="noopener">CC-CEDICT · MDBG and contributors · CC BY-SA 4.0</a></details><button class="progress-link" onclick="showHomeworkHelp()">Back to Help</button></section>`;
  const root=$('homework-lookup'),input=$('lookup-input'),detail=$('lookup-detail'),results=$('lookup-results');input.value=state.query;
@@ -137,6 +137,7 @@ function showHomeworkLookup(){
   if(found.items.some(row=>helpSchoolResult(index,row))){const heading=document.createElement('h2');heading.textContent='School characters & example words';school.append(heading);}results.append(school);
   if(found.items.some(row=>!helpSchoolResult(index,row)))results.append(general);
   $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?'Showing '+found.items.length+' of '+found.total+' match'+(found.total===1?'':'es')+' for “'+found.query+'”. School characters and examples appear first.'+(found.items.length<found.total?(found.items.length>=240?' To see other matches, narrow your search.':' Choose Show more for more results.'):''):'No matches for “'+found.query+'”. Try another spelling or meaning.';
+  contentFeedbackOffer($('lookup-feedback-offer'),bankReady&&found.query&&!found.total?{label:'Suggest a missing entry',message:'You can suggest a character or word for the lookup.',note:'Lookup did not find a match.\nSearch: '+found.query}:null,input);
   $('lookup-more').hidden=found.items.length>=found.total||found.items.length>=240;
   for(const row of found.items){
    const button=document.createElement('button');button.type='button';button.className='lookup-result';button.dataset.lookupText=row.text;
@@ -219,7 +220,7 @@ function showHomeworkLookup(){
   try{
    const words=await loadWordBank();if(!active())return;
    if(!HELP_DICTIONARY_CACHE||HELP_DICTIONARY_SOURCE!==words||HELP_DICTIONARY_PACK!==HELP_VOCABULARY_PACK){HELP_DICTIONARY_SOURCE=words;rebuildIndex();}
-   index=HELP_DICTIONARY_CACHE;$('lookup-bank-status').textContent='School characters and word dictionary ready. Searches stay on this device.';$('lookup-bank-status').dataset.ready='true';renderResults();
+   bankReady=true;index=HELP_DICTIONARY_CACHE;$('lookup-bank-status').textContent='School characters and word dictionary ready. Searches stay on this device.';$('lookup-bank-status').dataset.ready='true';renderResults();
   }catch{if(active()){$('lookup-bank-status').textContent='School characters work now. The word dictionary could not load.';$('lookup-retry').hidden=false;}}
  }
  $('lookup-retry').onclick=load;$('lookup-examples-retry').onclick=loadExamples;renderResults();updateSelection();load();loadExamples();

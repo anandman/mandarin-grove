@@ -6,6 +6,12 @@ const origin='https://mandarin-grove.vercel.app';
 const env={GH_FEEDBACK_TOKEN:'github_pat_test_scoped_token'};
 const report=()=>({id:'49bb5d96-6826-422c-8b2a-c15a63bebdd3',category:'sound',note:'',version:'test',time:'2026-10-21T10:00:00.000Z',grade:'2',question:{character:'止',pinyin:'zhǐ',meaning:'stop',mode:'listen'},speech:{preference:'auto',voice:null,prompt:'止'},session:null,browser:'Test browser',app:origin});
 const response=(status,data)=>({ok:status>=200&&status<300,status,json:async()=>data});
+test('explicit missing-content suggestions accept bounded attempted text without inventing an existing item',async()=>{
+ const gh=github(),body={...report(),category:'missing',note:'Lookup did not find a match.\nSearch: 学甲乙丙',question:null,speech:null};
+ const res=await request(createHandler({env,fetch:gh.fetch}),body);
+ assert.equal(res.statusCode,201);assert.equal(res.data.receipt,48);
+ const created=JSON.parse(gh.calls.at(-1).body);assert.match(created.title,/could not find or check/i);assert.match(created.body,/学甲乙丙/);assert.ok(!created.body.includes('"content":'));
+});
 function github(){const calls=[];const fetch=async(url,opts)=>{calls.push({url,...opts});if(url.endsWith('/mandarin-grove'))return response(200,{private:true});if(opts.method==='GET')return response(200,[]);return response(201,{number:48});};return {calls,fetch};}
 async function request(handler,body=report(),headers={},method='POST'){
  const req=Readable.from([typeof body==='string'?body:JSON.stringify(body)]);req.method=method;req.headers={origin,'content-type':'application/json','x-real-ip':'192.0.2.5',...headers};
