@@ -28,7 +28,7 @@ await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
  await page.waitForFunction(()=>!document.getElementById('word-check')?.disabled);
  assert.equal(await page.locator('.word-collection').isVisible(),false,'Collected answers must not give away an unanswered scored question');
  const before=await page.evaluate(()=>JSON.stringify([S.learning,S.stars,S.pts]));
- await page.locator('#word-input').fill('学甲乙丙');await page.locator('#word-check').click();assert.equal(await page.locator('#word-status').innerText(),'Not in our word bank yet.');
+ await page.locator('#word-input').fill('学甲乙丙');await page.locator('#word-check').click();assert.equal(await page.locator('#word-status').innerText(),'The app can’t check this answer yet. It is not marked wrong.');
  await page.locator('#word-study-next').click();assert.equal(await page.evaluate(()=>JSON.stringify([S.learning,S.stars,S.pts])),before);
  assert.equal(await page.evaluate(()=>S.studyHistory.at(-1).score.reached),false);assert.equal(await page.getByRole('button',{name:'Practice these again',exact:true}).count(),0);assert.match(await page.locator('.study-finish').innerText(),/1 answer not checked/);
  // Wrong target then Pause/reload cannot become a clean first attempt; a collected word is reusable.
@@ -40,7 +40,7 @@ await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
  assert.equal(await page.getByRole('button',{name:'Practice these again',exact:true}).count(),1);
  // Don't know must finish honestly without inventing an expression or excluding the character.
  await page.evaluate(()=>{const c=ALL.find(c=>c.c==='学');startStudyRound('review',{units:[],chars:['学'],modes:['words'],limit:5},[c])});
- const unknownButton=page.getByRole('button',{name:'I don’t know a word yet',exact:true});assert.equal(await unknownButton.count(),1,'An unknown word has an honest miss action');await unknownButton.click();await page.locator('#word-study-next').click();
+ const unknownButton=page.getByRole('button',{name:'I can’t think of a word',exact:true});assert.equal(await unknownButton.count(),1,'An unknown word has an honest miss action');await unknownButton.click();await page.locator('#word-study-next').click();
  assert.deepEqual(await page.evaluate(()=>[S.studyHistory.at(-1).score.correct,S.learning.chars.学.skills.words.misses,(S.cfg.notLearned||[]).includes('学')]),[0,2,false]);
  // Actual shared setup starts words only and choices survive refresh.
  await page.evaluate(()=>home());await page.getByRole('button',{name:'Practice',exact:true}).click();
@@ -57,7 +57,7 @@ await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
   await slow.route('**/vendor/cc-cedict/words.json*',async route=>{await held;if(fail)await route.abort();else await route.continue();});
   await slow.goto(process.env.APP_URL||'http://127.0.0.1:4181');
   await slow.evaluate(()=>{PR={cur:'slow-words',list:[{id:'slow-words',name:'Learner',gr:'2',av:'🐼'}]};savePR();S=blank();localStorage.setItem('zh_p_slow-words',JSON.stringify(S));loadS();window.say=()=>{};const c=ALL.find(c=>c.c==='学');startStudyRound('review',{units:[],chars:['学'],modes:['words'],limit:5},[c]);});
-  await slow.getByRole('button',{name:'I don’t know a word yet',exact:true}).click();release();await slow.evaluate(()=>WORD_BANK_PROMISE?.catch(()=>{}));
+  await slow.getByRole('button',{name:'I can’t think of a word',exact:true}).click();release();await slow.evaluate(()=>WORD_BANK_PROMISE?.catch(()=>{}));
   assert.ok(await slow.locator('#word-check').isDisabled(),'Late load cannot enable a second answer');assert.equal(await slow.locator('#word-retry').isVisible(),false);assert.match(await slow.locator('#word-status').innerText(),/Saved for more practice/);
   await slow.locator('#word-study-next').click();assert.deepEqual(await slow.evaluate(()=>[S.studyHistory.at(-1).score.correct,S.learning.chars.学.skills.words.attempts]),[0,1]);await slow.close();
  }
