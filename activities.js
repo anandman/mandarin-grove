@@ -194,7 +194,9 @@ function listen(preferred) {
     <p class="msg" id="m" role="status"></p>${ui.button('Skip ▶', 'sk')}`);
   beginReview(c, 'listen');
   let missed = !!(SESS?.study && studyAttemptInfo()?.miss), done = false;
-  ui.on('rp', () => ui.speak(c)); ui.on('sk', () => ui.next(listen));
+  ui.on('rp', () => ui.speak(c));
+  ui.on('sk', event => { if (event.detail <= 1 && ui.current(view.token, view.node)) ui.next(listen); });
+  ui.find('sk').onkeydown = event => { if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault(); };
   A.querySelectorAll('[data-c]').forEach(option => option.addEventListener('click', ui.guard(view.token, view.node, () => {
     if (done || option.disabled) return;
     if (option.dataset.c !== c.c) {

@@ -23,12 +23,16 @@ function backupPreparationFailure(error){const status=document.getElementById('b
 function profileRegistryRefresh(){PR=GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));}
 function profileGradeName(grade){return grade==='K'?'Kindergarten':'Grade '+grade;}
 function profileClose(dialog){stopSpeech();if(dialog.open)dialog.close();dialog.remove();}
+function profileButtonKeydown(event){
+ if(event.repeat&&(event.key==='Enter'||event.key===' ')&&event.target.closest('button'))event.preventDefault();
+}
 function profileDialog(id,title,alert=false){
  document.getElementById(id)?.remove();profileStyles();const previous=document.activeElement;
  const dialog=profileElement('dialog',undefined,{id,class:'profile-panel'+(alert?' profile-delete':''),'aria-labelledby':id+'-title'});
  if(alert)dialog.setAttribute('role','alertdialog');
  const heading=profileElement('header'),name=profileElement('h2',title,{id:id+'-title'});heading.append(name);
  if(!alert){const close=profileElement('button','×',{'aria-label':'Close',type:'button'});close.onclick=()=>profileClose(dialog);heading.append(close);}dialog.append(heading);
+ dialog.onkeydown=profileButtonKeydown;
  dialog.onclose=()=>{stopSpeech();dialog.remove();if(previous?.isConnected)previous.focus({preventScroll:true});};
  dialog.onclick=event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)profileClose(dialog);};
  return dialog;
@@ -73,7 +77,6 @@ function parentEntry(button){
   dialog.onclose=()=>{dialog.remove();if(button.isConnected){button.focus({preventScroll:true});grown();}};
   profileClose(dialog);
  });
- dialog.onkeydown=event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();};
  document.body.append(dialog);dialog.showModal();cancel.focus();
 }
 function parenthold(button){
@@ -81,7 +84,7 @@ function parenthold(button){
  const cancel=()=>{clearTimeout(timer);timer=null;holding=false;button.style.background='';};
  const begin=event=>{if(holding)return;event.preventDefault();holding=true;button.style.background='var(--ac-soft)';timer=setTimeout(()=>{cancel();grown();},2000);};
  button.onpointerdown=begin;button.onpointerup=button.onpointercancel=button.onpointerleave=button.onblur=cancel;
- button.onkeydown=button.onkeyup=null;
+ button.onkeydown=profileButtonKeydown;button.onkeyup=null;
  button.onclick=event=>{if(event.detail===0){cancel();parentEntry(button);}else if(!document.getElementById('gov'))pop('Hold for 2 seconds');};button.oncontextmenu=event=>event.preventDefault();
 }
 function gearHold(){parenthold(document.getElementById('gear'));}
