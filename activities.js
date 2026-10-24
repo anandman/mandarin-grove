@@ -204,7 +204,7 @@ function listen(preferred) {
     }
     const outcome = SESS?.study ? studyOutcome(missed ? 'miss' : 'correct') : missed ? 'miss' : 'correct';
     if(!ui.success(c,outcome))return;done=true;option.classList.add('ok');A.querySelectorAll('[data-c]').forEach(choice=>choice.disabled=true); ui.message(missed ? 'Got it! Keep practicing 👍' : 'You got it! 🎉', !missed);
-    ui.nextButton(); after(1000, () => ui.next(listen));
+    ui.nextButton(); ui.find('sk').focus();
   })));
   ui.speak(c);
 }
