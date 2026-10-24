@@ -112,7 +112,7 @@ function showHomeworkLookup(){
  screen();SESS=null;CRAM=null;delete document.body.dataset.study;
  if(!HELP_LOOKUP_SESSION||HELP_LOOKUP_SESSION.owner!==PR.cur)HELP_LOOKUP_SESSION={owner:PR.cur,query:'',selected:new Set(),limit:24};
  const state=HELP_LOOKUP_SESSION,owner=PR.cur,examples=CHARACTER_IDEAS.map(e=>e.words[0]);
- let index=HELP_DICTIONARY_CACHE||createHelpLookup(ALL,null,examples,HELP_VOCABULARY_PACK),composing=false,shown=null,bankReady=!!HELP_DICTIONARY_CACHE;
+ let index=HELP_DICTIONARY_CACHE||createHelpLookup(ALL,null,examples,HELP_VOCABULARY_PACK),composing=false,shown=null,bankReady=!!HELP_DICTIONARY_SOURCE;
  A.innerHTML=`<section class="homework-lookup" id="homework-lookup" aria-labelledby="lookup-title"><div class="writing-heading"><span class="writing-tree">${groveTree('unit')}</span><div><h1 id="lookup-title">Find a character or word</h1><p>Look it up, then try it yourself.</p></div></div>
  <form id="lookup-form"><label for="lookup-input">Character, word, pinyin or English meaning</label><div class="lookup-search-row"><input id="lookup-input" type="search" maxlength="80" placeholder="学 · 学校 · xue2 · school" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="lookup-input-help"><button class="btn" id="lookup-search">Search</button></div><p class="reading-note" id="lookup-input-help">School characters from every grade, plus a word dictionary. Try nǚ, nv3 or nu:3 for 女.</p></form>
  <p class="reading-note" id="lookup-bank-status" role="status"></p><button class="progress-link" id="lookup-retry" hidden>Try loading the word dictionary again</button>
@@ -137,7 +137,7 @@ function showHomeworkLookup(){
   if(found.items.some(row=>helpSchoolResult(index,row))){const heading=document.createElement('h2');heading.textContent='School characters & example words';school.append(heading);}results.append(school);
   if(found.items.some(row=>!helpSchoolResult(index,row)))results.append(general);
   $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?'Showing '+found.items.length+' of '+found.total+' match'+(found.total===1?'':'es')+' for “'+found.query+'”. School characters and examples appear first.'+(found.items.length<found.total?(found.items.length>=240?' To see other matches, narrow your search.':' Choose Show more for more results.'):''):'No matches for “'+found.query+'”. Try another spelling or meaning.';
-  contentFeedbackOffer($('lookup-feedback-offer'),bankReady&&found.query&&!found.total?{label:'Suggest a missing entry',message:'You can suggest a character or word for the lookup.',note:'Lookup did not find a match.\nSearch: '+found.query}:null,input);
+  contentFeedbackOffer($('lookup-feedback-offer'),bankReady&&input.value.trim()===state.query&&found.query&&!found.total?{label:'Suggest a missing entry',message:'You can suggest a character or word for the lookup.',note:'Lookup did not find a match.\nSearch: '+found.query}:null,input);
   $('lookup-more').hidden=found.items.length>=found.total||found.items.length>=240;
   for(const row of found.items){
    const button=document.createElement('button');button.type='button';button.className='lookup-result';button.dataset.lookupText=row.text;
@@ -211,6 +211,7 @@ function showHomeworkLookup(){
   try{await loadHelpVocabulary();if(!active())return;rebuildIndex();$('lookup-examples-status').textContent='Dictionary examples ready · teaching review pending.';$('lookup-examples-status').dataset.ready='true';}
   catch{if(active()){$('lookup-examples-status').textContent='Optional examples could not load. The lookup still works.';$('lookup-examples-retry').hidden=false;}}
  }
+ input.addEventListener('input',()=>contentFeedbackOffer($('lookup-feedback-offer'),null,input));
  input.addEventListener('compositionstart',()=>composing=true);input.addEventListener('compositionend',()=>composing=false);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.isComposing||composing||e.keyCode===229))e.preventDefault();});
  $('lookup-form').onsubmit=e=>{e.preventDefault();if(!composing)search(input.value);};$('lookup-more').onclick=()=>{state.limit+=24;renderResults();};
  $('lookup-practice').onclick=()=>showStudySetup('practice',helpPracticeCharacters(index,[...state.selected]));
