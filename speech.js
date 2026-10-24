@@ -180,7 +180,13 @@ function refreshVoiceCatalog() {
 }
 function bindVoiceSettings() {
   refreshVoiceCatalog();
-  document.getElementById('voice-choice').onchange = e => { stopSpeech(); localStorage.setItem('zh_voice', e.target.value); refreshVoiceSettings(); };
+  document.getElementById('voice-choice').onchange = e => {
+    stopSpeech();let status=document.getElementById('voice-save-status');
+    if(!status){status=document.createElement('p');status.id='voice-save-status';status.className='reading-note';status.setAttribute('role','status');e.target.after(status);}
+    try{localStorage.setItem('zh_voice',e.target.value);status.textContent='Saved on this device.';}
+    catch{status.textContent='Could not save the voice preference. Your previous choice is kept. Please try again.';}
+    refreshVoiceSettings();
+  };
   document.getElementById('voice-refresh').onclick = refreshVoiceCatalog;
   document.getElementById('voice-preview').onclick = async () => {
     stopSpeech(); const token = speechSequence;

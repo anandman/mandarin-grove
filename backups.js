@@ -53,15 +53,15 @@ function openBackupRestore(overlay){
   replace.onclick=()=>{
    let imported=false;
    try{
-    if(device.stamp!==backupDeviceStamp()){preview.replaceChildren();const warning=document.createElement('p');warning.setAttribute('role','alert');warning.textContent='Device progress changed after this preview. Nothing has been replaced. Refresh the comparison and review it before continuing.';const refresh=document.createElement('button');refresh.className='btn gray';refresh.textContent='Refresh comparison';refresh.onclick=()=>field.oninput();preview.append(warning,refresh);refresh.focus();return;}
+    if(device.stamp!==backupDeviceStamp()){preview.replaceChildren();const warning=document.createElement('p');warning.setAttribute('role','alert');warning.textContent='Device progress changed after this preview. Nothing has been replaced. Refresh the comparison and review it before continuing.';const refresh=document.createElement('button');refresh.className='btn gray';refresh.textContent='Refresh comparison';refresh.onclick=()=>field.oninput();preview.append(warning,refresh);profileReveal(refresh);return;}
     const registry=GROVE_REPOSITORY.importBackup(GroveBackup.encodeBackup(candidate,GROVE_CODEC));imported=true;PR=registry;GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));loadS({persist:false});clearStorageFailure();home();overlay.remove();pop('Restored ✓');}
    catch(error){
     if(imported){GROVE_PROGRESS_READY=false;NAV++;overlay.remove();showProgressRecovery(error,{imported:true});}
-    else{preview.replaceChildren();preview.textContent='Could not restore progress. '+error.message+' Your previous progress has been kept for recovery.';}
+    else{preview.replaceChildren();const failure=document.createElement('p');failure.setAttribute('role','alert');failure.textContent='Could not restore progress. '+error.message+' Your previous progress has been kept for recovery. You can try again by pasting the code.';preview.append(failure);profileReveal(failure);}
    }
   };
   incoming.append(label,list);comparison.append(current,incoming);
-  const exportFirst=document.createElement('button');exportFirst.className='btn gray';exportFirst.textContent='Download current backup first';exportFirst.onclick=()=>{try{downloadBackupFile();}catch(error){const status=document.getElementById('backup-status');if(status)status.textContent='Could not prepare a current backup. '+error.message+' Your progress has not been replaced.';}};
+  const exportFirst=document.createElement('button');exportFirst.className='btn gray';exportFirst.textContent='Download current backup first';exportFirst.onclick=()=>{try{downloadBackupFile();}catch(error){backupPreparationFailure(error);}};
   preview.append(comparison,question,exportFirst,replace);
  };
 }

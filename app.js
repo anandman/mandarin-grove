@@ -8,7 +8,7 @@ const ANIMALS=['🐶','🐱','🐮','🐯','🐰','🐼','🐨','🦁','🐸','�
 const BADGES=[['m5','🥉','5 characters','Mastered 5 characters'],['m15','🥈','15 characters','Mastered 15 characters'],['m30','🥇','30 characters','Mastered 30 characters'],['s7','🔥','7-day streak','Practiced 7 days in a row'],['pq','📝','Perfect quiz','Every pinyin right on the weekly quiz']];
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const blank=()=>GroveState.emptyProfile();
-let PR={cur:null,list:[]},S=blank(),GROVE_SAVED_REGISTRY={cur:null,list:[]},GROVE_STATE_OWNER=null,GROVE_PROGRESS_READY=false;
+let PR={cur:null,list:[]},S=blank(),GROVE_SAVED_REGISTRY={cur:null,list:[]},GROVE_STATE_OWNER=null,GROVE_PROGRESS_READY=false,GROVE_SAVED_STATE=null;
 let NAV=0,SESS=null,HS=[],HO=Object.create(null),catG='',catQ='',DI=-1,DL=[],dw=null,detailRequest=0,detailReturnFocus=null;
 const STROKES={},strokeRequests=new Map();
 function prof(){return PR.list.find(profile=>profile.id===PR.cur);}
@@ -41,7 +41,7 @@ function loadS({persist=true}={}){
   const candidate=PR.cur?GROVE_REPOSITORY.readProfile(PR.cur):blank();
   S=candidate;setCards();
   if(persist&&PR.cur)S=GROVE_REPOSITORY.saveProfile(PR.cur,S);
-  GROVE_STATE_OWNER=PR.cur;GROVE_PROGRESS_READY=true;
+  GROVE_STATE_OWNER=PR.cur;GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));GROVE_PROGRESS_READY=true;
  }catch(error){S=previous;showStorageFailure(error);throw error;}
 }
 function savePR(){
@@ -52,8 +52,11 @@ function save(cramSelectionChanged=false){
  if(!GROVE_PROGRESS_READY||GROVE_STATE_OWNER!==PR.cur){const error=Error('This child’s progress has not loaded. Reload before saving.');showStorageFailure(error);throw error;}
  const candidate=JSON.parse(JSON.stringify(S)),earned=refreshRewardState(candidate,GR());
  if(!cramSelectionChanged)candidate.cfg.cramUnits=storedCramSelections();
- try{S=PR.cur?GROVE_REPOSITORY.saveProfile(PR.cur,candidate):candidate;hdr();announceRewards(earned);clearStorageFailure();}
- catch(error){showStorageFailure(error);throw error;}
+ try{S=PR.cur?GROVE_REPOSITORY.saveProfile(PR.cur,candidate):candidate;}
+ catch(error){if(GROVE_SAVED_STATE){S=JSON.parse(JSON.stringify(GROVE_SAVED_STATE));setCards();}showStorageFailure(error);throw error;}
+ GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));
+ // Rendering failures cannot undo an already committed durable save.
+ hdr();announceRewards(earned);clearStorageFailure();
 }
 function today(date=new Date()){return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;}
 function touchStreak(){

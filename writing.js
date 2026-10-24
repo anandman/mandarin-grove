@@ -104,8 +104,10 @@ function renderWritingIdea(){
  $('writing-finish').onclick=()=>{
   if(state.claim.done)return;
   const amount=completeWritingSentence(S,state.claim.id);
-  state.claim.done=true;
-  if(amount){save();announceRewards([{kind:'fruit',amount}]);}
+  try{if(amount)save();}
+  catch(error){$('writing-status').textContent='Could not save your sentence reward. Please try again. '+error.message;return;}
+  state.claim.done=true;$('writing-status').textContent='';
+  if(amount)announceRewards([{kind:'fruit',amount}]);
   renderWritingIdea();
   $('writing-another').focus();
  };

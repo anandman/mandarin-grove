@@ -11,6 +11,15 @@ function profileStyles(){
 function profileFailure(container,error){
  let status=container.querySelector('.profile-error');if(!status){status=profileElement('p','',{class:'profile-error',role:'alert'});container.append(status);}status.textContent=error.message||String(error);
 }
+// Keep focused recovery controls visible below the dialog's sticky header.
+function profileReveal(element){
+ if(!element)return;
+ if(!element.matches('button,input,textarea,select,a'))element.tabIndex=-1;
+ element.focus({preventScroll:true});element.scrollIntoView({block:'center'});
+ const dialog=element.closest('dialog'),header=dialog?.querySelector(':scope > header');
+ if(header){const top=element.getBoundingClientRect().top,bottom=header.getBoundingClientRect().bottom+12;if(top<bottom)dialog.scrollTop-=bottom-top;}
+}
+function backupPreparationFailure(error){const status=document.getElementById('backup-status');if(status){status.textContent='Could not prepare a backup file. '+error.message+' Your saved progress is unchanged. Please try again.';profileReveal(status);}}
 function profileRegistryRefresh(){PR=GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));}
 function profileGradeName(grade){return grade==='K'?'Kindergarten':'Grade '+grade;}
 function profileClose(dialog){stopSpeech();if(dialog.open)dialog.close();dialog.remove();}
@@ -119,7 +128,7 @@ function grown(sectionName='child'){
   let code;try{code=backup();if(!navigator.clipboard?.writeText)throw new Error('Clipboard unavailable');await navigator.clipboard.writeText(code);if(!dialog.isConnected)return;try{localStorage.setItem('zh_bk',String(Date.now()));}catch{}document.getElementById('glast').textContent='Last copied: '+BKA();document.getElementById('gcl').textContent='Copied! Paste it somewhere safe.';document.getElementById('gcf').replaceChildren();}
   catch(error){if(dialog.isConnected){if(code!==undefined)backupCopyFallback(code);else profileFailure(transfers,error);}}
  },true);copy.append(profileElement('span','Copy backup code',{id:'gcl'}));transfers.append(profileElement('div',undefined,{id:'gcf'}));
- const download=profileButton(transfers,'Download backup file','gdownload',downloadBackupFile,true);download.setAttribute('aria-label','Download backup file');
+ const download=profileButton(transfers,'Download backup file','gdownload',()=>{try{downloadBackupFile();}catch(error){backupPreparationFailure(error);}},true);download.setAttribute('aria-label','Download backup file');
  const file=profileElement('input',undefined,{id:'gfile',type:'file',accept:'.txt,text/plain','aria-label':'Choose backup file'});file.hidden=true;file.onchange=()=>restoreBackupFile(file);
  const load=profileButton(transfers,'Restore from backup file','gload',()=>file.click(),true);load.setAttribute('aria-label','Restore from backup file');transfers.append(file,profileElement('p','',{id:'backup-status',role:'status',class:'reading-note'}));
  profileButton(transfers,'Restore from a backup code','grest',()=>openBackupRestore(dialog),true);transfers.append(profileElement('div',undefined,{id:'grx'}));

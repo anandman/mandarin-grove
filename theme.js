@@ -16,12 +16,12 @@ function applyAppearance(){
 function setAppearance(value){
  if(!APPEARANCES.includes(value))return;
  appearance=value;applyAppearance();
- try{localStorage.setItem(APPEARANCE_KEY,value);}catch{
-  const status=document.getElementById('appearance-status');if(status)status.textContent='Applied now. This browser could not save the preference.';
- }
+ let message='Saved for this browser.';
+ try{localStorage.setItem(APPEARANCE_KEY,value);}catch{message='Applied now. This browser could not save the preference. Please try again.';}
+ document.querySelectorAll('#appearance-status').forEach(status=>status.textContent=message);
 }
 function appearanceSettingsMarkup(){
- return `<label class="voice-label" for="appearance-setting">Appearance</label><select id="appearance-setting" class="voice-choice" data-appearance-setting><option value="system" ${appearance==='system'?'selected':''}>System</option><option value="light" ${appearance==='light'?'selected':''}>Light</option><option value="dark" ${appearance==='dark'?'selected':''}>Dark</option></select><p class="reading-note">System follows this device’s light or dark setting. Saved for this browser.</p>`;
+ return `<label class="voice-label" for="appearance-setting">Appearance</label><select id="appearance-setting" class="voice-choice" data-appearance-setting><option value="system" ${appearance==='system'?'selected':''}>System</option><option value="light" ${appearance==='light'?'selected':''}>Light</option><option value="dark" ${appearance==='dark'?'selected':''}>Dark</option></select><p class="reading-note">System follows this device’s light or dark setting.</p><p id="appearance-status" role="status" class="reading-note">Saved for this browser.</p>`;
 }
 function showAppearance(){
  if(document.getElementById('appearance-dialog'))return;
