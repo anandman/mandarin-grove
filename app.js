@@ -106,7 +106,7 @@ function creditWin(card,amount=1){
  const prior={count:S.pts[card.c]||0,sleeping:asleep(card)};touchStreak();S.stars+=amount;S.pts[card.c]=prior.count+1;S.ok??={};S.ok[card.c]=Date.now();return prior;
 }
 function celebrateWin(card,prior){
- if(prior.count<MASTER&&prior.count+1>=MASTER){pop(ANIMALS[mastered()-1]||'🎉');after(500,()=>pop('New friend!'));say('太棒了');}else pop(prior.sleeping?'☀️':'⭐');
+ if(prior.count<MASTER&&prior.count+1>=MASTER){const count=Object.values(S.pts).filter(n=>n>=MASTER).length,animal=ANIMALS[count-1];pop(animal||'🎉');if(animal)after(500,()=>pop('New friend!'));say('太棒了');}else pop(prior.sleeping?'☀️':'⭐');
  try{checkBadges();}catch(error){showStorageFailure(error);}
 }
 function win(card,amount=1){const prior=creditWin(card,amount);save();celebrateWin(card,prior);}

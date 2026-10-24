@@ -265,3 +265,10 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{border-color:var(--
 }
 
 .study-home-hero .hello .hello-greeting{display:inline;font:inherit;color:inherit}
+
+/* Supplementary action feedback uses document flow, leaving controls exposed. */
+.grove-reward-feedback{padding:10px 14px;background:var(--surface);border:1px solid var(--ln);border-radius:12px}
+#grove-action-notice{position:static;transform:none;pointer-events:auto;z-index:auto;width:auto;max-width:min(90vw,800px);margin:12px auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.dictation-prompt #drp{font-size:16px;line-height:1.3;flex:0 0 auto;max-width:100%}
+.dictation-prompt>div{min-width:0;flex:1 1 180px}
+@media(max-width:680px){.dictation-prompt{flex-wrap:wrap}}

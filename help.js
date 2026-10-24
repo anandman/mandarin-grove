@@ -136,7 +136,7 @@ function showHomeworkLookup(){
   const dictionary=document.createElement('div');dictionary.id='lookup-dictionary-results';general.append(summary,dictionary);
   if(found.items.some(row=>helpSchoolResult(index,row))){const heading=document.createElement('h2');heading.textContent='School characters & example words';school.append(heading);}results.append(school);
   if(found.items.some(row=>!helpSchoolResult(index,row)))results.append(general);
-  $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?found.total+' match'+(found.total===1?'':'es')+' for “'+found.query+'”. School characters and examples appear first.':'No matches for “'+found.query+'”. Try another spelling or meaning.';
+  $('lookup-results-status').textContent=!found.query?'Search for a character you forgot, a word, or its meaning.':found.total?'Showing '+found.items.length+' of '+found.total+' match'+(found.total===1?'':'es')+' for “'+found.query+'”. School characters and examples appear first.'+(found.items.length<found.total?(found.items.length>=240?' To see other matches, narrow your search.':' Choose Show more for more results.'):''):'No matches for “'+found.query+'”. Try another spelling or meaning.';
   $('lookup-more').hidden=found.items.length>=found.total||found.items.length>=240;
   for(const row of found.items){
    const button=document.createElement('button');button.type='button';button.className='lookup-result';button.dataset.lookupText=row.text;

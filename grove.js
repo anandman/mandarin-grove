@@ -123,7 +123,7 @@ function showGroveRewards(message=''){
  const active=Object.hasOwn(GROVE_REWARD_TABS,S.cfg.groveRewardTab)?S.cfg.groveRewardTab:'build';
  const recent=wallet.transactions.slice().reverse().find(t=>!t.undone&&(t.type==='unlock'&&wallet.owned.includes(t.reward)||t.type==='build'&&wallet.projects?.[t.project]?.stage===t.stage));
  const panel=(id,content)=>`<section id="grove-panel-${id}" role="tabpanel" aria-labelledby="grove-tab-${id}" data-grove-panel="${id}" ${active===id?'':'hidden'}>${content}</section>`;
- A.innerHTML=`<div class="grove-reward-page"><div class="grove-compact-title"><h1>Your grove</h1><small>Grow it your way.</small></div><div class="grove-reward-tools" tabindex="-1"><b>🍊 ${wallet.balance} oranges</b>${recent?`<button id="grove-undo" data-grove-control="undo">Undo last ${recent.type==='build'?'piece':'unlock'} · refund 🍊 ${-recent.amount}</button>`:'<span>One orange per ribbon or sentence.</span>'}</div><p id="grove-reward-message" class="sr-only" role="status">${voiceEscape(message)}</p>
+ A.innerHTML=`<div class="grove-reward-page"><div class="grove-compact-title"><h1>Your grove</h1><small>Grow it your way.</small></div><div class="grove-reward-tools" tabindex="-1"><b>🍊 ${wallet.balance} oranges</b>${recent?`<button id="grove-undo" data-grove-control="undo">Undo last ${recent.type==='build'?'piece':'unlock'} · refund 🍊 ${-recent.amount}</button>`:'<span>One orange per ribbon or sentence.</span>'}</div><p id="grove-reward-message" class="grove-reward-feedback reading-note" role="status" ${message?'':'hidden'}>${voiceEscape(message)}</p>
  <section class="grove-reward-workbench"><figure class="grove-reward-scene">${groveLandscape()}<figcaption>Your grove, your way.</figcaption></figure><div class="grove-workbench-controls">${groveGoalMarkup()||'<p class="reading-note">Pick a decoration or start a project. Earned rewards stay yours.</p>'}<details class="grove-arrange" ${arrange?'open':''}><summary>Arrange your grove</summary>${groveEquippedMarkup()}${groveGoalStatus(S)?'<button class="grove-goal-clear" data-grove-control="clear-goal" onclick="grovePin(null)">Clear goal</button>':''}<button class="btn gray" data-grove-control="original" onclick="groveChoose(null)">Use the original grove</button></details></div></section>
  <nav class="grove-catalog-nav" role="tablist" aria-label="Grove rewards">${Object.entries(GROVE_REWARD_TABS).map(([id,label])=>`<button role="tab" id="grove-tab-${id}" data-grove-tab="${id}" aria-controls="grove-panel-${id}" aria-selected="${id===active}" tabindex="${id===active?0:-1}" onclick="setGroveRewardTab('${id}')">${label}</button>`).join('')}</nav>
  ${panel('build',`<div class="grove-projects">${GROVE_PROJECT_CATALOG.map(groveProjectMarkup).join('')}</div>`)}
@@ -148,11 +148,10 @@ function groveRewardUpdate(message){
   (target||A.querySelector('.grove-reward-tools'))?.focus({preventScroll:true});
  });
 }
-let groveActionNoticeTimer;
 function groveActionNotice(message){
- let notice=$('grove-action-notice');if(!notice){notice=document.createElement('div');notice.id='grove-action-notice';notice.setAttribute('role','status');document.body.append(notice);}
- notice.textContent=message;notice.hidden=false;clearTimeout(groveActionNoticeTimer);
- groveActionNoticeTimer=setTimeout(()=>notice.hidden=true,3500);
+ const inline=$('grove-reward-message');if(inline){inline.textContent=message;inline.hidden=false;return;}
+ let notice=$('grove-action-notice');if(!notice){notice=document.createElement('div');notice.id='grove-action-notice';notice.setAttribute('role','status');$('reward-strip').after(notice);}
+ const text=document.createElement('span');text.textContent=message;const close=document.createElement('button');close.type='button';close.className='progress-link';close.textContent='Dismiss';close.setAttribute('aria-label','Dismiss grove message');close.onclick=()=>{notice.hidden=true;focusMain();};notice.replaceChildren(text,close);notice.hidden=false;
 }
 function groveUnlock(id){
  const before=Object.keys(groveWallet(S).collections||{}).length;
