@@ -64,13 +64,25 @@ function who(){
  for(const child of PR.list){const grade=child.gr||'2',button=profileElement('button',undefined,{type:'button',class:'profile-child','aria-label':(child.av||'🐼')+' '+(child.name||'Friend')+' '+ORD(grade)+', '+profileGradeName(grade)});button.append(profileElement('span',child.av||'🐼'),' ',profileElement('b',child.name||'Friend'),' ',profileElement('small',ORD(grade)));button.onclick=()=>{try{PR.cur=child.id;savePR();loadS();home();}catch(error){profileFailure(view,error);}};children.append(button);}
  const add=profileElement('button','＋ Add kid',{type:'button',class:'profile-child'});add.onclick=()=>setup(false);children.append(add);A.replaceChildren(view);
 }
+function parentEntry(button){
+ if(document.getElementById('gov')||document.getElementById('parent-entry'))return;
+ const dialog=profileDialog('parent-entry','Grown-ups settings');
+ dialog.append(profileElement('p','These settings are for grown-ups. Continue to open them.',{class:'reading-note'}));
+ const cancel=profileButton(dialog,'Cancel','parent-entry-cancel',()=>profileClose(dialog),true);
+ profileButton(dialog,'Continue','parent-entry-continue',()=>{
+  dialog.onclose=()=>{dialog.remove();if(button.isConnected){button.focus({preventScroll:true});grown();}};
+  profileClose(dialog);
+ });
+ dialog.onkeydown=event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();};
+ document.body.append(dialog);dialog.showModal();cancel.focus();
+}
 function parenthold(button){
  if(!button)return;let timer=null,holding=false;
  const cancel=()=>{clearTimeout(timer);timer=null;holding=false;button.style.background='';};
  const begin=event=>{if(holding)return;event.preventDefault();holding=true;button.style.background='var(--ac-soft)';timer=setTimeout(()=>{cancel();grown();},2000);};
  button.onpointerdown=begin;button.onpointerup=button.onpointercancel=button.onpointerleave=button.onblur=cancel;
- button.onkeydown=event=>{if((event.key===' '||event.key==='Enter')&&!event.repeat)begin(event);};button.onkeyup=event=>{if(event.key===' '||event.key==='Enter')cancel();};
- button.onclick=()=>{if(!document.getElementById('gov'))pop('Hold for 2 seconds');};button.oncontextmenu=event=>event.preventDefault();
+ button.onkeydown=button.onkeyup=null;
+ button.onclick=event=>{if(event.detail===0){cancel();parentEntry(button);}else if(!document.getElementById('gov'))pop('Hold for 2 seconds');};button.oncontextmenu=event=>event.preventDefault();
 }
 function gearHold(){parenthold(document.getElementById('gear'));}
 function BKA(){

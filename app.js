@@ -115,7 +115,7 @@ function hdr(){
  const host=$('hd');host.replaceChildren();const profile=prof();
  const button=(label,text,action)=>{const item=document.createElement('button');item.className='pill';item.setAttribute('aria-label',label);item.textContent=text;item.onclick=action;host.append(item);return item;};
  if(profile){const switcher=button(`${profile.av||'🐼'} ${profile.name} ${ORD(GR())}, Switch learner`,profile.av||'🐼',who),name=document.createElement('span'),grade=document.createElement('span');name.className='nm';name.textContent=profile.name;grade.className='gb';grade.textContent=ORD(GR());switcher.append(' ',name,' ',grade);}
- button('Appearance','◐',showAppearance).classList.add('appearance-toggle');button('Grown-ups settings, press and hold','⚙️',()=>{}).id='gear';
+ button('Appearance','◐',showAppearance).classList.add('appearance-toggle');button('Grown-ups settings, press and hold or activate with keyboard','⚙️',()=>{}).id='gear';
  const stats=document.createElement('span');stats.className='pill legacy-stats';stats.textContent=`⭐ ${S.stars}`;const streak=document.createElement('span');streak.className='legacy-streak';streak.textContent=` · 🔥 ${S.streak}`;stats.append(streak);host.append(stats);gearHold();renderRewards();
 }
 function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
