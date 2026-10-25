@@ -1,0 +1,22 @@
+Mandarin Grove online reading pilot — selected text sources
+
+Global Storybooks / Global African Storybook Project, Chinese translations.
+Source: https://github.com/global-asp/global-asp/tree/65c924ee281dd470ecefe3acc23cb27426db5cfc/zh
+Reuse policy: https://storybookscanada.ca/about/source/
+Selected texts: Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+License: https://creativecommons.org/licenses/by/3.0/
+0008 你在做什么？ — Nina Orange; translated by dohliam; original illustrator Wiehan de Jager.
+0049 彩虹 — Ursula Nafula; translated by dohliam; original illustrators Catherine Groenewald, Wiehan de Jager.
+0087 我喜欢看书 — Letta Machoga; translated by dohliam; original illustrator Wiehan de Jager.
+Only selected text is displayed; illustrations and audio omitted, paragraph formatting changed. No endorsement implied. Other stories may have different licenses.
+
+Tatoeba contributors — selected sentence text and English translations.
+https://tatoeba.org/
+License: Creative Commons Attribution 2.0 France (CC BY 2.0 FR).
+https://creativecommons.org/licenses/by/2.0/fr/
+Chinese/English authors and original item links are shown beside each reading. Text unchanged; only selected translations displayed.
+Selected Chinese ids: 4878932, 2782523, 10966829, 6318533, 10534879, 9965018.
+Selected English ids: 472089, 2714993, 7787226, 6303746, 4646117, 2803374.
+No source audio is included.
+
+These licenses permit sharing/adaptation including commercial use with their conditions. Reading selection is a pilot, awaiting teaching review. Source licenses do not endorse teaching quality or the app.
