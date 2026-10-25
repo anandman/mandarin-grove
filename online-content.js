@@ -36,6 +36,8 @@
     if(s?.id!==item.remoteId||s.lang!=='cmn'||s.script!=='Hans'||s.is_unapproved!==false||s.license!=='CC BY 2.0 FR'||!text(s.text,2000)||!text(s.owner,120)||translations?.length!==1||t.lang!=='eng'||t.is_direct!==true||t.is_unapproved!==false||t.license!=='CC BY 2.0 FR'||!text(t.text,2000)||!text(t.owner,120))throw Error('reading-invalid');
     canonical=JSON.stringify([s.id,s.text,s.lang,s.script,s.license,s.owner,s.is_unapproved,[t.id,t.text,t.lang,t.license,t.owner,t.is_unapproved,t.is_direct]]);
     paragraphs=[s.text];translation=[t.text];
+    // The API can add translations/metadata. Persist only this selected, verified projection.
+    raw=JSON.stringify({data:{id:s.id,text:s.text,lang:s.lang,script:s.script,license:s.license,owner:s.owner,is_unapproved:s.is_unapproved,translations:[{id:t.id,text:t.text,lang:t.lang,license:t.license,owner:t.owner,is_unapproved:t.is_unapproved,is_direct:t.is_direct}]}});
    }
    if(await digest(new TextEncoder().encode(canonical))!==item.sha256)throw Error('reading-changed');
    return {item:JSON.parse(JSON.stringify(item)),paragraphs,translation,raw,saved:false};

@@ -56,3 +56,10 @@ test('checked-in pilot catalogue is bounded, sourced, independent of any learner
  assert.ok(fs.existsSync('content/online-library.js'),'selected manifest exists');const c=require('../content/online-library.js');assert.equal(c.items.length,9);assert.equal(library({},c).list().filter(x=>x.kind==='story').length,3);
  for(const i of c.items){assert.ok(i.authors.length);assert.equal(i.reviewStatus,'pilot-selected-teaching-pending');assert.ok(!i.paragraphs&&!i.text&&!i.translation);}
 });
+test('unselected translations and arbitrary provider fields never enter the public offline cache',async()=>{
+ const s=structuredClone(sentence);s.providerMetadata={unselected:'not licensed'};s.translations[0].extra='unverified';s.translations.push({id:999,text:'unselected private or adult content',license:'NO REUSE',is_unapproved:true});
+ const caches=cacheStore(),lib=library({cacheStorage:caches,fetcher:async()=>Response.json({data:s,unverifiedEnvelope:'discard'})}),result=await lib.read('sentence-17');await lib.save('sentence-17',result);
+ const stored=[...caches.data.values()][0];assert.ok(!stored.includes('unselected'));assert.ok(!stored.includes('unverified'));assert.ok(!stored.includes('NO REUSE'));
+ const decoded=JSON.parse(stored);assert.deepEqual(Object.keys(decoded),['data']);assert.equal(decoded.data.translations.length,1);assert.equal(decoded.data.translations[0].id,18);assert.equal(decoded.data.providerMetadata,undefined);
+ const offline=library({cacheStorage:caches,fetcher:async()=>{throw Error('offline');}});assert.deepEqual((await offline.read('sentence-17')).translation,['I go to school.']);
+});
