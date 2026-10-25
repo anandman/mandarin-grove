@@ -42,7 +42,7 @@ function groveLandscape(){
 }
 function groveReadinessMarkup(){
  const cards=batch(),result=unitReadiness(S,cards.map(c=>c.c),GR());if(!cards.length)return '';
- return `<aside class="grove-readiness ${result.ready?'is-ready':''}" data-unit-readiness><div><b>${result.ready?'🌱 Ready for more':`${result.completed}/${result.total} characters ready`}</b><details><summary>How it works</summary><p>Two independent successes in ${GR()==='K'?'listening':Number(GR())>=2?'listening, writing recall, and pinyin where needed':'listening and writing recall'} per character. Keep this week’s schoolwork as long as you like; earlier characters stay in review.</p></details></div><button class="btn gray" onclick="showGroveUnitChooser()">${result.ready?'Add another unit':'Choose units'}</button></aside>`;
+ return `<aside class="grove-readiness ${result.ready?'is-ready':''}" data-unit-readiness><div><b>${result.ready?'🌱 Practice goal reached':`${result.completed}/${result.total} character goals reached`}</b><details><summary>How it works</summary><p>Two recorded successes in ${GR()==='K'?'listening':Number(GR())>=2?'listening, writing recall, and pinyin where needed':'listening and writing recall'} per character. Writing recall can include your own handwriting checks. This is a practice goal. Keep this week’s schoolwork as long as you like; earlier characters stay in review.</p></details></div><button class="btn gray" onclick="showGroveUnitChooser()">${result.ready?'Add another unit':'Choose units'}</button></aside>`;
 }
 function showGroveUnitChooser(){
  screen();SESS=null;CRAM=null;const selected=new Set(SET());

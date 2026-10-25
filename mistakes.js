@@ -16,7 +16,7 @@ function showRecentMistakes(){
  let returnToSetup=true;closeStudySetup();
  const dialog=document.createElement('dialog');dialog.id='recent-mistakes';dialog.setAttribute('aria-labelledby','recent-mistakes-title');dialog.setAttribute('aria-describedby','recent-mistakes-note');
  dialog.innerHTML=`<div class="recent-mistakes-heading"><h2 id="recent-mistakes-title">Things to practice</h2><button class="study-close" aria-label="Close things to practice">✕</button></div>
- <p id="recent-mistakes-note">From your current Review choices and last 20 completed rounds. First scores stay saved.</p>
+ <p id="recent-mistakes-note">From your current Review choices and last 20 completed rounds. First scores stay saved. App checks and your own checks are labeled below.</p>
  <details id="recent-mistakes-filters"><summary>Filter these questions</summary><div class="recent-mistakes-filters"><label>Character<select id="recent-mistakes-character" aria-label="Character"><option value="">All selected characters</option></select></label><label>Activity<select id="recent-mistakes-activity" aria-label="Activity"><option value="">All selected activities</option></select></label><label>Questions<select id="recent-mistakes-limit" aria-label="Questions">${[5,10,20,30].map(n=>`<option value="${n}" ${context.config.limit===n?'selected':''}>${n}</option>`).join('')}</select></label></div></details>
  <div id="recent-mistakes-results" role="region" aria-label="Recent practice needs"></div>
  <div class="recent-mistakes-actions"><button class="btn" id="recent-mistakes-start"></button><div id="recent-mistakes-replace" hidden><p>A Review round is paused. You can resume it or replace it with this review.</p><button class="btn gray" id="recent-mistakes-resume">Resume paused Review</button><button class="btn" id="recent-mistakes-confirm">Replace with this review</button><button class="progress-link" id="recent-mistakes-keep">Keep paused round</button></div></div>`;
@@ -36,7 +36,7 @@ function showRecentMistakes(){
   const chips=document.createElement('div');chips.className='recent-mistake-evidence';
   for(const need of item.needs){const chip=document.createElement('span');
    const skill=need.legacyCombined?'Earlier combined result':skillLabels[need.skill]||need.skill;
-   const method=need.method==='self-rated'?'Self-rated':need.method==='checked'?'Checked':'Assessment not recorded';
+   const method=need.method==='self-rated'?'Self-check':need.method==='checked'?'Checked by app':'Check type not saved';
    chip.textContent=(item.needs.length>1||need.skill==='pinyin'||need.skill==='writing'?skill+' · ':'')+method+' · '+(resolved?'Practiced again':need.outcome==='assisted'?'Practiced with support':'Practice again');chips.append(chip);
   }
   li.append(chips);return li;
@@ -44,7 +44,7 @@ function showRecentMistakes(){
  const render=()=>{
   if(!valid())return;current=recentMistakeQuery(context,character.value,activity.value);
   const results=byId('results');results.replaceChildren();
-  const status=document.createElement('p');status.setAttribute('role','status');status.textContent=current.needs.length?`${current.needs.length} question${current.needs.length===1?'':'s'} to practice`:current.hasDetails?'No things to practice in this selection.':'No recent saved details yet.';results.append(status);
+  const status=document.createElement('p');status.setAttribute('role','status');status.textContent=current.needs.length?`${current.needs.length} question${current.needs.length===1?'':'s'} to practice`:current.hasDetails?'No saved practice needs in this selection.':'No recent saved details yet.';results.append(status);
   if(current.needs.length){const ul=document.createElement('ul');ul.className='recent-mistakes-list';for(const item of current.needs.slice(0,expanded?undefined:6))ul.append(row(item));results.append(ul);
    if(current.needs.length>6){const more=document.createElement('button');more.className='progress-link';more.textContent=expanded?'Show fewer':`Show all ${current.needs.length}`;more.setAttribute('aria-expanded',String(expanded));more.onclick=()=>{expanded=!expanded;render();};results.append(more);}
   }
