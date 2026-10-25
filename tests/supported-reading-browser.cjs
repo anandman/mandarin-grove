@@ -12,6 +12,15 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   }catch(e){failed.push(name);console.error('FAIL:',name,e.stack);}finally{await context.close();}
  }
  try{
+  await run('sentence hints are independent and inline lookup keeps the reading and earned history',async(p,c)=>{
+   const story=fs.readFileSync('tests/fixtures/online/story-0008.md','utf8');await c.route('https://raw.githubusercontent.com/**',r=>r.fulfill({body:story,contentType:'text/plain'}));
+   await p.evaluate(()=>{PR.list[0].gr='4';savePR();loadS();showOnlineLibrary();});const before=await p.evaluate(()=>backup());
+   await p.locator('[data-reading="story-0008"]').click();await p.locator('.online-paragraph').first().waitFor();
+   assert.equal(await p.locator('.online-pinyin:visible').count(),0);assert.equal(await p.locator('.online-english:visible').count(),0);
+   await p.locator('#online-show-pinyin-1').click();assert.equal(await p.locator('.online-pinyin:visible').count(),1);assert.equal(await p.locator('.online-english:visible').count(),0);
+   await p.locator('.reading-word').filter({hasText:'我'}).first().click();await p.locator('#reading-lookup-body .reading-dictionary-entry').first().waitFor();
+   assert.equal(await p.locator('.online-paragraph').count(),8);await p.locator('#reading-lookup-close').click();assert.equal(await p.locator('.online-pinyin:visible').count(),1);assert.equal(await p.evaluate(()=>backup()),before);
+  });
   await run('dictionary survives a disconnected cold launch and searches non-school single characters',async(p,c)=>{
    await p.waitForFunction(()=>OFFLINE_STATUS==='ready');await p.evaluate(()=>navigator.serviceWorker.ready);const before=await p.evaluate(()=>backup());
    await c.setOffline(true);await p.reload();await p.evaluate(()=>showHomeworkLookup());

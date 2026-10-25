@@ -10,6 +10,7 @@
   "core/backup.js",
   "core/catalog.js",
   "core/mistakes.js",
+  "core/readings.js",
   "core/results.js",
   "core/state.js",
   "core/units.js",

@@ -45,19 +45,49 @@ function showOnlineLibrary({resume=null}={}){
    if(!active()||token!==revision)return;current=null;
    if(!GroveOnlineContent.eligibleReadingText([item.titleZh,...result.paragraphs],grade,GL))throw Error('reading-grade-unavailable');
    const aids=GroveOnlineContent.readingAids(item,result);status.remove();
-   const view={owner,grade,id:item.id,result,pinyin:previous?.pinyin||false,english:previous?.english||false};ONLINE_READING_LAST=view;
-   const controls=node('div',null,detail,'online-aid-controls');
-   const passages=node('div',null,detail,'online-passages');passages.id='online-passages';passages.lang='zh-Hans';
-   const pinyin=[],english=[];
-   for(const [i,text]of result.paragraphs.entries()){
-    const paragraph=node('div',null,passages,'online-paragraph');node('p',text,paragraph,'online-line');
-    const py=node('p',aids.pinyin[i],paragraph,'online-pinyin');py.lang='zh-Latn-pinyin';py.hidden=!view.pinyin;pinyin.push(py);
-    const en=node('p',aids.translation[i],paragraph,'online-english');en.lang='en';en.hidden=!view.english;english.push(en);
+   const view=previous||{owner,grade,id:item.id,result,pinyin:[],english:[],helpUsed:false};ONLINE_READING_LAST=view;
+   const sentences=GroveReadings.readingSentences(result.paragraphs,aids,item.annotations);
+   if(!Array.isArray(view.pinyin))view.pinyin=sentences.map(()=>!!view.pinyin);
+   if(!Array.isArray(view.english))view.english=sentences.map(()=>!!view.english);
+   const passages=node('div',null,detail,'online-passages');passages.id='online-passages';
+   node('p','Tap a word for its meaning. Show help for one sentence at a time.',detail,'reading-note');
+   const lines=[];let dictionary=null;
+   const helped=()=>{view.helpUsed=true;view.onHelp?.();};
+   function lookup(word,prepared,trigger){
+    helped();const dialog=node('dialog',null,detail,'reading-lookup');dialog.setAttribute('aria-labelledby','reading-lookup-title');
+    const title=node('h2',word,dialog);title.id='reading-lookup-title';title.lang='zh-Hans';
+    const close=button('Close',dialog,()=>dialog.close());close.id='reading-lookup-close';
+    dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus({preventScroll:true});});
+    const body=node('div',null,dialog);body.id='reading-lookup-body';
+    if(prepared?.meaning){node('h3','In this sentence',body);const py=node('p',prepared.pinyin,body);py.lang='zh-Latn-pinyin';node('p',prepared.meaning,body);}
+    const status=node('p','Loading dictionary…',body,'reading-note');status.setAttribute('role','status');
+    async function load(){
+     try{const index=dictionary||await loadHelpDictionary();if(!active()||!dialog.isConnected||token!==revision)return;dictionary=index;status.remove();
+      node('h3','Dictionary meanings',body);const rows=[...new Set(index.get(word)||[])];
+      if(!rows.length){node('p','This dictionary has no entry for '+word+'.',body);button('Suggest a missing entry',body,()=>{dialog.close();showFeedback({category:'meaning',note:'Reading lookup missing entry: '+word,context});});}
+      for(const entry of rows.slice(0,12)){const row=node('section',null,body,'reading-dictionary-entry'),py=node('p',pinyinWithMarks(entry[2]),row);py.lang='zh-Latn-pinyin';node('p',entry[3],row);}
+      if(rows.length>1)node('p','A word may have several readings or meanings. Choose the one that fits the sentence.',body,'reading-note');
+      if([...word].length>1){node('h3','Individual characters',body);const chars=node('div',null,body,'online-words');for(const ch of [...new Set(word)]){const b=button(ch,chars,()=>{dialog.close();lookup(ch,null,trigger);},'btn gray');b.lang='zh-Hans';}}
+     }catch{if(dialog.isConnected&&active()){status.textContent='The dictionary could not load.';button('Try again',body,load);}}
+    }
+    dialog.showModal();close.focus();load();
    }
-   const toggle=(type,rows)=>{
-    const b=button('',controls,()=>{view[type]=!view[type];refresh();});b.id='online-show-'+type;b.setAttribute('aria-controls','online-passages');
-    const refresh=()=>{b.textContent=(view[type]?'Hide ':'Show ')+(type==='pinyin'?'pinyin':'English');b.setAttribute('aria-expanded',String(view[type]));rows.forEach(el=>el.hidden=!view[type]);};refresh();
-   };toggle('pinyin',pinyin);toggle('english',english);
+   for(const [i,sentence]of sentences.entries()){
+    const paragraph=node('section',null,passages,'online-paragraph');paragraph.setAttribute('aria-label','Sentence '+(i+1));
+    const line=node('p',null,paragraph,'online-line');lines.push(line);
+    const py=node('p',sentence.pinyin,paragraph,'online-pinyin');py.id='reading-pinyin-'+i;py.lang='zh-Latn-pinyin';py.hidden=!view.pinyin[i];
+    const en=node('p',sentence.english,paragraph,'online-english');en.id='reading-english-'+i;en.lang='en';en.hidden=!view.english[i];
+    const controls=node('div',null,paragraph,'online-aid-controls');
+    for(const [type,row,label]of [['pinyin',py,'pinyin'],['english',en,'English']]){
+     const b=button('',controls,()=>{view[type][i]=!view[type][i];if(view[type][i])helped();refresh();});b.id='online-show-'+type+(i?'-'+i:'');b.setAttribute('aria-controls',row.id);
+     const refresh=()=>{b.textContent=(view[type][i]?'Hide ':'Show ')+label;b.setAttribute('aria-label',b.textContent+' for sentence '+(i+1));b.setAttribute('aria-expanded',String(!!view[type][i]));row.hidden=!view[type][i];};refresh();
+    }
+    function render(){line.replaceChildren();for(const part of GroveReadings.readingTokens(sentence.text,dictionary,sentence.words)){
+     if(!part.lookup){line.append(document.createTextNode(part.text));continue;}
+     const b=button('',line,()=>lookup(part.text,part,b),'reading-word');b.setAttribute('aria-label','Look up '+part.text);const span=node('span',part.text,b);span.lang='zh-Hans';
+    }}render();sentence.render=render;
+   }
+   loadHelpDictionary().then(index=>{if(!active()||token!==revision)return;dictionary=index;if(!detail.querySelector('dialog[open]')&&!passages.contains(document.activeElement))for(const sentence of sentences)sentence.render();}).catch(()=>{});
    const words=node('details',null,detail,'compact-help');words.id='online-word-tools';node('summary','Look up a word',words);const wordButtons=node('div',null,words,'online-words');
    for(const word of item.words){
     const b=button('Look up '+word,wordButtons,()=>{stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id}),backLabel:'Back to reading'});},'chip');
