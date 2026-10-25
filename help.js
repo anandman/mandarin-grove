@@ -37,10 +37,17 @@ async function loadHelpVocabulary(fetcher=fetch){
  return HELP_VOCABULARY_PROMISE;
 }
 function createHelpLookup(cards,wordIndex=null,examples=[],vocabularyPack=null){
- const byText=new Map(),rows=[],byChar=new Map(cards.map(c=>[c.c,c]));
+ const byText=new Map(),rows=[],byChar=new Map(cards.map(c=>[c.c,c])),schoolRows=new Map();
+ function bind(row){
+  for(const alias of row.aliases){
+   const current=byText.get(alias);
+   if(alias===row.text){if(!byChar.has(alias)||row.kind==='character')byText.set(alias,row);}
+   else if(!byChar.has(alias)&&(!current||current.text!==alias)&&current?.kind!=='character')byText.set(alias,row);
+  }
+ }
  for(const card of cards){
-  const row={kind:'character',text:card.c,aliases:[card.c,...(wordIndex?.characterForms?.[card.c]||[])],readings:helpCharacterReadings(card),card};
-  rows.push(row);row.aliases.forEach(text=>byText.set(text,row));
+  const row={kind:'character',text:card.c,aliases:[card.c,...(wordIndex?.characterForms?.[card.c]||[])],readings:helpCharacterReadings(card),displayReadings:helpCharacterReadings(card),card};
+  rows.push(row);schoolRows.set(card.c,row);bind(row);
  }
  if(wordIndex){
   const words=new Map(),seen=new Set();
@@ -55,12 +62,12 @@ function createHelpLookup(cards,wordIndex=null,examples=[],vocabularyPack=null){
   }
   for(const row of words.values()){
    row.readings=row.readings.map(r=>({pinyin:r.pinyin,meaning:r.meanings.join('; ')}));
-   const school=byChar.has(row.text)?byText.get(row.text):null;
+   const school=schoolRows.get(row.text);
    if(school){
     school.aliases=[...new Set([...school.aliases,...row.aliases])];
     for(const reading of row.readings)if(!school.readings.some(r=>r.pinyin===reading.pinyin&&r.meaning===reading.meaning))school.readings.push(reading);
-    school.aliases.forEach(text=>byText.set(text,school));
-   }else{rows.push(row);row.aliases.forEach(text=>byText.set(text,row));}
+    bind(school);
+   }else{rows.push(row);bind(row);}
   }
  }
  const curatedWords=[];
@@ -72,7 +79,7 @@ function createHelpLookup(cards,wordIndex=null,examples=[],vocabularyPack=null){
    const reading={pinyin:pinyinWithMarks(item.pinyin),meaning:item.meaning};
    if(!row){row={kind:'word',text:item.word,aliases:[item.word,...item.aliases],readings:[reading]};rows.push(row);}
    row.example=item;row.displayReadings=[reading];row.content={packId:item.packId,itemId:item.id,version:item.packVersion,sourceId:item.source.id,reviewStatus:item.status.instructional};
-   row.aliases.forEach(alias=>byText.set(alias,row));curatedWords.push(row.text);
+   bind(row);curatedWords.push(row.text);
   }
  }
  for(const row of rows){
@@ -85,6 +92,12 @@ function createHelpLookup(cards,wordIndex=null,examples=[],vocabularyPack=null){
  return {rows,byText,byChar,exampleWords,curatedWords};
 }
 function helpSchoolResult(index,row){return row.kind==='character'||!!row.example||index.exampleWords.includes(row.text);}
+function helpResultReadings(row,query){
+ const main=row.displayReadings||row.readings,key=helpPinyinKey(query||'');
+ const matches=r=>r.pinyin.split(/\s*\/\s*/).some(py=>helpPinyinMatches(helpPinyinKey(py),key));
+ if(!key.base||main.some(matches))return main;
+ const other=row.readings.filter(matches);return other.length?other:main;
+}
 function searchHelpLookup(index,value,limit=24){
  const query=String(value).trim(),empty={query,items:[],total:0};if(!query||query.length>80)return empty;
  const han=/^\p{Script=Han}+$/u.test(query),pinyin=helpPinyinKey(query),english=query.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(),matches=[];
@@ -151,19 +164,28 @@ function showHomeworkLookup({back=showHomeworkHelp,backLabel='Back to Help'}={})
   for(const row of found.items){
    const button=document.createElement('button');button.type='button';button.className='lookup-result';button.dataset.lookupText=row.text;
    const word=document.createElement('b');word.lang='zh-Hans';word.textContent=row.text;
-   const reading=document.createElement('span');reading.lang='zh-Latn-pinyin';reading.textContent=row.readings.map(r=>r.pinyin).join(' / ');
-   const meaning=document.createElement('small');meaning.textContent=row.meaning;
+   const reading=document.createElement('span');reading.lang='zh-Latn-pinyin';reading.textContent=helpResultReadings(row,state.query).map(r=>r.pinyin).join(' / ');
+   const meaning=document.createElement('small');meaning.textContent=helpResultReadings(row,state.query).map(r=>r.meaning).join('; ');
    const source=document.createElement('small');source.className='lookup-source';source.textContent=row.kind==='character'?'School character':row.example?'Example · teaching review pending':helpSchoolResult(index,row)?'Writing ideas word':'Full dictionary';button.append(word,reading,meaning,source);button.onclick=()=>openResult(row);(helpSchoolResult(index,row)?school:dictionary).append(button);
   }
   if(focused){const target=focused.summary?results.querySelector('#lookup-dictionary > summary'):[...results.querySelectorAll('[data-lookup-text]')].find(el=>el.dataset.lookupText===focused.text);(target||input).focus();}
  }
  function search(value){shown=null;setPageBack(back,backLabel);state.query=value.trim();state.limit=24;state.dictionaryOpen=false;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();renderResults();}
+ function renderReadings(row,target){
+  const expanded=target.querySelector('#lookup-full-readings')?.open,focused=document.activeElement,inside=target.contains(focused),tag=focused?.tagName,label=focused?.textContent;target.replaceChildren();
+  function reading(r,parent){const p=document.createElement('p'),py=document.createElement('strong'),meaning=document.createElement('span');py.lang='zh-Latn-pinyin';py.textContent=r.pinyin;meaning.textContent=r.meaning;p.className='lookup-reading';p.append(py,meaning);parent.append(p);}
+  for(const r of row.displayReadings||row.readings)reading(r,target);
+  if(row.displayReadings&&JSON.stringify(row.displayReadings)!==JSON.stringify(row.readings)){
+   const extra=document.createElement('details'),summary=document.createElement('summary'),note=document.createElement('p'),credit=document.createElement('a');extra.id='lookup-full-readings';extra.className='compact-help';extra.open=!!expanded||helpResultReadings(row,state.query)!==(row.displayReadings||row.readings);summary.textContent='Full dictionary readings and meanings';note.className='reading-note';note.textContent='CC-CEDICT · MDBG and contributors. These are general dictionary senses; choose the meaning that fits your text.';credit.href='vendor/cc-cedict/LICENSE';credit.target='_blank';credit.rel='noopener';credit.textContent='CC BY-SA 4.0';extra.append(summary,note);for(const r of row.readings)reading(r,extra);extra.append(credit);target.append(extra);
+  }
+  if(inside)[...target.querySelectorAll('summary,a')].find(n=>n.tagName===tag&&n.textContent===label)?.focus({preventScroll:true});
+ }
  function openResult(row,focus=true){
   shown=row;if(focus)stopSpeech();detail.hidden=false;$('lookup-matches').hidden=true;detail.replaceChildren();
   const backToResults=()=>{shown=null;detail.hidden=true;detail.replaceChildren();$('lookup-matches').hidden=false;feedbackQuestion=null;stopSpeech();setPageBack(back,backLabel);input.focus();input.scrollIntoView({block:'center'});};setPageBack(backToResults,'Back to results');
   const title=document.createElement('h2');title.lang='zh-Hans';title.textContent=row.text;title.className='lookup-word';
   const source=document.createElement('p');source.className='reading-note';source.textContent=row.kind==='character'?'School character · '+GN[row.card.g?.[0]||'K']:'Word dictionary';detail.append(title,source);
-  for(const r of row.displayReadings||row.readings){const p=document.createElement('p'),reading=document.createElement('strong'),meaning=document.createElement('span');reading.lang='zh-Latn-pinyin';reading.textContent=r.pinyin;meaning.textContent=r.meaning;p.className='lookup-reading';p.append(reading,meaning);detail.append(p);}
+  const readingRoot=document.createElement('div');readingRoot.id='lookup-readings';detail.append(readingRoot);renderReadings(row,readingRoot);
   const actions=document.createElement('div');actions.className='lookup-detail-actions';const hear=document.createElement('button');hear.className='btn';hear.textContent='Hear pronunciation';hear.onclick=()=>say(row.text);actions.append(hear);detail.append(actions);
   if(row.kind==='character'){
    const strokes=document.createElement('button');strokes.className='btn gray';strokes.textContent='Watch strokes';actions.append(strokes);
@@ -187,7 +209,7 @@ function showHomeworkLookup({back=showHomeworkHelp,backLabel='Back to Help'}={})
     const disclosure=document.createElement('details'),summary=document.createElement('summary'),text=document.createElement('p'),status=document.createElement('p');disclosure.className='compact-help';summary.textContent='Try a writing idea (draft)';text.textContent=idea.text;status.className='reading-note';status.textContent='An AI-assisted draft, awaiting teaching review. Use your own words; this idea is ungraded.';disclosure.append(summary,text,status);detail.append(disclosure);
    }
   }
-  if(row.content){const report=document.createElement('button');report.className='progress-link';report.textContent=row.example?'Report this example':'Report this entry';report.onclick=()=>{feedbackQuestion=helpFeedbackQuestion(row);showFeedback();};detail.append(report);}
+  if(row.content){const report=document.createElement('button');report.className='progress-link';report.textContent=row.example?'Report this example':'Report this entry';report.onclick=()=>{feedbackQuestion=helpFeedbackQuestion(shown||row);showFeedback();};detail.append(report);}
   const chars=helpPracticeCharacters(index,[row.text]);
   if(chars.length){const group=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent='Choose characters to practice';group.className='lookup-characters';group.append(legend);
    for(const card of chars){const label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span');check.type='checkbox';check.dataset.lookupChar=card.c;check.checked=state.selected.has(card.c);text.lang='zh-Hans';text.textContent=card.c+' · '+card.p;check.onchange=()=>{if(check.checked)state.selected.add(card.c);else state.selected.delete(card.c);updateSelection();};label.append(check,text);group.append(label);}detail.append(group);
@@ -202,11 +224,12 @@ function showHomeworkLookup({back=showHomeworkHelp,backLabel='Back to Help'}={})
  }
  function rebuildIndex(){
   HELP_DICTIONARY_CACHE=createHelpLookup(ALL,HELP_DICTIONARY_SOURCE,examples,HELP_VOCABULARY_PACK);HELP_DICTIONARY_PACK=HELP_VOCABULARY_PACK;index=HELP_DICTIONARY_CACHE;renderResults();
-  if(shown?.kind==='character'&&$('lookup-word-examples'))renderExamples(shown.text,$('lookup-word-examples'));
-  else if(shown?.kind==='word'){
+  if(shown?.kind==='character'){
+   const updated=index.byText.get(shown.text);if(updated){shown=updated;renderReadings(updated,$('lookup-readings'));feedbackQuestion=helpFeedbackQuestion(updated);if($('lookup-word-examples'))renderExamples(updated.text,$('lookup-word-examples'));}
+  }else if(shown?.kind==='word'){
    const updated=index.byText.get(shown.text);
    if(updated){
-    const display=row=>JSON.stringify([row.displayReadings||row.readings,row.content,row.example?.writingIdea]);
+    const display=row=>JSON.stringify([row.displayReadings,row.readings,row.content,row.example?.writingIdea]);
     if(display(updated)!==display(shown)){
      const focused=document.activeElement,inside=detail.contains(focused),character=focused?.dataset.lookupChar,tag=focused?.tagName,label=focused?.textContent;
      openResult(updated,false);

@@ -21,3 +21,22 @@ test('app update preserves public reading caches and the offline shell only admi
  assert.ok(assets.includes('vendor/cc-cedict/dictionary.json'));assert.ok(assets.includes('index.html'));
  assert.equal(assets.some(p=>/docs\/|HANDOFF|api\/|audio\//.test(p)),false);
 });
+test('real full-bank aliases cannot replace canonical school characters or their practice selection',()=>{
+ const ctx=vm.createContext({});vm.runInContext(fs.readFileSync('words.js','utf8'),ctx);vm.runInContext(fs.readFileSync('help.js','utf8'),ctx);
+ const cards=require('../content/curriculum.json').cards,index=ctx.createHelpLookup(cards,ctx.createWordIndex(JSON.parse(fs.readFileSync('vendor/cc-cedict/dictionary.json'))));
+ for(const ch of ['么','宁']){assert.equal(index.byText.get(ch).text,ch);assert.equal(index.byText.get(ch).kind,'character');assert.equal(JSON.stringify(ctx.helpPracticeCharacters(index,[ch]).map(c=>c.c)),JSON.stringify([ch]));}
+});
+test('activating a new worker during an older document load keeps versioned scripts consistent',async()=>{
+ const source=fs.readFileSync('sw.js','utf8'),version=source.match(/const VERSION='([^']+)'/)[1],old='20261025-supported-70',handlers={},calls=[];
+ const manifest=JSON.stringify(['index.html','app.js','offline-assets.json']),banks=new Map([
+  ['mandarin-grove-shell-'+version,new Map([['offline-assets.json',manifest],['app.js','new app']])],
+  ['mandarin-grove-shell-'+old,new Map([['offline-assets.json',manifest],['index.html','old HTML with version70 scripts'],['app.js','old app']])]
+ ]);
+ const ctx=vm.createContext({URL,Request,Response,Set,caches:{has:async k=>banks.has(k),open:async k=>({match:async p=>banks.get(k)?.has(p)?new Response(banks.get(k).get(p)):undefined})},fetch:async r=>{calls.push(r);return new Response('NETWORK CURRENT APP');},self:{location:{origin:'https://grove.test'},addEventListener:(n,f)=>handlers[n]=f}});
+ vm.runInContext(source,ctx);
+ // The old HTML was obtained before activation. Its remaining requests arrive at the new worker.
+ assert.match(banks.get('mandarin-grove-shell-'+old).get('index.html'),/old HTML/);
+ async function request(v){let pending;handlers.fetch({request:new Request('https://grove.test/app.js?v='+v),respondWith:p=>pending=p});return pending;}
+ assert.equal(await (await request(old)).text(),'old app');assert.equal(await (await request(version)).text(),'new app');
+ assert.equal((await request('20261025-supported-69')).status,409,'missing old version fails closed instead of mixing current scripts');assert.equal(calls.length,0);
+});

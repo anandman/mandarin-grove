@@ -1,5 +1,5 @@
 // Cache only the explicit public app shell. Never cache feedback, learner records or remote sources.
-const VERSION='20261025-supported-71',SHELL='mandarin-grove-shell-'+VERSION;
+const VERSION='20261025-supported-72',SHELL='mandarin-grove-shell-'+VERSION;
 let allowed=null;
 async function assets(){
  if(allowed)return allowed;
@@ -19,9 +19,20 @@ self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE')self.skipWaiting();});
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
- if(request.method!=='GET'||url.origin!==self.location.origin||url.pathname==='/version.txt')return;
+ if(request.method!=='GET'||url.origin!==self.location.origin||url.pathname==='/version.txt'||url.pathname.startsWith('/api/'))return;
  event.respondWith((async()=>{
-  const path=url.pathname==='/'?'index.html':url.pathname.slice(1),list=await assets();
+  const path=url.pathname==='/'?'index.html':url.pathname.slice(1),requested=url.searchParams.get('v');
+  if(path!=='index.html'&&requested&&/^\d{8}-[a-z0-9-]+$/.test(requested)&&requested!==VERSION){
+   // Another tab may still be loading an older document when this worker activates.
+   // Static hosting ignores ?v=, so a network fallback could silently return the wrong code.
+   const oldName='mandarin-grove-shell-'+requested;
+   if(await caches.has(oldName)){
+    const old=await caches.open(oldName),manifest=await old.match('offline-assets.json');
+    if(manifest&&(await manifest.json()).includes(path)){const saved=await old.match(path);if(saved)return saved;}
+   }
+   return new Response('This page version is unavailable. Refresh the page to load the complete current app.',{status:409,headers:{'Content-Type':'text/plain'}});
+  }
+  const list=await assets();
   if(!list.has(path))return fetch(request);
   const cache=await caches.open(SHELL),saved=await cache.match(path);return saved||fetch(request);
  })());

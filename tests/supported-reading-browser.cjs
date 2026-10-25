@@ -3,7 +3,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']}),failed=[];
  async function run(name,fn){
   if(process.env.CASE_FILTER&&!name.includes(process.env.CASE_FILTER))return;
-  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
+  const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:name.includes('delayed dictionary')?'block':'allow'}),page=await context.newPage(),errors=[];page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
   await context.route('**/api/feedback',r=>r.abort());
   try{
    await page.goto(process.env.APP_URL||'http://127.0.0.1:4200');
@@ -42,6 +42,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    const before=await p.evaluate(()=>{window.originalReadingSet=Storage.prototype.setItem;const raw=localStorage.getItem('zh_p_'+PR.cur);Storage.prototype.setItem=function(k,v){if(k==='zh_p_supported-synthetic')throw new DOMException('quota','QuotaExceededError');return originalReadingSet.call(this,k,v);};return raw;});
    await p.locator('#reading-check').click();await p.locator('#reading-save-retry').waitFor();assert.equal(await p.locator('#reading-check').isDisabled(),true);assert.equal(await p.evaluate(()=>localStorage.getItem('zh_p_'+PR.cur)),before);
    await p.evaluate(()=>Storage.prototype.setItem=originalReadingSet);await p.locator('#reading-save-retry').click();await p.locator('#reading-answer-feedback').waitFor();assert.match(await p.locator('#reading-answer-feedback').innerText(),/^Correct/);assert.equal(await p.locator('#reading-next').isEnabled(),true);
+  });
+  await run('delayed dictionary completes an open school entry without losing focus or selection',async(p,c)=>{
+   let release;const gate=new Promise(r=>release=r);await c.route('**/vendor/cc-cedict/dictionary.json',async r=>{await gate;await r.continue();});
+   await p.evaluate(()=>showHomeworkLookup());await p.locator('#lookup-input').fill('行');await p.locator('#lookup-search').click();await p.locator('[data-lookup-text="行"]').click();await p.locator('[data-lookup-char="行"]').check();await p.getByRole('button',{name:'Hear pronunciation',exact:true}).focus();
+   assert.doesNotMatch(await p.locator('#lookup-detail').innerText(),/háng/);release();await p.locator('#lookup-bank-status[data-ready="true"]').waitFor();assert.equal(await p.locator('[data-lookup-char="行"]').isChecked(),true);assert.equal(await p.getByRole('button',{name:'Hear pronunciation',exact:true}).evaluate(e=>e===document.activeElement),true);await p.locator('#lookup-full-readings > summary').click();assert.match(await p.locator('#lookup-full-readings').innerText(),/háng/);
+  });
+  await run('curated word examples keep full dictionary meanings available',async p=>{
+   await p.evaluate(()=>showHomeworkLookup());await p.locator('#lookup-bank-status[data-ready="true"]').waitFor();await p.waitForFunction(()=>!!HELP_VOCABULARY_PACK);await p.locator('#lookup-input').fill('千万');await p.locator('#lookup-search').click();await p.locator('[data-lookup-text="千万"]').click();await p.locator('#lookup-full-readings > summary').click();assert.match(await p.locator('#lookup-full-readings').innerText(),/countless|by all means/);
   });
   await run('dictionary survives a disconnected cold launch and searches non-school single characters',async(p,c)=>{
    await p.waitForFunction(()=>OFFLINE_STATUS==='ready');await p.evaluate(()=>navigator.serviceWorker.ready);const before=await p.evaluate(()=>backup());
