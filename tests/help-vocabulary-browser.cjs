@@ -12,7 +12,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  await page.evaluate(()=>{PR={cur:'help-vocab',list:[{id:'help-vocab',name:'Fixture',gr:'2',av:'🐼'},{id:'help-other',name:'Other fixture',gr:'3',av:'🐳'}]};savePR();loadS();S.stars=7;S.pts={改:4};S.privateDraft='PRIVATE FIXTURE TEXT';save();loadS();window.say=()=>{};showHomeworkHelp();});
  const baseline=await page.evaluate(()=>JSON.stringify(S));
  assert.equal(requests.filter(row=>row.url.includes('elementary-vocabulary.json')).length,0);
- await page.getByRole('button',{name:'Find a character or word',exact:true}).click();
+ await page.getByRole('button',{name:/^Find a character or word(?:\s|$)/}).click();
  await page.locator('#lookup-examples-retry').waitFor({state:'visible'});await page.locator('#lookup-retry').waitFor({state:'visible'});
  const search=async text=>{await page.locator('#lookup-input').fill(text);await page.locator('#lookup-search').click();};
  await search('改');await page.locator('[data-lookup-text="改"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/改/);

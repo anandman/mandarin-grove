@@ -20,3 +20,11 @@ Selected English ids: 472089, 2714993, 7787226, 6303746, 4646117, 2803374.
 No source audio is included.
 
 These licenses permit sharing/adaptation including commercial use with their conditions. Reading selection is a pilot, awaiting teaching review. Source licenses do not endorse teaching quality or the app.
+
+Text reading aids added October25,2026:
+Pinyin prepared contextually by Mandarin Grove, using lexical written tones; not an acoustic transcription.
+Story English adapted by Mandarin Grove to the displayed Chinese under CC BY3.0; Chinese unchanged.
+English originals cross-checked at https://github.com/global-asp/asp-source/tree/b5c3d5b2266ad936e5f20fa878e839b32b02b4ba/en
+0008 p4 reflects extending a hand, p5 shouting;0049 identifies the rainbow/colors explicitly;0087 p3 specifies younger sister/fast asleep.
+0087 original English metadata also credits Letta Machoga as translator.
+Pinyin/story English aids are offered under the corresponding source text CC BY license with these adaptation notices. Teaching review remains pending.

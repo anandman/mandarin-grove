@@ -52,7 +52,7 @@ test('corrupt cache is not trusted; failed saves never replace a previous good p
  const quota=library({cacheStorage:{has:async()=>false,open:async()=>({keys:async()=>[],put:async()=>{throw Error('quota');}})},fetcher:async()=>Response.json({data:sentence})});await assert.rejects(()=>quota.save('sentence-17',r),/quota/);
  await assert.rejects(()=>library({cacheStorage:null}).save('sentence-17',r),/storage/);
 });
-test('checked-in pilot catalogue is bounded, sourced, independent of any learner and has no embedded reading bodies',()=>{
+test('checked-in sample catalogue has bounded source identities, credits and review status',()=>{
  assert.ok(fs.existsSync('content/online-library.js'),'selected manifest exists');const c=require('../content/online-library.js');assert.equal(c.items.length,9);assert.equal(library({},c).list().filter(x=>x.kind==='story').length,3);
  for(const i of c.items){assert.ok(i.authors.length);assert.equal(i.reviewStatus,'pilot-selected-teaching-pending');assert.ok(!i.paragraphs&&!i.text&&!i.translation);}
 });
@@ -62,4 +62,11 @@ test('unselected translations and arbitrary provider fields never enter the publ
  const stored=[...caches.data.values()][0];assert.ok(!stored.includes('unselected'));assert.ok(!stored.includes('unverified'));assert.ok(!stored.includes('NO REUSE'));
  const decoded=JSON.parse(stored);assert.deepEqual(Object.keys(decoded),['data']);assert.equal(decoded.data.translations.length,1);assert.equal(decoded.data.translations[0].id,18);assert.equal(decoded.data.providerMetadata,undefined);
  const offline=library({cacheStorage:caches,fetcher:async()=>{throw Error('offline');}});assert.deepEqual((await offline.read('sentence-17')).translation,['I go to school.']);
+});
+test('a metadata update retains prior offline downloads of the same verified source text',async()=>{
+ const caches=cacheStore(),old=catalog();old.version='old-metadata';const item=old.items[0],legacy='https://mandarin-grove.invalid/public-readings/old-metadata/'+item.id+'/'+item.sha256;
+ caches.data.set(legacy,JSON.stringify({data:sentence}));const updated=catalog();updated.version='new-aids';
+ const lib=library({cacheStorage:caches,fetcher:async()=>{throw Error('offline');}},updated);
+ assert.equal(await lib.isSaved(item.id),true);assert.deepEqual((await lib.read(item.id)).paragraphs,['我去学校。']);assert.equal(caches.data.size,1,'Reading a legacy saved copy does not rewrite it');
+ await lib.remove(item.id);assert.equal(caches.data.size,0,'Explicit remove clears matching old/current copies only');
 });

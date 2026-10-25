@@ -4,6 +4,25 @@
  const MAX_BYTES=65536,MAX_SAVED=32,MAX_CACHE_BYTES=524288,CACHE='mandarin-grove-public-readings-v1';
  const licenses={'CC-BY-3.0':'https://creativecommons.org/licenses/by/3.0/','CC-BY-2.0-FR':'https://creativecommons.org/licenses/by/2.0/fr/'};
  const text=(s,max)=>typeof s==='string'&&s.trim().length>0&&s.length<=max&&!/[\u0000-\u001f<>]/.test(s);
+ const gradeOrder=['K','1','2','3','4','5'];
+ function eligibleReading(item,grade,grades){
+  const level=gradeOrder.indexOf(String(grade)),characters=item?.characters;
+  if(level<0||!Array.isArray(characters)||!characters.length||!characters.every(c=>typeof c==='string'&&/^\p{Script=Han}$/u.test(c)))return false;
+  if(level>=4)return true;
+  const available=new Set(gradeOrder.slice(0,level+1).flatMap(g=>[...(grades?.[g]||'')]));
+  return characters.every(c=>available.has(c));
+ }
+ function eligibleReadingText(paragraphs,grade,grades){
+  if(!Array.isArray(paragraphs)||!paragraphs.every(p=>typeof p==='string'))return false;
+  return eligibleReading({characters:[...new Set(paragraphs.join('').match(/\p{Script=Han}/gu)||[])]},grade,grades);
+ }
+ function readingAids(item,result){
+  const support=item?.support,count=result?.paragraphs?.length;
+  const valid=rows=>Array.isArray(rows)&&rows.length===count&&rows.every(s=>text(s,2000));
+  const translation=item.kind==='sentence'?result.translation:support?.english;
+  if(!count||support?.sourceHash!==item.sha256||!valid(support.pinyin)||!valid(translation))throw Error('reading-support-invalid');
+  return {pinyin:support.pinyin.slice(),translation:translation.slice()};
+ }
  function endpoint(item){
   if(item.kind==='story')return 'https://raw.githubusercontent.com/global-asp/global-asp/'+item.revision+'/'+item.path.split('/').map(encodeURIComponent).join('/');
   return 'https://api.tatoeba.org/v1/sentences/'+item.remoteId+'?'+new URLSearchParams({'showtrans:lang':'eng','showtrans:is_direct':'yes','showtrans:is_unapproved':'no'});
@@ -21,7 +40,11 @@
   }
   const fetcher=options.fetcher||globalThis.fetch,crypt=options.crypto||globalThis.crypto,storage=options.cacheStorage===undefined?globalThis.caches:options.cacheStorage,timeout=options.timeoutMs??10000;
   const get=id=>{const item=items.find(i=>i.id===id);if(!item)throw Error('reading-unknown');return item;};
-  const key=item=>'https://mandarin-grove.invalid/public-readings/'+encodeURIComponent(catalog.version)+'/'+item.id+'/'+item.sha256;
+  const key=item=>'https://mandarin-grove.invalid/public-readings/'+item.id+'/'+item.sha256;
+  async function matchingKeys(cache,item){
+   const target=key(item),suffix='/'+item.id+'/'+item.sha256;
+   return [target,...(await cache.keys()).map(k=>k.url).filter(url=>url!==target&&url.startsWith('https://mandarin-grove.invalid/public-readings/')&&url.endsWith(suffix))];
+  }
   const digest=async bytes=>Array.from(new Uint8Array(await crypt.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
   async function decode(item,raw){
    if(typeof raw!=='string'||new TextEncoder().encode(raw).length>MAX_BYTES)throw Error('reading-too-large');
@@ -44,8 +67,11 @@
   }
   async function existing(){if(!storage||!await storage.has(CACHE))return null;return storage.open(CACHE);}
   async function saved(item){
-   try{const cache=await existing(),response=await cache?.match(key(item));if(!response)return null;
-    const raw=await bounded(response);return {...await decode(item,raw),saved:true};
+   try{const cache=await existing();if(!cache)return null;
+    for(const target of await matchingKeys(cache,item)){
+     try{const response=await cache.match(target);if(!response)continue;const raw=await bounded(response);return {...await decode(item,raw),saved:true};}catch{}
+    }
+    return null;
    }catch{return null;}
   }
   async function bounded(response){
@@ -82,11 +108,11 @@
     if(total>MAX_CACHE_BYTES)throw Error('reading-cache-full');
     await cache.put(target,new Response(verified.raw,{headers:{'Content-Type':'text/plain; charset=utf-8'}}));
    },
-   remove:async id=>{const cache=await existing();if(cache)await cache.delete(key(get(id)));},
+   remove:async id=>{const item=get(id),cache=await existing();if(cache)for(const target of await matchingKeys(cache,item))await cache.delete(target);},
    licenseUrl:id=>licenses[get(id).license],
    sourceEndpoint:id=>endpoint(get(id)),
    version:catalog.version
   };
  }
- const api={createLibrary};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GroveOnlineContent=api;
+ const api={createLibrary,eligibleReading,eligibleReadingText,readingAids};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GroveOnlineContent=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

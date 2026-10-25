@@ -16,7 +16,7 @@ const ActivityUI = (() => {
     try{return action();}catch(error){
       if(!error.groveSaveRejected)throw error;
       const status=find('progress-storage-status');if(!status)return false;find('progress-action-retry')?.remove();
-      const retry=document.createElement('button');retry.id='progress-action-retry';retry.className='btn gray';retry.textContent='Retry saving this answer';
+      const retry=document.createElement('button');retry.id='progress-action-retry';retry.className='btn gray';retry.textContent=error.groveRetryLabel||'Retry saving this answer';
       const token=NAV;retry.onclick=()=>{if(token!==NAV)return;run(()=>{if(error.groveRetryAction)return error.groveRetryAction();const item=SESS?.study&&SESS.q[SESS.currentIndex],saved=item&&Object.hasOwn(SESS.round.results,item[0]+':'+item[1].c);if(SESS&&(ACTIVE_REVIEW?.done||saved))nextItem();else action();});};status.append(retry);retry.focus();retry.scrollIntoView({block:'center'});return false;
     }
   }

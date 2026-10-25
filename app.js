@@ -129,9 +129,13 @@ function setPageBack(action=home,label='Back to Home'){
  const nav=$('page-navigation'),button=$('page-back');if(!nav||!button)return;
  nav.hidden=!prof()||typeof action!=='function';button.setAttribute('aria-label',label);
  const token=NAV,owner=PR.cur;button.onkeydown=feedbackButtonKeydown;
+ const execute=()=>{
+  if(token!==NAV||owner!==PR.cur||nav.hidden)return;
+  try{return action();}catch(error){if(error.groveSaveRejected){error.groveRetryAction=execute;error.groveRetryLabel='Retry saving and go back';}throw error;}
+ };
  button.onclick=event=>{
   if(event.detail>1||token!==NAV||owner!==PR.cur||nav.hidden)return;
-  PAGE_BACK_DOUBLE=event.detail>0;return ActivityUI.run(action);
+  PAGE_BACK_DOUBLE=event.detail>0;return ActivityUI.run(execute);
  };
 }
 function hidePageBack(){const nav=$('page-navigation');if(nav)nav.hidden=true;const button=$('page-back');if(button)button.onclick=null;}
