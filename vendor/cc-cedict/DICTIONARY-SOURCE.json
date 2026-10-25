@@ -1,0 +1,13 @@
+{
+  "name": "CC-CEDICT",
+  "publisher": "MDBG and CC-CEDICT contributors",
+  "url": "https://www.mdbg.net/chinese/dictionary?page=cedict",
+  "download": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
+  "license": "CC-BY-SA-4.0",
+  "licenseURL": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "retrieved": "2026-10-25",
+  "sha256": "f34b5bf7bff705199ea7aef61f140a1fb779a1acf6a7da5c6740a26041c3704b",
+  "uncompressedSha256": "00f4b09c07c1c6c3b907142832d8ece6fd281693fc320c78d3a412fcfd51ddbb",
+  "records": 125319,
+  "changes": "All original records, headwords, readings and definitions retained. Simplified/traditional pairs represented as arrays, definition separators rendered as semicolons. General reference, not a teacher-reviewed school dictionary. Original word-checking bank unchanged."
+}

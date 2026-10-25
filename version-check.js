@@ -1,4 +1,4 @@
-const VER='20261025-reading-67';
+const VER='20261025-supported-68';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
@@ -39,7 +39,7 @@ function showAppUpdate(version){
    button.disabled=true;button.textContent='Updating…';
    document.getElementById('update-later').disabled=true;
    // Refresh downloaded app files only; child profiles and progress stay in localStorage.
-   try{if(window.caches)for(const key of await caches.keys())await caches.delete(key);}catch(e){}
+   try{if(typeof activateOfflineUpdate==='function')await activateOfflineUpdate();}catch(e){}
    location.replace(location.pathname+'?v='+Date.now());
   };
  }

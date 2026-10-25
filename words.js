@@ -76,3 +76,9 @@ function renderWordCollection(character){
  if(!words.length){const text=document.createElement('p');text.className='reading-note';text.textContent='Your words will grow here.';list.append(text);}
 }
 if(typeof module!=='undefined')module.exports={createWordIndex,checkWordAnswer,collectWord,pinyinWithMarks};
+
+let HELP_FULL_BANK_PROMISE=null;
+function loadHelpDictionary(){
+ if(!HELP_FULL_BANK_PROMISE)HELP_FULL_BANK_PROMISE=fetch('vendor/cc-cedict/dictionary.json').then(r=>{if(!r.ok)throw Error('Dictionary unavailable');return r.json();}).then(createWordIndex).catch(error=>{HELP_FULL_BANK_PROMISE=null;throw error;});
+ return HELP_FULL_BANK_PROMISE;
+}

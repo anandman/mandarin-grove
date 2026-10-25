@@ -12,3 +12,7 @@ The reproducible curriculum builder uses only the cited CC-CEDICT lines, the sch
 The PDF-derived school unit fixture credits Better Chinese LLC. Fixture attribution and public availability do not settle permission for broader redistribution. The private original application history, original 847 recordings' publication rights, and remaining Grove asset provenance are separate release questions. This source record is not a public-release clearance or legal-completion claim. Required pronunciation verification remains paused.
 
 Rebuild/check offline with `node scripts/build-curriculum.cjs --check`; verify geometry, engine, notices and radical metadata with `node scripts/audit-source-assets.cjs`. Explicitly add these source and license files to the product exporter when integrating; merely committing them does not ship the notices.
+
+## Complete offline Help dictionary
+
+`cc-cedict/dictionary.json` contains the complete October 25, 2026 CC-CEDICT release (125,319 records), including single characters, mixed headwords and full definitions. MDBG and CC-CEDICT contributors, CC BY-SA 4.0; see `cc-cedict/LICENSE` and `cc-cedict/DICTIONARY-SOURCE.json` for the pinned source hash and representation changes. This general reference has not received teaching review. The older `words.json` bank remains unchanged for Build words compatibility.
