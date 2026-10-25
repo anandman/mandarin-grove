@@ -44,7 +44,7 @@ function writingIdeasHomeEntry(){
  return `<button class="grove-explore-card grove-writing-entry" onclick="showWritingIdeas()"><span class="grove-explore-icon" aria-hidden="true">${writingBook()}</span><b>Writing ideas</b><small>A seed for a sentence</small></button>`;
 }
 function showWritingIdeas(){
- screen();SESS=null;CRAM=null;
+ screen();setPageBack(showHomeworkHelp,'Back to Help');SESS=null;CRAM=null;
  const state=writingIdeasSession();
  A.innerHTML=`<section class="writing-ideas" aria-labelledby="writing-title">
   <div class="writing-heading"><span class="writing-tree">${groveTree('writing')}</span><div><h1 id="writing-title">Writing ideas</h1><p>A small idea to get your own sentence growing.</p></div></div>
@@ -52,7 +52,7 @@ function showWritingIdeas(){
   <div id="writing-result" aria-live="polite" aria-atomic="true"></div>
   <details class="writing-browse" id="writing-browse"><summary>Browse available characters &amp; words</summary><div class="writing-browse-controls"><label>Browse <select id="writing-browse-kind"><option value="words">Words</option><option value="characters">Characters</option></select></label><label>Find <input type="search" id="writing-browse-search" placeholder="Character, word, or meaning" autocomplete="off"></label></div><p class="reading-note" id="writing-browse-count" role="status"></p><div id="writing-browse-feedback"></div><div id="writing-browse-list" class="writing-browse-list"></div><button class="btn gray" id="writing-browse-more">Show more</button></details>
   <p class="reading-note writing-attribution">Local ideas from Writing Spark · <a href="vendor/writing-spark/LICENSE" target="_blank" rel="noopener">MIT license</a></p>
-  <button class="progress-link" onclick="showHomeworkHelp()">Back to Help</button>
+
  </section>`;
  const input=$('writing-input');input.value=state.input;
  let composing=false;

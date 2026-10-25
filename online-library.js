@@ -3,18 +3,18 @@ let ONLINE_READING_CLIENT=null;
 function showOnlineLibrary(){
  screen();SESS=null;CRAM=null;delete document.body.dataset.study;feedbackQuestion=null;
  const owner=PR.cur,library=ONLINE_READING_CLIENT||(ONLINE_READING_CLIENT=GroveOnlineContent.createLibrary(GROVE_ONLINE_LIBRARY));
- A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Online reading</h1><p>Short readings to explore. No score or answer checking.</p></div></div><p class="reading-note" id="online-network-note">Read online loads text from Global Storybooks or Tatoeba. Your name, writing and progress stay on this device.</p><div id="online-panel"></div><details class="compact-help"><summary>About these readings &amp; privacy</summary><p>This small pilot uses selected simplified Chinese text. Teaching review is still pending; these are not school-grade levels or quiz answers. Ask a grown-up about unfamiliar words. No new recordings are included.</p><p>Opening an unsaved reading sends its item number or file path to its text provider. The provider sees normal connection details, including your IP address. We do not send names, drafts or learning history. Source websites opened through the credit links have their own privacy policies.</p><p>Save for offline keeps a public reading on this browser, shared between children. Saved readings are separate from progress backups. Your browser may clear them. Offline reading needs the app to be open or already loaded; saving a reading does not install the app for offline launch.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details><button class="progress-link" id="online-help-back">Back to Help</button></section>`;
+ A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Online reading</h1><p>Short readings to explore. No score or answer checking.</p></div></div><p class="reading-note" id="online-network-note">Read online loads text from Global Storybooks or Tatoeba. Your name, writing and progress stay on this device.</p><div id="online-panel"></div><details class="compact-help"><summary>About these readings &amp; privacy</summary><p>This small pilot uses selected simplified Chinese text. Teaching review is still pending; these are not school-grade levels or quiz answers. Ask a grown-up about unfamiliar words. No new recordings are included.</p><p>Opening an unsaved reading sends its item number or file path to its text provider. The provider sees normal connection details, including your IP address. We do not send names, drafts or learning history. Source websites opened through the credit links have their own privacy policies.</p><p>Save for offline keeps a public reading on this browser, shared between children. Saved readings are separate from progress backups. Your browser may clear them. Offline reading needs the app to be open or already loaded; saving a reading does not install the app for offline launch.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
  const root=$('online-library'),panel=$('online-panel');let current=null,revision=0;
  root.addEventListener('keydown',feedbackButtonKeydown);
  const active=()=>root.isConnected&&$('online-library')===root&&PR.cur===owner;
  const stop=()=>{revision++;current?.abort();current=null;};
  const observer=new MutationObserver(()=>{if(!active()){stop();observer.disconnect();}});observer.observe(A,{childList:true});
- $('online-help-back').onclick=()=>{stop();showHomeworkHelp();};
+
  function node(tag,value,parent,cls){const el=document.createElement(tag);if(value)el.textContent=value;if(cls)el.className=cls;if(parent)parent.append(el);return el;}
  function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=action;return b;}
  function link(label,url,parent){const a=node('a',label,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
  function list(focusId){
-  stop();feedbackQuestion=null;panel.replaceChildren();
+  stop();setPageBack(()=>{stop();showHomeworkHelp();},'Back to Help');feedbackQuestion=null;panel.replaceChildren();
   for(const [kind,label]of [['story','Stories & short readings'],['sentence','Everyday sentences']]){
    const section=node('section',null,panel);node('h2',label,section);const grid=node('div',null,section,'online-grid');
    for(const item of library.list().filter(i=>i.kind===kind)){
@@ -33,7 +33,7 @@ function showOnlineLibrary(){
   const heading=node('h2',item.title,detail);heading.tabIndex=-1;if(item.kind==='story')heading.lang='zh-Hans';heading.focus();
   const status=node('p','Loading this reading…',detail,'reading-note');status.setAttribute('role','status');
   const cancel=button('Cancel loading',detail,()=>list(item.id));cancel.id='online-cancel';
-  button('Back to readings',detail,()=>list(item.id),'progress-link').id='online-list-back';
+  setPageBack(()=>list(item.id),'Back to readings');
   const context={content:{packId:'grove-online-reading',itemId:item.id,version:library.version,sourceId:item.sourceId,reviewStatus:item.reviewStatus}};
   feedbackQuestion=context;
   const report=()=>showFeedback({category:'meaning',note:'Reading: '+item.title+'\nItem: '+item.id,context});

@@ -153,7 +153,7 @@ function trace(index = 0) {
   const c = cards[index], ui = ActivityUI;
   const view = ui.render('trace', `<div class="pin">${ui.escape(c.p)}</div><div class="mean">${ui.escape(c.m)}</div>${wordLine(c)}
     <div id="hw" role="group" aria-label="Trace ${ui.escape(c.c)}"></div><p class="msg" id="m" role="status"></p>
-    ${ui.button('◀ Back', 'prev')}${ui.button('🔊 Hear again', 'trp')}${ui.button('Watch strokes', 'watch')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">Before you finish, watching strokes counts as practice with help. Your first attempt stays saved.</p>`);
+    ${ui.button('Previous character', 'prev')}${ui.button('🔊 Hear again', 'trp')}${ui.button('Watch strokes', 'watch')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">Before you finish, watching strokes counts as practice with help. Your first attempt stays saved.</p>`);
   beginReview(c, 'trace');
   TLK = 1; after(700, () => { TLK = 0; });
   ui.on('trp', () => ui.speak(c));

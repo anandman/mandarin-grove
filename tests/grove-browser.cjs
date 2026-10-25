@@ -32,7 +32,7 @@ const assert=require('node:assert/strict');
  assert.equal(await page.evaluate(()=>groveWallet(S).balance),11);assert.equal(await page.evaluate(()=>S.stars),149);
  await page.reload();await page.evaluate(()=>showGroveRewards());assert.equal(await page.evaluate(()=>groveWallet(S).balance),11);
  await page.locator('#grove-undo').click();assert.equal(await page.evaluate(()=>groveWallet(S).balance),14);
- await page.getByRole('tab',{name:'Visitors',exact:true}).click();await page.locator('[data-reward="butterfly"]').getByRole('button',{name:'Unlock · 🍊 4',exact:true}).click();await page.getByRole('button',{name:'Back home',exact:true}).click();await page.getByRole('button',{name:'My progress',exact:true}).click();await page.locator('#progress-characters > summary').click();assert.ok(await page.locator('.grove-visitor').isVisible());
+ await page.getByRole('tab',{name:'Visitors',exact:true}).click();await page.locator('[data-reward="butterfly"]').getByRole('button',{name:'Unlock · 🍊 4',exact:true}).click();await page.getByRole('button',{name:'Back to Home',exact:true}).click();await page.getByRole('button',{name:'My progress',exact:true}).click();await page.locator('#progress-characters > summary').click();assert.ok(await page.locator('.grove-visitor').isVisible());
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'/tmp/mandarin-grove-trees-phone.png',fullPage:true});
  await page.getByRole('button',{name:/Your grove/}).click();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

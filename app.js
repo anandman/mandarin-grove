@@ -119,14 +119,32 @@ function hdr(){
  const stats=document.createElement('span');stats.className='pill legacy-stats';stats.textContent=`⭐ ${S.stars}`;const streak=document.createElement('span');streak.className='legacy-streak';streak.textContent=` · 🔥 ${S.streak}`;stats.append(streak);host.append(stats);gearHold();renderRewards();
 }
 function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
+let PAGE_BACK_DOUBLE=false;
+// A second click can land on Home after returning changes the scroll position.
+document.addEventListener('click',event=>{
+ if(event.detail>1&&PAGE_BACK_DOUBLE){event.preventDefault();event.stopImmediatePropagation();return;}
+ PAGE_BACK_DOUBLE=false;
+},true);
+function setPageBack(action=home,label='Back to Home'){
+ const nav=$('page-navigation'),button=$('page-back');if(!nav||!button)return;
+ nav.hidden=!prof()||typeof action!=='function';button.setAttribute('aria-label',label);
+ const token=NAV,owner=PR.cur;button.onkeydown=feedbackButtonKeydown;
+ button.onclick=event=>{
+  if(event.detail>1||token!==NAV||owner!==PR.cur||nav.hidden)return;
+  PAGE_BACK_DOUBLE=event.detail>0;return ActivityUI.run(action);
+ };
+}
+function hidePageBack(){const nav=$('page-navigation');if(nav)nav.hidden=true;const button=$('page-back');if(button)button.onclick=null;}
 function screen({scroll=true}={}){
  viewNavigation={origin:document.activeElement};
  NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');$('reward-notice')?.setAttribute('hidden','');$('progress-action-retry')?.remove();renderRewards();
+ setPageBack(()=>SESS?.study?pauseStudy():home());
  const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
 function home(){
  screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
+ hidePageBack();
  archQ();$('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();checkBadges();after(1200,PF);
 }
 function characterBrowserScope(){const el=$('progress-characters');return el?{grade:el.dataset.grade,unit:el.dataset.unit}:null;}
@@ -216,7 +234,7 @@ function resume(){
 function nextItem(){
  try{
  if(!SESS)return;if(SESS.study)return studyNextItem();
- if(SESS.i>=SESS.q.length){const session=SESS;delete S.cfg[session.cram?'cram':'rs'];save();SESS=null;screen();A.innerHTML='<div class="big">🎉</div><h1>Round done!</h1><p class="mean"></p><button class="btn" id="again">Practice again</button><button class="btn gray" id="round-choices">Choose units / mode</button><button class="btn gray" id="round-home">Back home</button>';A.querySelector('.mean').textContent=`You finished ${session.q.length} activities. Stars celebrate practice; the Parent dashboard shows saved app checks and self-checks.`;$('again').onclick=()=>CRAM?startCram(CRAM.mode,true):startSession(session.pool,session.t);$('round-choices').onclick=()=>CRAM?showCram():showStudySetup('practice');$('round-home').onclick=home;return;}
+ if(SESS.i>=SESS.q.length){const session=SESS;delete S.cfg[session.cram?'cram':'rs'];save();SESS=null;screen();A.innerHTML='<div class="big">🎉</div><h1>Round done!</h1><p class="mean"></p><button class="btn" id="again">Practice again</button><button class="btn gray" id="round-choices">Choose units / mode</button>';A.querySelector('.mean').textContent=`You finished ${session.q.length} activities. Stars celebrate practice; the Parent dashboard shows saved app checks and self-checks.`;$('again').onclick=()=>CRAM?startCram(CRAM.mode,true):startSession(session.pool,session.t);$('round-choices').onclick=()=>CRAM?showCram():showStudySetup('practice');return;}
  saveRound();const [mode,card]=SESS.q[SESS.i++],actions={trace:()=>trace(practiceCards().indexOf(card)),listen:()=>listen(card),flip:()=>flip(card),memory:()=>memory(card),dictation:()=>dictQuestion(card)};actions[mode]?.();
  }catch(error){if(error.groveSaveRejected)error.groveRetryAction=nextItem;throw error;}
 }

@@ -50,7 +50,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>groveWallet(S).writingSentences),1);
   assert.equal(await page.locator('#writing-finish').isDisabled(),true);
   assert.equal(await page.evaluate(()=>JSON.stringify({learning:S.learning,rewards:S.rewards,cfg:S.cfg,stars:S.stars,pts:S.pts})),evidence);
-  await page.getByRole('button',{name:'Back to Help',exact:true}).click();await page.getByRole('button',{name:'Back to your grove',exact:true}).click();
+  await page.getByRole('button',{name:'Back to Help',exact:true}).click();await page.getByRole('button',{name:'Back to Home',exact:true}).click();
   await page.getByRole('button',{name:'Help',exact:true}).click();await page.getByRole('button',{name:/Writing ideas/}).click();
   assert.equal(await page.locator('#writing-finish').isDisabled(),true,'Reopening must not let the same idea earn twice');
   await page.locator('#writing-another').click();assert.equal(await page.locator('#writing-finish').isDisabled(),false);

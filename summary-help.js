@@ -1,6 +1,6 @@
 // Fixed planning prompts and per-child drafts. No answer checking or uploads.
 function showSummaryHelp(){
- screen();SESS=null;CRAM=null;delete document.body.dataset.study;feedbackQuestion=null;
+ screen();setPageBack(showHomeworkHelp,'Back to Help');SESS=null;CRAM=null;delete document.body.dataset.study;feedbackQuestion=null;
  const owner=PR.cur;
  A.innerHTML=`<section class="summary-help" id="summary-help" aria-labelledby="summary-title">
   <div class="writing-heading"><span class="writing-tree">${groveTree('writing')}</span><div><h1 id="summary-title">Plan a summary</h1><p>Find the big idea, then tell it in your own words.</p></div></div>
@@ -12,7 +12,7 @@ function showSummaryHelp(){
    <div class="summary-field"><span class="summary-step-label">3 · Put it together</span><label for="summary-draft">My summary</label><p class="reading-note" id="summary-draft-help">Use your own words to connect the main idea and key details. Read it back: will someone understand the reading from your summary?</p><textarea id="summary-draft" rows="4" maxlength="2000" lang="zh-Hans" aria-describedby="summary-draft-help"></textarea></div>
   </div>
   <div class="summary-footer"><p class="reading-note" id="summary-save-status" role="status">Your draft saves on this device as you type, for this child. It is included in your normal backup.</p><button type="button" class="btn gray" id="summary-clear">Clear draft</button></div>
-  <button class="progress-link" onclick="showHomeworkHelp()">Back to Help</button>
+
  </section>`;
  const root=$('summary-help'),status=root.querySelector('#summary-save-status'),clear=root.querySelector('#summary-clear');
  const fields={reading:root.querySelector('#summary-reading'),mainIdea:root.querySelector('#summary-main-idea'),details:root.querySelector('#summary-details'),summary:root.querySelector('#summary-draft')};
