@@ -59,7 +59,7 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  dialog.innerHTML=`<div class="study-setup-title"><h2 id="study-title">${kind==='review'?'Review':'Practice'}</h2><button class="study-close" aria-label="Close session choices">✕</button></div>
  <p class="study-explanation">${kind==='review'?'Check what you remember from your selection.':'Build skills with help. Due skills come first within each activity; up to 3 characters with no saved skill record per round.'}</p>
  ${saved?`<section class="study-saved"><p id="study-saved-scope">Paused · ${saved.cursor} of ${saved.q.length} finished · ${saved.config.chars.length} character${saved.config.chars.length===1?'':'s'} · ${saved.config.modes.length} activit${saved.config.modes.length===1?'y':'ies'}<br>${voiceEscape(studyScopeText(saved.config))}</p><button class="btn study-resume" id="study-continue">Continue this round</button></section>`:''}
- <section class="study-ready"><b id="study-count" role="status"></b><p id="study-scope" class="reading-note"></p><p id="study-round-goal" class="reading-note"></p><button class="btn ${saved?'gray':''}" id="study-start">Start</button></section>
+ <section class="study-ready"><b id="study-count" role="status"></b><p id="study-scope" class="reading-note"></p><p id="study-round-goal" class="reading-note"></p><button class="btn ${saved?'gray':''}" id="study-start">Start</button><button type="button" class="btn gray" id="study-reading">Read Chinese</button></section>
  ${kind==='review'?'<button type="button" id="study-recent-mistakes" class="progress-link" onclick="showRecentMistakes()">Things to practice</button>':''}
  <details id="study-choice-editor"><summary>Change choices</summary><div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
  <section><div class="study-subheading"><h3>Characters</h3><button class="progress-link" id="study-all-chars">Select all available</button></div><div class="study-characters" id="study-characters"></div><small>Leave out characters you haven’t learned yet.</small><details id="study-deferred"><summary>Not learned yet <span id="study-deferred-count"></span></summary><div id="study-deferred-list"></div></details></section>
@@ -78,6 +78,7 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  dialog.querySelectorAll('[data-study-mode]').forEach(input=>input.onchange=()=>{STUDY_DRAFT.config.modes=[...dialog.querySelectorAll('[data-study-mode]:checked')].map(e=>e.dataset.studyMode);updateStudyCount();});
  $('study-limit').onchange=()=>{STUDY_DRAFT.config.limit=Number($('study-limit').value);updateStudyCount();};
  $('study-all-chars').onclick=()=>{STUDY_DRAFT.config.chars=studyDraftCharacters().filter(c=>!STUDY_DRAFT.excluded.has(c));renderStudyCharacters();};
+ $('study-reading').onclick=startStudyReading;
  $('study-start').onclick=()=>{if(currentStudyRound(kind)){$('study-replace').hidden=false;$('study-keep').focus();}else startStudyDraft();};
  $('study-confirm-replace').onclick=startStudyDraft;
  $('study-keep').onclick=()=>{$('study-replace').hidden=true;($('study-continue')||$('study-start')).focus();};
@@ -101,6 +102,15 @@ function updateStudyCount(){
  $('study-scope').textContent=studyScopeText(d.config)+'\n'+studyActivities().filter(([mode])=>d.config.modes.includes(mode)).map(([,label])=>label).join(' · ');$('study-round-goal').textContent=count?`${count} question${count===1?'':'s'} · ${studyGoalText(count)}. Build words answers outside the word bank do not count toward the goal.`:'Choose characters and at least one activity.';
  const b=$('study-start');b.disabled=!count;b.textContent=(currentStudyRound(d.kind)?'Start a new round':'Start')+(count?' · '+count+' question'+(count===1?'':'s'):'');
  const recent=$('study-recent-mistakes');if(recent)recent.textContent='Things to practice · '+recentMistakeCount();
+ $('study-reading').disabled=!STUDY_DRAFT.config.chars.some(c=>!STUDY_DRAFT.excluded.has(c));
+}
+function startStudyReading(){
+ const d=STUDY_DRAFT;if(!d||d.owner!==PR.cur)return;
+ const config=JSON.parse(JSON.stringify(d.config));config.chars=config.chars.filter(c=>!d.excluded.has(c));if(!config.chars.length)return;
+ const before=JSON.parse(JSON.stringify(S.cfg));
+ try{S.cfg.notLearned=[...d.excluded];((S.cfg.studyChoices||={})[GR()]||={})[d.kind]=config;save();}
+ catch(error){S.cfg=before;$('study-count').textContent='Could not save your choices. Try again.';return;}
+ const kind=d.kind;closeStudySetup();showOnlineLibrary({kind,selection:config});
 }
 function startStudyDraft(){
  const d=STUDY_DRAFT;if(!d||d.owner!==PR.cur){closeStudySetup();return;}const pool=studyDraftPool();if(!pool.length||!d.config.modes.length)return;

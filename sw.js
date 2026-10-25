@@ -1,5 +1,5 @@
 // Cache only the explicit public app shell. Never cache feedback, learner records or remote sources.
-const VERSION='20261025-supported-69',SHELL='mandarin-grove-shell-'+VERSION;
+const VERSION='20261025-supported-70',SHELL='mandarin-grove-shell-'+VERSION;
 let allowed=null;
 async function assets(){
  if(allowed)return allowed;

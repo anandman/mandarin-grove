@@ -1,34 +1,40 @@
 // Read-only samples and optional text aids; downloaded public text is outside learner records.
 let ONLINE_READING_CLIENT=null,ONLINE_READING_LAST=null;
-function showOnlineLibrary({resume=null}={}){
+function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  screen();SESS=null;CRAM=null;delete document.body.dataset.study;feedbackQuestion=null;
  const owner=PR.cur,grade=GR(),library=ONLINE_READING_CLIENT||(ONLINE_READING_CLIENT=GroveOnlineContent.createLibrary(GROVE_ONLINE_LIBRARY));
- const items=library.list().filter(item=>GroveOnlineContent.eligibleReading(item,grade,GL));
- A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Read Chinese</h1><p>Show pinyin or English when you need help.</p></div></div><p class="reading-note online-grade">${esc(GN[grade])}${Number(grade)>=4?' · readings may include new characters':''}</p><p id="online-offline" class="reading-note" role="status" hidden></p><div id="online-panel"></div><details class="compact-help"><summary>About these samples</summary><p>These are sample texts while we work out the homework Help journeys. Readings through Grade 3 use characters in this app’s school lists through that grade. From Grade 4, new characters may appear. This is a character check, not a claim that every word or idea has been taught.</p><p>Text pinyin and translations are reading aids; teaching review is pending. Pinyin uses lexical tones, not an acoustic transcription. No new recordings or scoring are included.</p><p>Opening an unsaved sample requests its public source text. The provider receives normal connection details, including your IP address. Names, drafts and progress are not sent. Optional saved readings are shared public text on this browser, separate from progress backups. Your browser may clear them. Offline use needs the app already loaded.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
+ const selected=selection||studyDefaults(S,grade,kind,CARDS.map(c=>c.c),studyActivities().map(x=>x[0]));
+ const scope=GroveReadings.readingScope({grade,chars:selected.chars,excluded:S.cfg.notLearned||[],grades:GL});
+ const allItems=[...GROVE_READING_PRACTICE.items,...library.list()];
+ const items=allItems.filter(item=>GroveReadings.readingMatch(item,scope).eligible).sort((a,b)=>GroveReadings.readingMatch(b,scope).rank-GroveReadings.readingMatch(a,scope).rank);
+ const returnToChoices=()=>{home();showStudySetup(kind);};
+ A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Read Chinese</h1><p>Read the Chinese. Tap words or reveal help when you need it.</p></div></div><p class="reading-note online-grade">${esc(GN[grade])} · ${esc(studyScopeText(selected))}</p><button class="btn gray" id="reading-choices">Change choices</button><p id="online-offline" class="reading-note" role="status" hidden></p><div id="online-panel"></div><details class="compact-help"><summary>About these samples</summary><p>Readings practise your selected characters. Earlier-grade characters may support the story. Through Grade 3, other characters must be in your selection; from Grade 4, new characters may appear. This checks character fit, not whether every word or idea has been taught.</p><p>Text pinyin and translations are reading aids; teaching review is pending. Pinyin uses lexical tones, not an acoustic transcription. No new recordings or scoring are included.</p><p>Opening an unsaved sample requests its public source text. The provider receives normal connection details, including your IP address. Names, drafts and progress are not sent. Optional saved readings are shared public text on this browser, separate from progress backups. Your browser may clear them. The starter readings and dictionary are installed with the offline app; other readings can be saved separately.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
+ $('reading-choices').onclick=returnToChoices;
  const root=$('online-library'),panel=$('online-panel'),offline=$('online-offline');let current=null,revision=0;
  root.addEventListener('keydown',feedbackButtonKeydown);
  const active=()=>root.isConnected&&$('online-library')===root&&PR.cur===owner&&GR()===grade;
  const stop=()=>{revision++;current?.abort();current=null;};
- const connection=()=>{if(!active())return;offline.hidden=navigator.onLine!==false;offline.textContent=offline.hidden?'':'You’re offline. Open a saved reading or reconnect.';};
+ const connection=()=>{if(!active())return;offline.hidden=navigator.onLine!==false;offline.textContent=offline.hidden?'':'You’re offline. Starter readings and saved readings are available.';};
  addEventListener('online',connection);addEventListener('offline',connection);connection();
  const observer=new MutationObserver(()=>{if(!active()){stop();observer.disconnect();removeEventListener('online',connection);removeEventListener('offline',connection);}});observer.observe(A,{childList:true});
  function node(tag,value,parent,cls){const el=document.createElement(tag);if(value)el.textContent=value;if(cls)el.className=cls;if(parent)parent.append(el);return el;}
  function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=action;return b;}
  function link(label,url,parent){const a=node('a',label,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
  function list(focusId){
-  stop();setPageBack(()=>{stop();showHomeworkHelp();},'Back to Help');feedbackQuestion=null;panel.replaceChildren();
+  stop();setPageBack(()=>{stop();returnToChoices();},'Back to '+(kind==='review'?'Review':'Practice'));feedbackQuestion=null;panel.replaceChildren();
   for(const [kind,label]of [['story','Short readings'],['sentence','Sentences']]){
    const group=items.filter(i=>i.kind===kind);if(!group.length)continue;
    const section=node('section',null,panel);node('h2',label,section);const grid=node('div',null,section,'online-grid');
    for(const item of group){
     const card=node('article',null,grid,'online-card'),heading=node('h3',item.titleZh,card);heading.lang='zh-Hans';
     const b=button('Read',card,()=>read(item));b.dataset.reading=item.id;b.setAttribute('aria-label','Read · '+item.titleZh);
-    const saved=node('span','Saved',card,'online-saved');saved.dataset.saved=item.id;saved.hidden=true;
-    library.isSaved(item.id).then(ready=>{if(active()&&card.isConnected)saved.hidden=!ready;}).catch(()=>{});
+    const match=GroveReadings.readingMatch(item,scope);if(match.unknown.length)node('p',match.unknown.length+' new character'+(match.unknown.length===1?'':'s')+' · tap for help',card,'reading-note');
+    const saved=node('span',item.local?'Included offline':'Saved',card,'online-saved');saved.dataset.saved=item.id;saved.hidden=true;
+    if(!item.local)library.isSaved(item.id).then(ready=>{if(active()&&card.isConnected)saved.hidden=!ready;}).catch(()=>{});
     if(item.id===focusId)b.focus();
    }
   }
-  if(!items.length)node('p','No samples match this grade’s character list yet.',panel,'reading-note');
+  if(!items.length)node('p','No readings fit these choices yet. Try other units or characters.',panel,'reading-note');
  }
  async function read(item,usePrevious=false){
   if(!items.some(i=>i.id===item.id))return;
@@ -37,14 +43,14 @@ function showOnlineLibrary({resume=null}={}){
   const heading=node('h2',item.kind==='story'?item.titleZh:'Sentence',detail,item.kind==='sentence'?'sr-only':null);heading.tabIndex=-1;if(item.kind==='story')heading.lang='zh-Hans';heading.focus();
   setPageBack(()=>list(item.id),'Back to readings');
   const status=node('p','Loading…',detail,'reading-note');status.setAttribute('role','status');
-  const context={content:{packId:'grove-online-reading',itemId:item.id,version:library.version,sourceId:item.sourceId,reviewStatus:item.reviewStatus}};feedbackQuestion=context;
+  const context={content:{packId:item.local?GROVE_READING_PRACTICE.id:'grove-online-reading',itemId:item.id,version:item.local?GROVE_READING_PRACTICE.version:library.version,sourceId:item.sourceId,reviewStatus:item.reviewStatus}};feedbackQuestion=context;
   const report=()=>showFeedback({category:'meaning',note:'Reading: '+item.titleZh+'\nItem: '+item.id,context});
   try{
    const previous=usePrevious&&ONLINE_READING_LAST?.owner===owner&&ONLINE_READING_LAST?.grade===grade&&ONLINE_READING_LAST?.id===item.id?ONLINE_READING_LAST:null;
-   const result=previous?.result||await library.read(item.id,{signal});
+   const result=previous?.result||(item.local?{paragraphs:item.paragraphs.slice(),translation:item.support.english.slice(),saved:true}:await library.read(item.id,{signal}));
    if(!active()||token!==revision)return;current=null;
-   if(!GroveOnlineContent.eligibleReadingText([item.titleZh,...result.paragraphs],grade,GL))throw Error('reading-grade-unavailable');
-   const aids=GroveOnlineContent.readingAids(item,result);status.remove();
+   if(!GroveReadings.readingMatch({...item,characters:[...new Set((item.titleZh+result.paragraphs.join('')).match(/\p{Script=Han}/gu)||[])]},scope).eligible)throw Error('reading-grade-unavailable');
+   const aids=item.local?{pinyin:item.support.pinyin,translation:item.support.english}:GroveOnlineContent.readingAids(item,result);status.remove();
    const view=previous||{owner,grade,id:item.id,result,pinyin:[],english:[],helpUsed:false};ONLINE_READING_LAST=view;
    const sentences=GroveReadings.readingSentences(result.paragraphs,aids,item.annotations);
    if(!Array.isArray(view.pinyin))view.pinyin=sentences.map(()=>!!view.pinyin);
@@ -90,10 +96,11 @@ function showOnlineLibrary({resume=null}={}){
    loadHelpDictionary().then(index=>{if(!active()||token!==revision)return;dictionary=index;if(!detail.querySelector('dialog[open]')&&!passages.contains(document.activeElement))for(const sentence of sentences)sentence.render();}).catch(()=>{});
    const words=node('details',null,detail,'compact-help');words.id='online-word-tools';node('summary','Look up a word',words);const wordButtons=node('div',null,words,'online-words');
    for(const word of item.words){
-    const b=button('Look up '+word,wordButtons,()=>{stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id}),backLabel:'Back to reading'});},'chip');
+    const b=button('Look up '+word,wordButtons,()=>{stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id,kind,selection:selected}),backLabel:'Back to reading'});},'chip');
     // The interface remains English; only the word itself is Chinese.
     b.replaceChildren(document.createTextNode('Look up '));const glyph=node('span',word,b);glyph.lang='zh-Hans';
    }
+   if(!item.local){
    const savedTools=node('details',null,detail,'compact-help');savedTools.id='online-save-tools';node('summary','Save for offline',savedTools);
    const saveStatus=node('p',result.saved?'Saved copy on this browser.':'',savedTools,'reading-note');saveStatus.id='online-save-status';saveStatus.setAttribute('role','status');
    const actions=node('div',null,savedTools,'online-actions');
@@ -109,17 +116,19 @@ function showOnlineLibrary({resume=null}={}){
     catch{if(active()&&token===revision)saveStatus.textContent='Could not remove the saved copy. Try again.';}
     finally{if(active()&&token===revision){save.disabled=false;remove.disabled=false;}}
    });remove.id='online-remove';remove.hidden=!result.saved;
+   }
    const credits=node('details',null,detail,'compact-help online-source');credits.id='online-source';node('summary','Source & credits',credits);
-   if(item.kind==='story'){
+   if(item.local){node('p','Original text, pinyin and English prepared by Mandarin Grove. Teaching review is pending.',credits);}
+   else if(item.kind==='story'){
     node('p',item.authors[0]+' · Chinese translation: '+item.authors[1]+'.',credits);node('p','Original illustrations: '+item.illustrators+'. Illustrations omitted. Chinese text unchanged; English adapted and pinyin added by Mandarin Grove.',credits);link('Global Storybooks · original reading',item.sourceUrl,credits);link('English source reference',item.support.englishReference.url,credits);
    }else{
     node('p','Tatoeba contributors · Chinese: '+item.authors[0]+' · English: '+item.authors[1]+'. Text unchanged; pinyin added by Mandarin Grove.',credits);link('Original Chinese sentence',item.sourceUrl,credits);link('Original English sentence','https://tatoeba.org/en/sentences/show/'+item.translationId,credits);
    }
-   link(item.license,library.licenseUrl(item.id),credits);node('p','Text aids prepared for these samples; teaching review pending.',credits,'reading-note');
+   if(!item.local)link(item.license,library.licenseUrl(item.id),credits);node('p','Text aids prepared for these samples; teaching review pending.',credits,'reading-note');
    button('Report a problem with this reading',detail,report,'progress-link').id='online-report';
   }catch(error){
    if(!active()||token!==revision)return;current=null;status.remove();
-   const message=node('p',error.message==='reading-changed'?'This source has changed. Please try another reading.':error.message==='reading-grade-unavailable'?'This reading includes characters beyond this grade. Please choose another sample.':'We could not load this reading. Try again, or open a saved reading.',detail,'reading-note');message.id='online-error';message.setAttribute('role','status');
+   const message=node('p',error.message==='reading-changed'?'This source has changed. Please try another reading.':error.message==='reading-grade-unavailable'?'This reading no longer fits your choices. Please choose another reading.':'We could not load this reading. Try again, or open a saved reading.',detail,'reading-note');message.id='online-error';message.setAttribute('role','status');
    button('Try again',detail,()=>read(item)).id='online-retry';button('Report this loading problem',detail,report,'progress-link').id='online-report';
   }
  }

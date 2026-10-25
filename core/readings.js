@@ -21,5 +21,15 @@
   }
   return tokens;
  }
- return {readingSentences,readingTokens};
+ function readingScope({grade,chars=[],excluded=[],grades}){
+  const order=['K','1','2','3','4','5'],level=order.indexOf(String(grade)),blocked=new Set(excluded),selected=[...new Set(chars)].filter(c=>/^\p{Script=Han}$/u.test(c)&&!blocked.has(c));
+  const known=new Set([...order.slice(0,Math.max(0,level)).flatMap(g=>[...(grades[g]||'')]),...selected].filter(c=>!blocked.has(c)));
+  return {grade:String(grade),level,selected,known,blocked};
+ }
+ function readingMatch(item,scope){
+  const chars=[...new Set(item.characters||[])],targets=chars.filter(c=>scope.selected.includes(c)),unknown=chars.filter(c=>!scope.known.has(c));
+  const eligible=scope.level>=0&&targets.length>0&&chars.length>0&&!chars.some(c=>scope.blocked.has(c))&&(!item.minGrade||scope.level>=item.minGrade)&&(scope.level>=4||!unknown.length);
+  return {eligible,targets,unknown,rank:targets.length};
+ }
+ return {readingSentences,readingTokens,readingScope,readingMatch};
 });
