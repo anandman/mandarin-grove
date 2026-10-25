@@ -1,0 +1,6 @@
+Public source fixtures for isolated online reading tests.
+story-0008.md: 你在做什么？, Nina Orange, translated dohliam; original illustrator Wiehan de Jager. Global ASP commit65c924ee281dd470ecefe3acc23cb27426db5cfc. CC BY3.0 https://creativecommons.org/licenses/by/3.0/
+Source https://global-asp.github.io/storybooks-chinese/stories/zh/0008/
+sentence-4878932.json: Tatoeba Chinese sentence4878932 by musclegirlxyp; English472089 by tamsanh. CC BY2.0FR https://creativecommons.org/licenses/by/2.0/fr/
+Sources https://tatoeba.org/en/sentences/show/4878932 and https://tatoeba.org/en/sentences/show/472089
+Fixtures unchanged. No audio/illustrations included.

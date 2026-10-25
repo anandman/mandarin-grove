@@ -1,4 +1,4 @@
-const VER='20261024-wording-63';
+const VER='20261025-online-64';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
