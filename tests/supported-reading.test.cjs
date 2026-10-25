@@ -32,3 +32,37 @@ test('Grade2 starter readings contain only curriculum characters and have aligne
   assert.deepEqual([...new Set((item.titleZh+item.paragraphs.join('')).match(/\p{Script=Han}/gu))].sort(),item.characters.slice().sort());
  }
 });
+test('comprehension keeps the first answer and never upgrades assisted evidence',()=>{
+ assert.equal(typeof api().newReadingSession,'function');
+ const q={id:'who',options:[{id:'a',text:'A'},{id:'b',text:'B'}],answer:'b'};
+ const original=api().newReadingSession('pets','1','review',4,100);
+ const first=api().recordReadingAnswer(original,q,'a');assert.equal(first.responses.who.correct,false);assert.equal(first.responses.who.assisted,false);assert.deepEqual(original.responses,{});
+ assert.deepEqual(api().recordReadingAnswer(first,q,'b'),first);
+ const helped={...original,helpUsed:true};const answer=api().recordReadingAnswer(helped,q,'b');assert.equal(answer.responses.who.assisted,true);
+ assert.equal(api().recordReadingAnswer({...answer,helpUsed:false},q,'b').responses.who.assisted,true);
+ assert.throws(()=>api().recordReadingAnswer(original,q,'invented'));
+});
+test('reading resume validates content identity and keeps unknown and malformed older progress',()=>{
+ const session=api().newReadingSession('pets','1','practice',4,100),question={id:'who',options:[{id:'a',text:'A'}],answer:'a'};
+ const recorded=api().recordReadingAnswer({...session,phase:'questions'},question,'a');
+ assert.ok(api().restoreReadingSession(recorded,{id:'pets',version:'1',kind:'practice',count:4},[question]));
+ assert.equal(api().restoreReadingSession(recorded,{id:'pets',version:'2',kind:'practice',count:4},[question]),null);
+ assert.equal(api().restoreReadingSession({...recorded,responses:{who:{choice:'invented'}}},{id:'pets',version:'1',kind:'practice',count:4},[question]),null);
+ assert.equal(api().restoreReadingSession({...recorded,phase:'questions',cursor:1},{id:'pets',version:'1',kind:'practice',count:4},[question]),null,'cannot resume past the last question');
+ const old={version:1,opaque:{preserve:1},sessions:{other:{keep:'old'},pets:{malformed:'original'}}};
+ const bank=api().storeReadingSession(old,'pets',recorded,true);assert.deepEqual(bank.opaque,old.opaque);assert.deepEqual(bank.sessions.other,old.sessions.other);assert.deepEqual(bank.preserved[0],{key:'pets',value:old.sessions.pets});assert.equal(old.sessions.pets.malformed,'original');
+ const unusual={version:1,sessions:{},history:[null],preserved:{unknown:'retain'}};const done={...recorded,phase:'done',cursor:1};const kept=api().storeReadingSession(unusual,'pets',done);assert.deepEqual(kept.history[0],null);assert.ok(kept.preserved.some(x=>x.value?.unknown==='retain'));
+});
+test('each starter has source-bound questions and a text explanation identifying the answer',()=>{
+ for(const item of require('../content/reading-practice.js').items){assert.ok(item.questions?.length>=2,item.id);for(const q of item.questions){assert.ok(q.options.some(o=>o.id===q.answer));assert.ok(q.explanation.length>10);assert.ok(Number.isInteger(q.sentence)&&q.sentence<item.paragraphs.length);}}
+});
+test('reading evidence roundtrips with both frozen backup generations and preserves every other child',()=>{
+ const backup=require('../core/backup.js'),codec={decodeUtf8:s=>Buffer.from(s,'base64').toString('utf8'),encodeUtf8:s=>Buffer.from(s,'utf8').toString('base64')};
+ for(const name of ['original-v1','grove-v1']){
+  const snapshot=JSON.parse(fs.readFileSync('tests/fixtures/backups/'+name+'.json')),original=JSON.parse(JSON.stringify(snapshot)),id=snapshot.PR.list[0].id,state=JSON.parse(snapshot.data[id]);
+  state.readingStudy=api().storeReadingSession(undefined,'pets',api().newReadingSession('pets','1','practice',4,100));snapshot.data[id]=JSON.stringify(state);
+  const decoded=backup.decodeBackup(codec.encodeUtf8(JSON.stringify(snapshot)),codec),again=backup.decodeBackup(backup.encodeBackup(decoded,codec),codec);
+  assert.deepEqual(again,decoded);const restored=JSON.parse(again.rawProfiles[id]);assert.deepEqual(restored.readingStudy,state.readingStudy);delete restored.readingStudy;assert.deepEqual(restored,JSON.parse(original.data[id]));
+  for(const other of snapshot.PR.list.filter(p=>p.id!==id))assert.equal(again.rawProfiles[other.id],original.data[other.id]);
+ }
+});

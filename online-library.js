@@ -1,4 +1,4 @@
-// Read-only samples and optional text aids; downloaded public text is outside learner records.
+// Supported reading and separate comprehension evidence; public text stays outside learner backups.
 let ONLINE_READING_CLIENT=null,ONLINE_READING_LAST=null;
 function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  screen();SESS=null;CRAM=null;delete document.body.dataset.study;feedbackQuestion=null;
@@ -6,19 +6,20 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  const selected=selection||studyDefaults(S,grade,kind,CARDS.map(c=>c.c),studyActivities().map(x=>x[0]));
  const scope=GroveReadings.readingScope({grade,chars:selected.chars,excluded:S.cfg.notLearned||[],grades:GL});
  const allItems=[...GROVE_READING_PRACTICE.items,...library.list()];
- const items=allItems.filter(item=>GroveReadings.readingMatch(item,scope).eligible).sort((a,b)=>GroveReadings.readingMatch(b,scope).rank-GroveReadings.readingMatch(a,scope).rank);
+ const items=allItems.filter(item=>GroveReadings.readingMatch(item,scope).eligible&&(kind!=='review'||item.questions?.length)).sort((a,b)=>GroveReadings.readingMatch(b,scope).rank-GroveReadings.readingMatch(a,scope).rank);
+ const rawScopeLabel=studyScopeText(selected),scopeLabel=rawScopeLabel.startsWith(GN[grade]+' ·')?rawScopeLabel:GN[grade]+' · '+rawScopeLabel;
  const returnToChoices=()=>{home();showStudySetup(kind);};
- A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Read Chinese</h1><p>Read the Chinese. Tap words or reveal help when you need it.</p></div></div><p class="reading-note online-grade">${esc(GN[grade])} · ${esc(studyScopeText(selected))}</p><button class="btn gray" id="reading-choices">Change choices</button><p id="online-offline" class="reading-note" role="status" hidden></p><div id="online-panel"></div><details class="compact-help"><summary>About these samples</summary><p>Readings practise your selected characters. Earlier-grade characters may support the story. Through Grade 3, other characters must be in your selection; from Grade 4, new characters may appear. This checks character fit, not whether every word or idea has been taught.</p><p>Text pinyin and translations are reading aids; teaching review is pending. Pinyin uses lexical tones, not an acoustic transcription. No new recordings or scoring are included.</p><p>Opening an unsaved sample requests its public source text. The provider receives normal connection details, including your IP address. Names, drafts and progress are not sent. Optional saved readings are shared public text on this browser, separate from progress backups. Your browser may clear them. The starter readings and dictionary are installed with the offline app; other readings can be saved separately.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
- $('reading-choices').onclick=returnToChoices;
- const root=$('online-library'),panel=$('online-panel'),offline=$('online-offline');let current=null,revision=0;
+ A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Read Chinese</h1><p>Choose a reading for your practice choices.</p></div></div><p class="reading-note online-grade">${esc(scopeLabel)}</p><button class="btn gray" id="reading-choices">Change choices</button><p id="online-offline" class="reading-note" role="status" hidden></p><div id="online-panel"></div><details class="compact-help"><summary>About these samples</summary><p>Readings practise your selected characters. Earlier-grade characters may support the story. Through Grade 3, other characters must be in your selection; from Grade 4, new characters may appear. This checks character fit, not whether every word or idea has been taught.</p><p>Text pinyin and translations are reading aids; teaching review is pending. Pinyin uses lexical tones, not an acoustic transcription. Comprehension questions record their own answers and help use; they do not award stars or change character mastery. No new recordings are included.</p><p>Opening an unsaved sample requests its public source text. The provider receives normal connection details, including your IP address. Names, drafts and progress are not sent. Optional saved readings are shared public text on this browser, separate from progress backups. Your browser may clear them. The starter readings and dictionary are installed with the offline app; other readings can be saved separately.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
+ $('reading-choices').onclick=()=>{if(active()){stop();returnToChoices();}};
+ const root=$('online-library'),panel=$('online-panel'),offline=$('online-offline');let current=null,revision=0,flushReading=null;
  root.addEventListener('keydown',feedbackButtonKeydown);
  const active=()=>root.isConnected&&$('online-library')===root&&PR.cur===owner&&GR()===grade;
- const stop=()=>{revision++;current?.abort();current=null;};
+ const stop=()=>{if(flushReading){flushReading();flushReading=null;}revision++;current?.abort();current=null;};
  const connection=()=>{if(!active())return;offline.hidden=navigator.onLine!==false;offline.textContent=offline.hidden?'':'You’re offline. Starter readings and saved readings are available.';};
  addEventListener('online',connection);addEventListener('offline',connection);connection();
  const observer=new MutationObserver(()=>{if(!active()){stop();observer.disconnect();removeEventListener('online',connection);removeEventListener('offline',connection);}});observer.observe(A,{childList:true});
  function node(tag,value,parent,cls){const el=document.createElement(tag);if(value)el.textContent=value;if(cls)el.className=cls;if(parent)parent.append(el);return el;}
- function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=action;return b;}
+ function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=()=>{if(active()&&b.isConnected)action();};return b;}
  function link(label,url,parent){const a=node('a',label,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
  function list(focusId){
   stop();setPageBack(()=>{stop();returnToChoices();},'Back to '+(kind==='review'?'Review':'Practice'));feedbackQuestion=null;panel.replaceChildren();
@@ -46,19 +47,30 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
   const context={content:{packId:item.local?GROVE_READING_PRACTICE.id:'grove-online-reading',itemId:item.id,version:item.local?GROVE_READING_PRACTICE.version:library.version,sourceId:item.sourceId,reviewStatus:item.reviewStatus}};feedbackQuestion=context;
   const report=()=>showFeedback({category:'meaning',note:'Reading: '+item.titleZh+'\nItem: '+item.id,context});
   try{
-   const previous=usePrevious&&ONLINE_READING_LAST?.owner===owner&&ONLINE_READING_LAST?.grade===grade&&ONLINE_READING_LAST?.id===item.id?ONLINE_READING_LAST:null;
+   const previous=usePrevious&&ONLINE_READING_LAST?.owner===owner&&ONLINE_READING_LAST?.grade===grade&&ONLINE_READING_LAST?.id===item.id&&ONLINE_READING_LAST?.kind===kind?ONLINE_READING_LAST:null;
    const result=previous?.result||(item.local?{paragraphs:item.paragraphs.slice(),translation:item.support.english.slice(),saved:true}:await library.read(item.id,{signal}));
    if(!active()||token!==revision)return;current=null;
    if(!GroveReadings.readingMatch({...item,characters:[...new Set((item.titleZh+result.paragraphs.join('')).match(/\p{Script=Han}/gu)||[])]},scope).eligible)throw Error('reading-grade-unavailable');
    const aids=item.local?{pinyin:item.support.pinyin,translation:item.support.english}:GroveOnlineContent.readingAids(item,result);status.remove();
-   const view=previous||{owner,grade,id:item.id,result,pinyin:[],english:[],helpUsed:false};ONLINE_READING_LAST=view;
-   const sentences=GroveReadings.readingSentences(result.paragraphs,aids,item.annotations);
-   if(!Array.isArray(view.pinyin))view.pinyin=sentences.map(()=>!!view.pinyin);
-   if(!Array.isArray(view.english))view.english=sentences.map(()=>!!view.english);
+   const sentences=GroveReadings.readingSentences(result.paragraphs,aids,item.annotations),questions=item.questions||[];
+   const version=item.local?GROVE_READING_PRACTICE.version:library.version,key=item.id+'|'+version+'|'+kind;
+   const raw=S.readingStudy?.sessions?.[key],restored=item.local?GroveReadings.restoreReadingSession(raw,{id:item.id,version,kind,count:sentences.length},questions):null;
+   const view=previous||{...(restored||GroveReadings.newReadingSession(item.id,version,kind,sentences.length,Date.now())),owner,grade,result};ONLINE_READING_LAST=view;
+   const saveNote=node('p',null,detail,'reading-note');saveNote.id='reading-save-status';saveNote.setAttribute('role','status');saveNote.hidden=true;
+   const retrySave=button('Try saving again',detail,()=>{if(persist())renderQuestions();});retrySave.id='reading-save-retry';retrySave.hidden=true;
+   let preservePrevious=!!raw&&!restored;
+   function snapshot(){return Object.fromEntries(['id','version','kind','attempt','created','phase','cursor','responses','pinyin','english','helpUsed','position'].map(k=>[k,view[k]]));}
+   function persist(throwFailure=false){
+    if(!item.local||!active()||token!==revision)return true;
+    const old=S.readingStudy;S.readingStudy=GroveReadings.storeReadingSession(old,key,snapshot(),preservePrevious);
+    try{save();preservePrevious=false;view.unsaved=false;saveNote.hidden=true;retrySave.hidden=true;return true;}
+    catch(error){if(old===undefined)delete S.readingStudy;else S.readingStudy=old;view.unsaved=true;saveNote.hidden=false;saveNote.textContent='Could not save reading progress. Try saving again before continuing.';retrySave.hidden=false;if(throwFailure)throw error;return false;}
+    finally{detail.querySelectorAll('[data-reading-action]').forEach(b=>b.disabled=!!view.unsaved||b.dataset.ready!=='yes');}
+   }
    const passages=node('div',null,detail,'online-passages');passages.id='online-passages';
-   node('p','Tap a word for its meaning. Show help for one sentence at a time.',detail,'reading-note');
+   const instruction=node('p',questions.length?'Read the story, then answer '+questions.length+' questions. Tap words or reveal help when you need it.':'Tap a word for its meaning. Show help for one sentence at a time.',detail,'reading-note');detail.insertBefore(instruction,passages);
    const lines=[];let dictionary=null;
-   const helped=()=>{view.helpUsed=true;view.onHelp?.();};
+   const helped=()=>{view.helpUsed=true;persist();const help=detail.querySelector('#reading-help-status');if(help)help.textContent='Help is on for this reading.';};
    function lookup(word,prepared,trigger){
     helped();const dialog=node('dialog',null,detail,'reading-lookup');dialog.setAttribute('aria-labelledby','reading-lookup-title');
     const title=node('h2',word,dialog);title.id='reading-lookup-title';title.lang='zh-Hans';
@@ -85,7 +97,7 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
     const en=node('p',sentence.english,paragraph,'online-english');en.id='reading-english-'+i;en.lang='en';en.hidden=!view.english[i];
     const controls=node('div',null,paragraph,'online-aid-controls');
     for(const [type,row,label]of [['pinyin',py,'pinyin'],['english',en,'English']]){
-     const b=button('',controls,()=>{view[type][i]=!view[type][i];if(view[type][i])helped();refresh();});b.id='online-show-'+type+(i?'-'+i:'');b.setAttribute('aria-controls',row.id);
+     const b=button('',controls,()=>{view[type][i]=!view[type][i];if(view[type][i])helped();else persist();refresh();});b.id='online-show-'+type+(i?'-'+i:'');b.setAttribute('aria-controls',row.id);
      const refresh=()=>{b.textContent=(view[type][i]?'Hide ':'Show ')+label;b.setAttribute('aria-label',b.textContent+' for sentence '+(i+1));b.setAttribute('aria-expanded',String(!!view[type][i]));row.hidden=!view[type][i];};refresh();
     }
     function render(){line.replaceChildren();for(const part of GroveReadings.readingTokens(sentence.text,dictionary,sentence.words)){
@@ -94,9 +106,44 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
     }}render();sentence.render=render;
    }
    loadHelpDictionary().then(index=>{if(!active()||token!==revision)return;dictionary=index;if(!detail.querySelector('dialog[open]')&&!passages.contains(document.activeElement))for(const sentence of sentences)sentence.render();}).catch(()=>{});
+   const questionArea=node('section',null,detail,'reading-questions');questionArea.id='reading-questions';questionArea.setAttribute('aria-label','Reading questions');
+   function renderQuestions(focus=false){
+    questionArea.replaceChildren();if(!questions.length)return;
+    const title=node('h2',view.phase==='done'?'Reading finished':'Read and answer',questionArea);title.tabIndex=-1;
+    if(view.phase==='reading'){
+     const start=button('Answer '+questions.length+' questions',questionArea,()=>{view.phase='questions';if(persist())renderQuestions(true);});start.id='reading-start-questions';start.dataset.readingAction='start';start.dataset.ready='yes';start.disabled=!!view.unsaved;
+    }else if(view.phase==='done'){
+     const results=Object.values(view.responses),right=results.filter(r=>r.correct).length,help=results.filter(r=>r.assisted).length;
+     node('p',right+' of '+questions.length+' correct · '+help+' answered with help',questionArea);node('p','You finished this reading. Try another story or read it again.',questionArea,'reading-note');
+     const again=button('Read again',questionArea,()=>{Object.assign(view,GroveReadings.newReadingSession(item.id,version,kind,sentences.length,Date.now()));if(persist())read(item);});again.id='reading-again';again.dataset.readingAction='again';again.dataset.ready='yes';again.disabled=!!view.unsaved;
+     button('Choose another reading',questionArea,()=>list(item.id)).id='reading-finish';
+    }else{
+     const q=questions[view.cursor],response=view.responses[q.id];if(!q)return;
+     node('p','Question '+(view.cursor+1)+' of '+questions.length,questionArea,'reading-note');
+     const help=node('p',view.helpUsed?'Help is on for this reading.':'You can look back at the story or use help.',questionArea,'reading-note');help.id='reading-help-status';
+     const form=node('form',null,questionArea),fieldset=node('fieldset',null,form);node('legend',q.prompt,fieldset);fieldset.disabled=!!response;
+     let choice=response?.choice||'';
+     for(const option of q.options){const label=node('label',null,fieldset,'reading-answer'),input=node('input',null,label);input.type='radio';input.name='reading-answer';input.value=option.id;input.checked=choice===option.id;node('span',option.text,label);input.onchange=()=>{choice=option.id;check.dataset.ready='yes';check.disabled=!!view.unsaved;};}
+     const check=node('button','Check answer',form,'btn');check.id='reading-check';check.type='submit';check.dataset.readingAction='check';check.dataset.ready=choice&&!response?'yes':'no';check.disabled=!choice||!!response||!!view.unsaved;
+     form.onsubmit=event=>{event.preventDefault();if(!active()||token!==revision||view.unsaved||view.responses[q.id]||!choice)return;Object.assign(view,GroveReadings.recordReadingAnswer(snapshot(),q,choice));if(persist())renderQuestions(true);};
+     if(response){
+      const result=node('p',(response.correct?'Correct. ':'Have another look. ')+q.explanation,questionArea);result.id='reading-answer-feedback';result.setAttribute('role','status');
+      node('p',response.assisted?'Answered with help.':'Answered without pinyin, English or dictionary help.',questionArea,'reading-note');
+      const next=button(view.cursor+1===questions.length?'Finish reading':'Next question',questionArea,()=>{view.cursor++;if(view.cursor===questions.length)view.phase='done';if(persist())renderQuestions(true);});next.id='reading-next';next.dataset.readingAction='next';next.dataset.ready='yes';next.disabled=!!view.unsaved;
+     }
+     button('Look back at the story',questionArea,()=>passages.scrollIntoView({block:'start'}));
+    }
+    if(focus)title.focus();
+   }
+   renderQuestions();
+   if(item.local){
+    persist();
+    flushReading=()=>{if(!active()||token!==revision)return;const visible=lines.findIndex(el=>el.getBoundingClientRect().bottom>100);if(visible>=0)view.position=visible;persist(true);};
+    if(restored||previous)requestAnimationFrame(()=>{if(!active()||token!==revision)return;if(view.phase==='questions'||view.phase==='done')questionArea.scrollIntoView({block:'start'});else lines[view.position]?.scrollIntoView({block:'center'});});
+   }
    const words=node('details',null,detail,'compact-help');words.id='online-word-tools';node('summary','Look up a word',words);const wordButtons=node('div',null,words,'online-words');
    for(const word of item.words){
-    const b=button('Look up '+word,wordButtons,()=>{stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id,kind,selection:selected}),backLabel:'Back to reading'});},'chip');
+    const b=button('Look up '+word,wordButtons,()=>{helped();stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id,kind,selection:selected}),backLabel:'Back to reading'});},'chip');
     // The interface remains English; only the word itself is Chinese.
     b.replaceChildren(document.createTextNode('Look up '));const glyph=node('span',word,b);glyph.lang='zh-Hans';
    }
@@ -132,5 +179,6 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
    button('Try again',detail,()=>read(item)).id='online-retry';button('Report this loading problem',detail,report,'progress-link').id='online-report';
   }
  }
+ const onHide=()=>{try{flushReading?.();}catch{}};addEventListener('pagehide',onHide);const cleanup=new MutationObserver(()=>{if(!active()){removeEventListener('pagehide',onHide);cleanup.disconnect();}});cleanup.observe(A,{childList:true});
  list();if(resume){const item=items.find(i=>i.id===resume);if(item)read(item,true);}
 }

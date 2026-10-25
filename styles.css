@@ -218,9 +218,17 @@ footer { padding: 16px; text-align: center; }
 /* Reading aids stay next to their sentence, with touch and keyboard word lookup. */
 .online-paragraph{padding-block:1rem;border-bottom:1px solid var(--ln)}
 .online-aid-controls{display:flex;flex-wrap:wrap;gap:.5rem;margin-block:.5rem}
-.reading-word{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px dotted currentColor;border-radius:4px;padding:.08em .06em;min-height:44px;min-width:44px;cursor:pointer;line-height:1.6}
+.reading-word{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px dotted currentColor;border-radius:4px;padding:.08em .06em;min-height:44px;min-width:1em;cursor:pointer;line-height:1.6}
 .reading-word:hover{background:var(--surface,#8882)}
 .reading-word:focus-visible{outline:3px solid var(--violet-ink);outline-offset:2px}
 .reading-lookup{max-width:min(36rem,calc(100vw - 2rem));max-height:85dvh;overflow:auto;padding:1.25rem;border-radius:1rem;background:var(--surface);color:var(--tx)}
 .reading-lookup h2{font-size:2.5rem}.reading-dictionary-entry{padding-block:.5rem;border-bottom:1px solid #8885}.reading-dictionary-entry p{overflow-wrap:anywhere}
 .online-line{line-height:2!important;overflow-wrap:anywhere}
+
+.reading-questions{margin:1.5rem 0;padding:1.25rem;border:1px solid var(--ln);border-radius:1rem;background:var(--surface)}
+.reading-questions fieldset{border:0;padding:0;margin:0 0 1rem;min-width:0}.reading-questions legend{font-size:1.2rem;font-weight:600;margin-bottom:.75rem}
+.reading-answer{display:flex;align-items:center;gap:.75rem;min-height:48px;margin:.5rem 0;padding:.6rem;border:1px solid var(--ln);border-radius:.75rem;cursor:pointer}
+.reading-answer input{width:22px;height:22px;flex-shrink:0}.reading-questions button{margin:.5rem .5rem .5rem 0;min-height:48px}
+.reading-questions h2:focus-visible{outline:3px solid var(--violet-ink);outline-offset:4px}
+
+.online-aid-controls .btn{font-size:16px;padding-inline:10px}

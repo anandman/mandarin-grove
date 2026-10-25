@@ -29,6 +29,20 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    assert.equal(await p.evaluate(()=>JSON.stringify(S.cfg.studyRounds)),before.round);assert.equal(await p.evaluate(()=>S.stars),before.stars);assert.equal(await p.evaluate(()=>JSON.stringify(S.learning)),before.learning);
    await p.locator('#page-back').click();await p.locator('#reading-choices').click();assert.deepEqual(await p.evaluate(()=>STUDY_DRAFT.config.chars),['猫','狗']);
   });
+  await run('Review comprehension resumes first answers, records later help and roundtrips in backups',async p=>{
+   const before=await p.evaluate(()=>{const config={units:['2:1'],chars:['猫','狗'],modes:['trace'],limit:5};S.cfg.studyChoices={2:{review:config}};save();showOnlineLibrary({kind:'review'});return {stars:S.stars,learning:JSON.stringify(S.learning)};});
+   await p.locator('[data-reading="grove-pets"]').click();await p.locator('#reading-start-questions').click();await p.locator('input[name="reading-answer"][value="friend"]').check();await p.locator('#reading-check').click();await p.locator('#reading-answer-feedback').waitFor();
+   await p.reload();await p.evaluate(()=>{say=()=>{};showOnlineLibrary({kind:'review'});});await p.locator('[data-reading="grove-pets"]').click();await p.locator('#reading-answer-feedback').waitFor();assert.match(await p.locator('#reading-answer-feedback').innerText(),/^Correct/);
+   await p.locator('#online-show-english-1').click();await p.locator('#reading-next').click();await p.locator('input[name="reading-answer"][value="fish"]').check();await p.locator('#reading-check').click();await p.locator('#reading-next').click();assert.match(await p.locator('#reading-questions').innerText(),/2 of 2 correct · 1 answered with help/);
+   const result=await p.evaluate(()=>{const bank=S.readingStudy,entry=bank.history[0],decoded=GroveBackup.decodeBackup(backup(),GROVE_CODEC);return {entry,copy:JSON.parse(decoded.rawProfiles[PR.cur]).readingStudy,bank,stars:S.stars,learning:JSON.stringify(S.learning)};});
+   assert.equal(result.entry.responses.dog.assisted,false);assert.equal(result.entry.responses.food.assisted,true);assert.deepEqual(result.copy,result.bank);assert.equal(result.stars,before.stars);assert.equal(result.learning,before.learning);
+  });
+  await run('failed comprehension saves keep the first answer and block advancement until retry',async p=>{
+   await p.evaluate(()=>showOnlineLibrary({selection:{chars:['猫','狗'],units:['2:1'],modes:['trace'],limit:5}}));await p.locator('[data-reading="grove-pets"]').click();await p.locator('#reading-start-questions').click();await p.locator('input[name="reading-answer"][value="friend"]').check();
+   const before=await p.evaluate(()=>{window.originalReadingSet=Storage.prototype.setItem;const raw=localStorage.getItem('zh_p_'+PR.cur);Storage.prototype.setItem=function(k,v){if(k==='zh_p_supported-synthetic')throw new DOMException('quota','QuotaExceededError');return originalReadingSet.call(this,k,v);};return raw;});
+   await p.locator('#reading-check').click();await p.locator('#reading-save-retry').waitFor();assert.equal(await p.locator('#reading-check').isDisabled(),true);assert.equal(await p.evaluate(()=>localStorage.getItem('zh_p_'+PR.cur)),before);
+   await p.evaluate(()=>Storage.prototype.setItem=originalReadingSet);await p.locator('#reading-save-retry').click();await p.locator('#reading-answer-feedback').waitFor();assert.match(await p.locator('#reading-answer-feedback').innerText(),/^Correct/);assert.equal(await p.locator('#reading-next').isEnabled(),true);
+  });
   await run('dictionary survives a disconnected cold launch and searches non-school single characters',async(p,c)=>{
    await p.waitForFunction(()=>OFFLINE_STATUS==='ready');await p.evaluate(()=>navigator.serviceWorker.ready);const before=await p.evaluate(()=>backup());
    await c.setOffline(true);await p.reload();await p.evaluate(()=>showHomeworkLookup());
