@@ -216,9 +216,9 @@ function nextCard() { return reviewPick(S, practiceCards(), 'flip'); }
 function flip(preferred) {
   const ui = ActivityUI, c = ui.card(preferred, 'flip');
   if (!c) return;
-  const view = ui.render('flip', `<p class="reading-note">Can you remember the sound and meaning?</p>
+  const view = ui.render('flip', `<p class="reading-note">Try to remember the sound and meaning, then flip.</p>
     <button type="button" class="card" id="cd" aria-expanded="false" aria-controls="flip-rating" style="color:var(--tx);border:0;font:inherit"><span class="big">${ui.escape(c.c)}</span><small>Tap to flip</small></button>
-    <div id="flip-rating" hidden>${ui.button('Not yet', 'no', 'r')}${ui.button('I knew it', 'yes', 'g')}</div>${ui.button('Skip ▶', 'sk')}`);
+    <div id="flip-rating" hidden><p class="reading-note">Compare with what you remembered. This is your own check; the app does not listen to your answer.</p>${ui.button('I need more practice', 'no', 'r')}${ui.button('I remembered both', 'yes', 'g')}</div>${ui.button('Skip ▶', 'sk')}`);
   beginReview(c, 'flip');
   let revealed = false;
   ui.on('cd', () => {
@@ -237,7 +237,7 @@ function memory(preferred) {
   const ui = ActivityUI, c = ui.card(preferred, 'memory');
   if (!c) return;
   const view = ui.render('memory', `<h2>Write this from memory</h2><div class="pin">${ui.escape(c.p)}</div><div class="mean">${ui.escape(c.m)}</div>${wordLine(c, true)}
-    <div id="hw" role="group" aria-label="Write the character from memory"></div><p class="msg" id="m" role="status"></p>${ui.button('🔊 Hear again', 'mrp')}${ui.button('Peek', 'pk')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">Peek gives a clue. This answer will count as practice with help.</p>`);
+    <div id="hw" role="group" aria-label="Write the character from memory"></div><p class="msg" id="m" role="status"></p>${ui.button('🔊 Hear again', 'mrp')}${ui.button('Peek', 'pk')}${ui.button('Skip ▶', 'sk')}<p class="reading-note" id="writing-help-note">The app checks your strokes against the guide. Peek gives a clue and counts as practice with help.</p>`);
   beginReview(c, 'memory');
   let helped = !!(SESS?.study && studyAttemptInfo()?.help), complete = false;
   const instance = mkWriter(c, false, undefined, () => memory(c));
@@ -250,14 +250,14 @@ function memory(preferred) {
   ui.on('sk', () => ui.next(memory));
   instance.quiz({
     showHintAfterMisses: 3, leniency: 1.2,
-    onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('Hmm, not that stroke'); }),
+    onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('That stroke did not match the guide. Try again.'); }),
     onCorrectStroke: ui.guard(view.token, view.node, () => ui.message('')),
     onComplete: ui.guard(view.token, view.node, summary => {
       if (complete) return;
       const outcome = helped || summary.totalMistakes > 2 ? 'assisted' : 'correct';
       const first = SESS?.study ? studyOutcome(outcome) : outcome;
       if(!ui.success(c,first,2))return;complete=true; instance.showCharacter(); ui.find('pk').disabled = true;
-      ui.message(first === 'correct' ? 'You remembered it! 🎉' : 'Got it! Keep practicing 👍', first === 'correct');
+      ui.message(first === 'correct' ? 'You finished the character! 🎉' : 'Got it! Keep practicing 👍', first === 'correct');
       ui.nextButton(); ui.speak(c);
     })
   });
@@ -279,15 +279,15 @@ function dictItem() {
   const ui = ActivityUI, round = DQ;
   ui.persistDictation();
   if (round.i >= round.q.length) {
-    ui.render('dictation', `<div class="big">🎉</div><h1>Quiz done!</h1><p class="mean">${round.score} of ${round.n} answers right.</p>${ui.button('Again', 'dict-again', '')}${ui.button('Home', 'dict-home')}${CRAM ? ui.button('Choose units / mode', 'dict-units') : ''}`, false);
+    ui.render('dictation', `<div class="big">🎉</div><h1>Quiz done!</h1><p class="mean">${round.score} of ${round.n} answers right.</p><p class="reading-note">Pinyin is checked by the app. Handwriting uses your own check.</p>${ui.button('Again', 'dict-again', '')}${ui.button('Home', 'dict-home')}${CRAM ? ui.button('Choose units / mode', 'dict-units') : ''}`, false);
     if (!round.bad && round.q.length) award('pq');
     ui.on('dict-again', () => dictStart()); ui.on('dict-home', home); ui.on('dict-units', showCram); return;
   }
   const c = round.q[round.i];
   // Study's dispatcher inserts its own session bar once the question is ready.
-  const view = ui.render('dictation', `<div class="dictation-prompt">${ui.button('🔊 Hear again', 'drp', '')}<div><h2>Listen, then write and build the pinyin</h2><p class="mean" id="dictation-clue">Meaning: ${ui.escape(c.m)}</p></div></div>
+  const view = ui.render('dictation', `<div class="dictation-prompt">${ui.button('🔊 Hear again', 'drp', '')}<div><h2>Listen, then write and build the pinyin</h2><p class="mean" id="dictation-clue">Meaning: ${ui.escape(c.m)}</p></div></div><p class="reading-note">The app checks your pinyin. You check your own handwriting.</p>
     <div class="dictation-workspace"><section class="dictation-writing"><div class="dictation-paper"><canvas id="dc" width="600" height="600" aria-label="Write the character here" style="width:100%;height:100%;display:block"></canvas></div>${ui.button('Clear writing', 'dclr')}</section>
-    <section class="dictation-pinyin"><div class="dictation-pinyin-heading"><h2>Pinyin</h2><output id="pyout" aria-label="Your pinyin">&nbsp;</output></div><div id="tiles"></div><div class="dictation-tones" role="group" aria-label="Tone">${[1,2,3,4,0].map(tone=>`<button class="btn gray" type="button" data-tn="${tone}" aria-label="${tone ? 'Tone '+tone : 'Neutral tone'}">${tone ? ['','ā','á','ǎ','à'][tone] : 'neutral'}</button>`).join('')}</div>${ui.button('Delete letter', 'py-delete')}${ui.button('Check', 'dchk', '')}</section></div>`, !SESS?.study);
+    <section class="dictation-pinyin"><div class="dictation-pinyin-heading"><h2>Pinyin</h2><output id="pyout" aria-label="Your pinyin">&nbsp;</output></div><div id="tiles"></div><div class="dictation-tones" role="group" aria-label="Tone">${[1,2,3,4,0].map(tone=>`<button class="btn gray" type="button" data-tn="${tone}" aria-label="${tone ? 'Tone '+tone : 'Neutral tone'}">${tone ? ['','ā','á','ǎ','à'][tone] : 'neutral'}</button>`).join('')}</div>${ui.button('Delete letter', 'py-delete')}${ui.button('Check pinyin', 'dchk', '')}</section></div>`, !SESS?.study);
   feedbackQuestion = {card:c, mode:'dictation'}; renderRewards();
   let letters = '', tone = 0, locked = false;
   const requiredLetters = pinyinLetters(c);
@@ -313,7 +313,7 @@ function dictItem() {
     if (!right && round.session && SESS?.study) studyAttempt('pinyinMiss');
     const firstPinyin = right && !(round.session && SESS?.study && studyAttemptInfo()?.pinyinMiss);
     const picture = canvas.toDataURL();
-    A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="mean">Your pinyin: <span lang="zh-Latn-pinyin">${ui.escape(letters ? pyMark(letters,tone) : '—')}</span></p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Did you write the character correctly?</p>${ui.button('Yes, I got it', 'cy', 'g')}${ui.button('Not yet', 'cn', 'r')}</div></div>`;
+    A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="reading-note" role="status">${right ? 'Pinyin matches.' : 'Pinyin does not match yet.'}</p><p class="mean">Your pinyin: <span lang="zh-Latn-pinyin">${ui.escape(letters ? pyMark(letters,tone) : '—')}</span></p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Compare your writing with the character shown. Does it match?</p><p class="reading-note">The app has not checked your handwriting.</p>${ui.button('My writing matches', 'cy', 'g')}${ui.button('I need more practice', 'cn', 'r')}</div></div>`;
     ui.languages();
     let rated = false;
     const rate = chOk => {
