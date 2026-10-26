@@ -8,7 +8,7 @@ try{
   const before=await p.evaluate(()=>backup());await choices(p,kind);assert.equal(await p.locator('[data-study-grade]').count(),6);assert.equal(await p.locator('[data-study-grade="4"]').evaluate(e=>e.indeterminate),true);
   const k=await grade(p,'K');await k.check();assert.ok(await p.locator('[data-study-char="友"]').isChecked());assert.equal(await p.locator('[data-study-char="雨"]').isChecked(),false);assert.equal(await p.locator('[data-study-char="雨"]').isDisabled(),true);assert.equal(await p.locator('[data-study-unit="4:1"]').isChecked(),true);
   const unit=p.locator('[data-study-unit="K:2"]');await unit.uncheck();assert.equal(await k.evaluate(e=>e.indeterminate),true);await k.check();assert.equal(await unit.isChecked(),true);
-  const one=await grade(p,'1');await one.check();await k.uncheck();assert.equal(await p.locator('[data-study-char="友"]').isChecked(),true,'another selected grade retains a shared character');assert.equal(await one.isChecked(),true);assert.equal(await p.locator('[data-study-unit="4:1"]').isChecked(),true);
+  const one=await grade(p,'1');await one.check();await k.uncheck();assert.equal(await p.locator('[data-study-char="友"]').isChecked(),true,'another selected grade retains a shared character');assert.equal(await one.isChecked(),true);await one.focus();await p.keyboard.press('Space');assert.equal(await one.isChecked(),false);await p.keyboard.press('Space');assert.equal(await one.isChecked(),true);assert.equal(await p.locator('[data-study-unit="4:1"]').isChecked(),true);
   await p.getByRole('button',{name:'Close session choices',exact:true}).click();assert.equal(await p.evaluate(()=>backup()),before);
  });
  await run('bulk choices persist through Read Chinese and reload while keeping the paused round',async p=>{

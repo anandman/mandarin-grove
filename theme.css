@@ -291,3 +291,26 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{border-color:var(--
 @media(max-width:520px){.online-card h3{font-size:22px}.online-passages{font-size:26px;padding:16px}.online-paragraph+.online-paragraph{margin-top:16px}}
 
 .study-unit-picker .study-grade-all{font-weight:650;background:var(--surface-soft);border-radius:8px}
+
+/* Keep short readings compact without shrinking the Chinese or the help targets. */
+.online-library .online-passages,.online-library .reading-questions{box-sizing:border-box;width:100%;max-width:56rem}
+.online-library .online-passages{padding:12px 20px}
+.online-library .online-passages .online-paragraph{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:20px;padding:14px 0;margin:0}
+.online-library .online-passages .online-paragraph:first-child{padding-top:6px}
+.online-library .online-passages .online-paragraph:last-child{padding-bottom:6px;border-bottom:0}
+.online-library .online-sentence-text{min-width:0}
+.online-library .online-passages .online-line{line-height:1.6!important;margin:0}
+.online-library .online-passages .online-pinyin,.online-library .online-passages .online-english{margin:4px 0 0}
+.online-library .online-paragraph .online-aid-controls{margin:0;gap:8px;align-self:start}
+@media(max-width:760px){
+ .online-library .online-passages{padding:10px 14px}
+ .online-library .online-passages .online-paragraph{grid-template-columns:minmax(0,1fr);row-gap:8px;padding:12px 0}
+}
+
+.online-library>.writing-heading{justify-content:flex-start;gap:10px;margin:16px 0 12px}
+.online-library>.writing-heading h1{margin:0;font-size:32px}
+.online-library>.writing-heading p{margin:4px 0 0}
+.online-scope-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;max-width:56rem}
+.online-scope-controls .online-grade{margin:0;flex:1;min-width:8em}
+.online-library #online-detail>h2{margin:18px 0 8px}
+.online-library #online-detail>.reading-note{margin:8px 0 12px}
