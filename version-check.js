@@ -1,4 +1,4 @@
-const VER='20261025-supported-72';
+const VER='20261025-choices-73';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

@@ -34,9 +34,18 @@ function completeStudyRound(s,round,now=Date.now()){
 }
 function studyActivities(){return [...CRAM_MODES.filter(([m])=>m!=='dictation'||Number(GR())>=2),['words','Build words · 组词']];}
 function studyUnitChoices(){
- const units=[];for(const grade of ['K','1','2','3','4','5'])for(const [n,chars]of QU(grade))if(chars.length)units.push({id:grade+':'+n,grade,label:'Unit '+n,chars:[...chars]});
- for(const h of HSETS().o.filter(h=>h.supplemental))units.push({id:h.id,grade:h.g,label:h.t,chars:h.c});
+ const units=[];for(const grade of ['K','1','2','3','4','5']){
+  for(const [n,chars]of QU(grade))if(chars.length)units.push({id:grade+':'+n,grade,label:'Unit '+n,chars:[...chars]});
+  for(const h of GroveUnits.buildUnitGroups({units:U,cards:ALL,grade,selection:[]}).groups.filter(h=>h.supplemental))units.push({id:h.id,grade:h.g,label:h.t,chars:h.c});
+ }
  return units;
+}
+function updateStudyUnits(config,units,ids,checked,excluded=[]){
+ const changed=new Set(ids),blocked=new Set(excluded),affected=units.filter(u=>changed.has(u.id)).flatMap(u=>u.chars);
+ const selected=checked?[...new Set([...config.units,...units.filter(u=>changed.has(u.id)).map(u=>u.id)])]:config.units.filter(id=>!changed.has(id));
+ const keep=new Set(units.filter(u=>selected.includes(u.id)).flatMap(u=>u.chars)),removed=new Set(affected);
+ const chars=checked?[...new Set([...config.chars,...affected.filter(c=>!blocked.has(c))])]:config.chars.filter(c=>!removed.has(c)||keep.has(c));
+ return {...config,units:selected,chars};
 }
 function currentStudyRound(kind){const r=S.cfg.studyRounds?.[GR()]?.[kind];return r&&r.cursor<r.q.length?r:null;}
 let STUDY_DRAFT=null,STUDY_LAST=null;
@@ -61,7 +70,7 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  ${saved?`<section class="study-saved"><p id="study-saved-scope">Paused · ${saved.cursor} of ${saved.q.length} finished · ${saved.config.chars.length} character${saved.config.chars.length===1?'':'s'} · ${saved.config.modes.length} activit${saved.config.modes.length===1?'y':'ies'}<br>${voiceEscape(studyScopeText(saved.config))}</p><button class="btn study-resume" id="study-continue">Continue this round</button></section>`:''}
  <section class="study-ready"><b id="study-count" role="status"></b><p id="study-scope" class="reading-note"></p><p id="study-round-goal" class="reading-note"></p><button class="btn ${saved?'gray':''}" id="study-start">Start</button><button type="button" class="btn gray" id="study-reading">Read Chinese</button></section>
  ${kind==='review'?'<button type="button" id="study-recent-mistakes" class="progress-link" onclick="showRecentMistakes()">Things to practice</button>':''}
- <details id="study-choice-editor"><summary>Change choices</summary><div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
+ <details id="study-choice-editor"><summary>Change choices</summary><div class="study-settings"><section><h3>Units</h3><div class="study-unit-picker" role="region" aria-label="Choose school units">${[GR(),...['K','1','2','3','4','5'].filter(g=>g!==GR())].map(g=>`<details ${g===GR()?'open':''}><summary>${GN[g]}</summary><div><label class="study-grade-all"><input type="checkbox" data-study-grade="${g}" aria-label="Select all ${GN[g]} units"><span>Select all</span></label>${units.filter(u=>u.grade===g).map(u=>`<label><input type="checkbox" data-study-unit="${voiceEscape(u.id)}" ${config.units.includes(u.id)?'checked':''}><span>${u.label}<small lang="zh-Hans">${u.chars.join(' ')}</small></span></label>`).join('')}</div></details>`).join('')}</div></section>
  <section><div class="study-subheading"><h3>Characters</h3><button class="progress-link" id="study-all-chars">Select all available</button></div><div class="study-characters" id="study-characters"></div><small>Leave out characters you haven’t learned yet.</small><details id="study-deferred"><summary>Not learned yet <span id="study-deferred-count"></span></summary><div id="study-deferred-list"></div></details></section>
  <section><h3>Activities</h3><div class="study-activities">${studyActivities().map(([m,label])=>`<label><input type="checkbox" data-study-mode="${m}" ${config.modes.includes(m)?'checked':''}>${label}</label>`).join('')}</div></section></div>
  <div class="study-question-limit"><label>Questions <select id="study-limit">${[5,10,20,30].map(n=>`<option ${config.limit===n?'selected':''}>${n}</option>`).join('')}</select></label><p class="reading-note">Goal: 90% of scored first attempts, including your own checks. Build words answers outside the word bank stay ungraded.</p></div></details>
@@ -70,10 +79,14 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  dialog.querySelector('.study-close').onclick=closeStudySetup;
  dialog.onclose=()=>{dialog.remove();if(STUDY_DRAFT===draft)STUDY_DRAFT=null;if(previous?.isConnected)previous.focus({preventScroll:true});};
  dialog.querySelectorAll('[data-study-unit]').forEach(input=>input.onchange=()=>{
-  const d=STUDY_DRAFT,u=units.find(u=>u.id===input.dataset.studyUnit);
-  if(input.checked){d.config.units.push(u.id);d.config.chars=[...new Set([...d.config.chars,...u.chars])];}
-  else{d.config.units=d.config.units.filter(id=>id!==u.id);const keep=new Set(units.filter(u=>d.config.units.includes(u.id)).flatMap(u=>u.chars));d.config.chars=d.config.chars.filter(c=>!u.chars.includes(c)||keep.has(c));}
+  if(STUDY_DRAFT!==draft||PR.cur!==draft.owner||!dialog.isConnected)return;
+  draft.config=updateStudyUnits(draft.config,units,[input.dataset.studyUnit],input.checked,[...draft.excluded]);
   renderStudyCharacters();
+ });
+ dialog.querySelectorAll('[data-study-grade]').forEach(input=>input.onchange=()=>{
+  if(STUDY_DRAFT!==draft||PR.cur!==draft.owner||!dialog.isConnected)return;
+  const ids=units.filter(u=>u.grade===input.dataset.studyGrade).map(u=>u.id);
+  draft.config=updateStudyUnits(draft.config,units,ids,input.checked,[...draft.excluded]);renderStudyCharacters();
  });
  dialog.querySelectorAll('[data-study-mode]').forEach(input=>input.onchange=()=>{STUDY_DRAFT.config.modes=[...dialog.querySelectorAll('[data-study-mode]:checked')].map(e=>e.dataset.studyMode);updateStudyCount();});
  $('study-limit').onchange=()=>{STUDY_DRAFT.config.limit=Number($('study-limit').value);updateStudyCount();};
@@ -98,6 +111,12 @@ function renderStudyCharacters(){
 function studyDraftPool(){return ALL.filter(c=>STUDY_DRAFT.config.chars.includes(c.c)&&!STUDY_DRAFT.excluded.has(c.c));}
 function updateStudyCount(){
  const d=STUDY_DRAFT,pool=studyDraftPool(),count=d.config.modes.length?studyQueue({...S,cfg:{...S.cfg,notLearned:[...d.excluded]}},pool,d.config.modes,d.config.limit,d.kind,a=>a).length:0;
+ document.querySelectorAll('#study-setup [data-study-unit]').forEach(input=>input.checked=d.config.units.includes(input.dataset.studyUnit));
+ document.querySelectorAll('#study-setup [data-study-grade]').forEach(input=>{
+  const gradeUnits=d.units.filter(u=>u.grade===input.dataset.studyGrade),chars=[...new Set(gradeUnits.flatMap(u=>u.chars))].filter(c=>!d.excluded.has(c));
+  input.checked=gradeUnits.length>0&&gradeUnits.every(u=>d.config.units.includes(u.id))&&chars.every(c=>d.config.chars.includes(c));
+  input.indeterminate=!input.checked&&(gradeUnits.some(u=>d.config.units.includes(u.id))||chars.some(c=>d.config.chars.includes(c)));
+ });
  $('study-count').textContent=`${pool.length} character${pool.length===1?'':'s'} · ${d.config.modes.length} activit${d.config.modes.length===1?'y':'ies'}`;
  $('study-scope').textContent=studyScopeText(d.config)+'\n'+studyActivities().filter(([mode])=>d.config.modes.includes(mode)).map(([,label])=>label).join(' · ');$('study-round-goal').textContent=count?`${count} question${count===1?'':'s'} · ${studyGoalText(count)}. Build words answers outside the word bank do not count toward the goal.`:'Choose characters and at least one activity.';
  const b=$('study-start');b.disabled=!count;b.textContent=(currentStudyRound(d.kind)?'Start a new round':'Start')+(count?' · '+count+' question'+(count===1?'':'s'):'');
