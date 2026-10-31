@@ -1,5 +1,5 @@
 // Cache only the explicit public app shell. Never cache feedback, learner records or remote sources.
-const VERSION='20261031-msu-79',BASE=new URL('./',self.location.href),ROOT=BASE.pathname,
+const VERSION='20261031-update-80',BASE=new URL('./',self.location.href),ROOT=BASE.pathname,
  SHELL_PREFIX='mandarin-grove-shell-'+(ROOT==='/'?'':encodeURIComponent(ROOT)+'-'),SHELL=SHELL_PREFIX+VERSION;
 let allowed=null;
 function mainlandFiles(manifest){
@@ -32,7 +32,10 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
  }catch(error){await caches.delete(SHELL);throw error;}
 })()));
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
-self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE')self.skipWaiting();});
+self.addEventListener('message',event=>{
+ if(event.data?.type==='ACTIVATE')self.skipWaiting();
+ else if(event.data?.type==='GET_VERSION')event.ports?.[0]?.postMessage({version:VERSION});
+});
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
  if(request.method!=='GET'||url.origin!==BASE.origin||!url.pathname.startsWith(ROOT))return;

@@ -1,7 +1,8 @@
-const VER='20261030-feedback-78';
+const VER='20261031-update-80';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
+ if(document.getElementById('update-now')?.disabled)return;
  deferredUpdateVersion=pendingUpdateVersion;
  document.getElementById('upd')?.close();
  if(updateReturnFocus?.isConnected)updateReturnFocus.focus({preventScroll:true});
@@ -23,6 +24,7 @@ function showAppUpdate(version){
    <p id="update-description">A new version is ready!<br>Your saved progress will stay.</p>
    <button id="update-now" class="btn">Update now</button>
    <button id="update-later" class="btn gray">Keep practicing</button>
+   <p id="update-status" role="alert" hidden></p>
    <p class="update-hint">In the middle of an answer? Finish it before updating.</p>
   </div>`;
   dialog.addEventListener('cancel',event=>{event.preventDefault();deferAppUpdate();});
@@ -38,8 +40,14 @@ function showAppUpdate(version){
    const button=document.getElementById('update-now');
    button.disabled=true;button.textContent='Updating…';
    document.getElementById('update-later').disabled=true;
+   const status=document.getElementById('update-status');status.hidden=true;status.textContent='';
    // Refresh downloaded app files only; child profiles and progress stay in localStorage.
-   try{if(typeof activateOfflineUpdate==='function')await activateOfflineUpdate();}catch(e){}
+   try{if(typeof activateOfflineUpdate==='function')await activateOfflineUpdate(pendingUpdateVersion);}catch(e){
+    button.disabled=false;button.textContent='Update now';
+    document.getElementById('update-later').disabled=false;
+    status.textContent='The update couldn’t finish. Try again, or keep practicing.';status.hidden=false;
+    button.focus();return;
+   }
    location.replace(location.pathname+'?v='+Date.now());
   };
  }

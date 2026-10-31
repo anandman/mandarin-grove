@@ -59,7 +59,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   });
   await run('explicit app update preserves saved readings and learner data',async p=>{
    await p.waitForFunction(()=>OFFLINE_STATUS==='ready');const before=await p.evaluate(async()=>{const c=await caches.open('mandarin-grove-public-readings-v1');await c.put('/synthetic-public-text',new Response('preserved'));return backup();});
-   await p.evaluate(()=>showAppUpdate('synthetic-new-version'));await p.locator('#update-now').click();await p.waitForFunction(()=>!document.querySelector('#upd')?.open);
+   await p.evaluate(()=>showAppUpdate(VER));await p.locator('#update-now').click();await p.waitForFunction(()=>!document.querySelector('#upd')?.open);
    assert.equal(await p.evaluate(async()=>{const c=await caches.open('mandarin-grove-public-readings-v1');return (await c.match('/synthetic-public-text'))?.text();}),'preserved');assert.equal(await p.evaluate(()=>backup()),before);
   });
  }finally{await browser.close();}

@@ -14,15 +14,47 @@ async function installOffline(){
   if(registration.active||registration.waiting)setOfflineStatus('ready');else observe(registration.installing);
  }catch{setOfflineStatus('error');}
 }
-async function activateOfflineUpdate(){
+async function activateOfflineUpdate(expectedVersion=''){
  if(!('serviceWorker'in navigator))return;
  const registration=await navigator.serviceWorker.getRegistration();
  if(!registration)return;
- await registration.update();
- if(registration.installing){await new Promise(resolve=>{const w=registration.installing,finish=()=>{if(['installed','activated','redundant'].includes(w.state))resolve();};w.addEventListener('statechange',finish);finish();setTimeout(resolve,10000);});}
- if(registration.waiting)await new Promise(resolve=>{
-  const done=()=>{navigator.serviceWorker.removeEventListener('controllerchange',done);resolve();};
-  navigator.serviceWorker.addEventListener('controllerchange',done);registration.waiting.postMessage({type:'ACTIVATE'});setTimeout(done,5000);
+ // A downloaded update is usable offline only when it is the requested release.
+ let worker=registration.installing||registration.waiting;
+ if(!worker||(expectedVersion&&await offlineWorkerVersion(worker)!==expectedVersion)){
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>reject(Error('App update check timed out')),60000);
+   Promise.resolve().then(()=>registration.update()).then(result=>{clearTimeout(timer);resolve(result);},error=>{clearTimeout(timer);reject(error);});
+  });
+  worker=registration.installing||registration.waiting||registration.active;
+ }
+ if(!worker)return;
+ await waitForOfflineWorker(worker,()=>['installed','activated'].includes(worker.state));
+ if(expectedVersion&&await offlineWorkerVersion(worker)!==expectedVersion)throw Error('Requested app update is unavailable');
+ if(worker.state!=='activated')worker.postMessage({type:'ACTIVATE'});
+ await waitForOfflineWorker(worker,()=>worker.state==='activated'&&navigator.serviceWorker.controller===worker);
+}
+function offlineWorkerVersion(worker){
+ if(!worker||typeof MessageChannel==='undefined')return Promise.resolve('');
+ return new Promise(resolve=>{
+  const channel=new MessageChannel(),finish=version=>{
+   clearTimeout(timer);channel.port1.close();channel.port2.close();resolve(typeof version==='string'?version:'');
+  },timer=setTimeout(()=>finish(''),2000);
+  channel.port1.onmessage=event=>finish(event.data?.version);
+  try{worker.postMessage({type:'GET_VERSION'},[channel.port2]);}catch{finish('');}
+ });
+}
+function waitForOfflineWorker(worker,ready){
+ return new Promise((resolve,reject)=>{
+  const finish=error=>{
+   clearTimeout(timer);worker.removeEventListener('statechange',check);
+   navigator.serviceWorker.removeEventListener('controllerchange',check);
+   if(error)reject(error);else resolve();
+  },check=()=>{
+   if(worker.state==='redundant')finish(Error('App update installation failed'));
+   else if(ready())finish();
+  },timer=setTimeout(()=>finish(Error('App update timed out')),60000);
+  worker.addEventListener('statechange',check);
+  navigator.serviceWorker.addEventListener('controllerchange',check);check();
  });
 }
 addEventListener('load',installOffline,{once:true});
