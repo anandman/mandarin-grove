@@ -186,7 +186,7 @@ function showHomeworkLookup({back=showHomeworkHelp,backLabel='Back to Help'}={})
   const title=document.createElement('h2');title.lang='zh-Hans';title.textContent=row.text;title.className='lookup-word';
   const source=document.createElement('p');source.className='reading-note';source.textContent=row.kind==='character'?'School character · '+GN[row.card.g?.[0]||'K']:'Word dictionary';detail.append(title,source);
   const readingRoot=document.createElement('div');readingRoot.id='lookup-readings';detail.append(readingRoot);renderReadings(row,readingRoot);
-  const actions=document.createElement('div');actions.className='lookup-detail-actions';const hear=document.createElement('button');hear.className='btn';hear.textContent='Hear pronunciation';hear.onclick=()=>say(row.text);actions.append(hear);detail.append(actions);
+  const actions=document.createElement('div');actions.className='lookup-detail-actions';const hear=document.createElement('button');hear.className='btn';hear.textContent='Hear pronunciation';hear.onclick=()=>say(row.text,helpResultReadings(row,state.query)[0]?.pinyin);actions.append(hear);detail.append(actions);
   if(row.kind==='character'){
    const strokes=document.createElement('button');strokes.className='btn gray';strokes.textContent='Watch strokes';actions.append(strokes);
    const art=document.createElement('div');art.id='lookup-strokes';art.hidden=true;const status=document.createElement('p');status.className='reading-note';status.setAttribute('role','status');detail.append(art,status);

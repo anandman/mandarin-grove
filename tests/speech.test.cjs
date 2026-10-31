@@ -96,3 +96,18 @@ test('Taiwan recordings are explicitly optional and saved selections are preserv
  assert.match(elements['voice-note'].textContent,/not verified as Mainland/);
  assert.equal(elements['voice-choice'].value,'reference');assert.equal(h.saved.get('zh_voice'),'reference');
 });
+
+test('a dictionary word uses browser speech directly instead of requesting a nonexistent recording',async()=>{
+ const h=harness('reference');const result=h.ctx.say('关于','guān yú');
+ assert.equal(h.audio.length,0);assert.equal(h.spoken.length,1);assert.equal(h.spoken[0].text,'关于');assert.equal(h.spoken[0].lang,'zh-CN');
+ assert.equal(h.ctx.window.lastSpeechRequest.character,'关于');assert.equal(h.ctx.window.lastSpeechRequest.pinyin,'guān yú');assert.equal(h.ctx.window.lastSpeechRequest.source,'browser speech');assert.equal(h.saved.get('zh_voice'),'reference');
+ h.spoken[0].onend();assert.equal(await result,true);
+});
+test('failed dictionary-word speech reports failure without changing the saved voice or playing other audio',async()=>{
+ const h=harness('reference'),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
+ const result=h.ctx.say('关于');assert.equal(h.spoken.length,1);h.spoken[0].onerror();assert.equal(await result,false);assert.match(status.textContent,/Could not play/);assert.equal(status.hidden,false);assert.equal(h.audio.length,0);assert.equal(h.saved.get('zh_voice'),'reference');
+});
+test('unavailable browser speech for a dictionary word is explicit and never invents a recording URL',async()=>{
+ const h=harness('reference'),status={textContent:'',hidden:true};delete h.ctx.window.speechSynthesis;h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
+ const pending=h.ctx.say('关于');if(h.audio[0])h.audio[0].onerror();assert.equal(await pending,false);assert.equal(h.audio.length,0);assert.match(status.textContent,/unavailable/i);assert.equal(h.saved.get('zh_voice'),'reference');
+});

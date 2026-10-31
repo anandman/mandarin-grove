@@ -102,6 +102,18 @@ async function speakPrompt(text, token, reading) {
   const card = ALL.find(c => c.c === text);
   const prompt = english || (card ? speechText(card) : text);
   const preference=voicePreference();
+  if (!english && !card) {
+    const voice=selectedMandarinVoice();
+    window.lastSpeechRequest={character:text,pinyin:reading||null,prompt:text,preference,
+      voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:'browser speech',
+      selectionNote:'Dictionary word or character without a bundled recording; requests browser Mandarin. Actual pronunciation is not verified.'};
+    if(!window.speechSynthesis){speechStatus('No recording is available for this word or character, and browser speech is unavailable on this device.');return false;}
+    // Start within the deliberate button gesture: waiting for a nonexistent MP3 can lose Safari user activation.
+    if(preference==='reference'||preference==='recorded')speechStatus('No recording for this word or character. Using browser Mandarin.');
+    const ok=await speakDevice(prompt,token);
+    if(!ok&&token===speechSequence)speechStatus('Could not play this browser voice. Try again, or choose a voice in Grown-ups.');
+    return ok;
+  }
   if (card && preference==='reference') {
     const recording=referenceRecording(card,reading);
     window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt:text,preference,
