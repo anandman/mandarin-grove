@@ -101,18 +101,28 @@ function renderWritingIdea(){
  const focused=document.activeElement?.id;
  feedbackQuestion=state.card?{mode:'writing-ideas',writing:{input:state.input,word:state.card.word,meaning:state.card.meaning,idea:state.card.text}}:null;
  if(!state.card){result.replaceChildren();return;}
- const card=state.card,fruit=REWARD_POLICY.fruitPerSentence;
- result.innerHTML=`<article class="writing-seed"><div class="writing-seed-label"><span>${writingBook()}</span>Writing seed</div><p class="writing-caption">A word you could use</p><div class="writing-word"><span lang="zh-Hans">${voiceEscape(card.word)}</span><span>${voiceEscape(card.meaning)}</span></div><p class="writing-caption">Something to write about</p><p class="writing-prompt">${voiceEscape(card.text)}</p><button class="btn gray" id="writing-another">Try another idea</button><p class="reading-note">Use this as a starting point. Write your own sentence on paper. The app does not check your sentence.</p><div class="writing-finish"><button class="btn" id="writing-finish" ${state.claim.done?'disabled':''}>${state.claim.done?'Sentence celebrated':'I wrote my sentence'} · 🍊 +${fruit}</button><p class="reading-note">${state.claim.done?'Your reward is ready in Grove rewards.':`Finished? Celebrate your effort with ${fruit} orange${fruit===1?'':'s'}. No timer.`}</p></div></article>`;
- $('writing-another').onclick=generateWritingIdea;
- $('writing-finish').onclick=()=>{
-  if(state.claim.done)return;
-  const amount=completeWritingSentence(S,state.claim.id);
-  try{if(amount)save();}
-  catch(error){$('writing-status').textContent='Could not save your sentence reward. Please try again. '+error.message;return;}
-  state.claim.done=true;$('writing-status').textContent='';
-  if(amount)announceRewards([{kind:'fruit',amount}]);
-  renderWritingIdea();
-  $('writing-another').focus();
+ const card=state.card,fruit=REWARD_POLICY.fruitPerSentence,claim=state.claim,token=NAV;
+ const current=button=>button.isConnected&&result.isConnected&&token===NAV&&state.owner===PR.cur&&WRITING_IDEAS_SESSION===state&&state.claim===claim;
+ result.innerHTML=`<article class="writing-seed"><div class="writing-seed-label"><span>${writingBook()}</span>Writing seed</div><p class="writing-caption">A word you could use</p><div class="writing-word"><span lang="zh-Hans">${voiceEscape(card.word)}</span><span>${voiceEscape(card.meaning)}</span></div><p class="writing-caption">Something to write about</p><p class="writing-prompt">${voiceEscape(card.text)}</p><button class="btn gray" id="writing-another">Try another idea</button><p class="reading-note">Use this as a starting point. Write your own sentence on paper. The app does not check your sentence.</p><div class="writing-finish"><button class="btn" id="writing-finish" ${state.claim.done||state.claim.confirming?'disabled':''}>${state.claim.done?'Sentence celebrated':'I wrote my sentence'} · 🍊 +${fruit}</button><p class="reading-note">${state.claim.done?'Your reward is ready in Grove rewards.':`Finished? Celebrate your effort with ${fruit} orange${fruit===1?'':'s'}. No timer.`}</p>${claim.confirming&&!claim.done?'<div class="writing-confirm" role="group" aria-labelledby="writing-confirm-question"><p id="writing-confirm-question">Have you finished writing your own sentence on paper?</p><button class="btn" id="writing-confirm">Yes, I wrote it</button> <button class="btn gray" id="writing-keep">Keep writing</button></div>':''}</div></article>`;
+ const another=$('writing-another'),finish=$('writing-finish');
+ another.onclick=()=>{if(current(another))generateWritingIdea();};
+ finish.onkeydown=feedbackButtonKeydown;
+ finish.onclick=()=>{
+  if(!current(finish)||claim.done||claim.confirming)return;
+  claim.confirming=true;renderWritingIdea();$('writing-keep').focus();
  };
+ if(claim.confirming&&!claim.done){
+  const confirm=$('writing-confirm'),keep=$('writing-keep');confirm.onkeydown=keep.onkeydown=feedbackButtonKeydown;
+  keep.onclick=()=>{if(!current(keep)||!claim.confirming)return;claim.confirming=false;$('writing-status').textContent='';renderWritingIdea();$('writing-finish').focus();};
+  confirm.onclick=()=>{
+   if(!current(confirm)||claim.done||!claim.confirming)return;
+   const amount=completeWritingSentence(S,claim.id);
+   try{if(amount)save();}
+   catch(error){if(current(confirm))$('writing-status').textContent='Could not save your sentence reward. Please try again. '+error.message;return;}
+   claim.done=true;claim.confirming=false;$('writing-status').textContent='';
+   if(amount)announceRewards([{kind:'fruit',amount}]);
+   renderWritingIdea();$('writing-another').focus();
+  };
+ }
  if(focused==='writing-another')$('writing-another').focus();
 }

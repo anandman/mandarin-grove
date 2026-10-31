@@ -1,4 +1,4 @@
-const VER='20261030-feedback-77';
+const VER='20261030-feedback-78';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
