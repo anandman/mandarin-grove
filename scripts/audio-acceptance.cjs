@@ -30,15 +30,21 @@ function decision(scores,policy){
  if(Math.abs(sum-1)>1e-5)throw Error('Expected normalized model scores, not correctness probabilities');
  ranked.sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
  const [observed,score]=ranked[0],margin=score-(ranked[1]?.[1]||0);
- if(margin<=0||score<policy.minScore||margin<policy.minMargin)return{status:'abstained',reason:'below-calibrated-threshold',observed,score,margin};
+ const labelMinimum=policy.minScoreByLabel&&Object.hasOwn(policy.minScoreByLabel,observed)?policy.minScoreByLabel[observed]:0;
+ if(margin<=0||score<Math.max(policy.minScore,labelMinimum)||margin<policy.minMargin)return{status:'abstained',reason:'below-calibrated-threshold',observed,score,margin};
  if(policy.allowedLabels&&!policy.allowedLabels.includes(observed))return{status:'abstained',reason:'unsupported-label',observed,score,margin};
  return{status:'measured',observed,score,margin};
 }
 function verify(manifest,capture,policy,{frozen,qualification={}}={}){
  if(manifest.schemaVersion!==1||!Array.isArray(manifest.clips)||!manifest.clips.length||capture.schemaVersion!==1||capture.input!=='audio-only'||!Array.isArray(capture.predictions)||!Array.isArray(capture.fittedSpeakers)||!capture.fittedSpeakers.length||!SHA.test(capture.weightsSha256)||!SHA.test(capture.featureCodeSha256))throw Error('Expected identified audio-only component evidence');
- for(const component of COMPONENTS){const p=policy[component];if(!p||!Number.isFinite(p.minScore)||p.minScore<0||p.minScore>1||!Number.isFinite(p.minMargin)||p.minMargin<0||p.minMargin>1)throw Error('Invalid calibration policy')}
+ for(const component of COMPONENTS){const p=policy[component];
+  if(!p||!Number.isFinite(p.minScore)||p.minScore<0||p.minScore>1||!Number.isFinite(p.minMargin)||p.minMargin<0||p.minMargin>1)throw Error('Invalid calibration policy');
+  if(p.minScoreByLabel!==undefined&&(!p.minScoreByLabel||typeof p.minScoreByLabel!=='object'||Array.isArray(p.minScoreByLabel)||Object.values(p.minScoreByLabel).some(v=>!Number.isFinite(v)||v<0||v>1)))throw Error('Invalid label calibration policy');
+  if(p.allowedLabels!==undefined&&(!Array.isArray(p.allowedLabels)||p.allowedLabels.some(v=>typeof v!=='string')||new Set(p.allowedLabels).size!==p.allowedLabels.length))throw Error('Invalid calibration label allowlist');
+ }
  const ids=new Set(),audioHashes=new Set(),readings=new Map(),speakers=new Map();
  for(const c of manifest.clips){
+  if(c.referenceEligible!==undefined&&c.referenceEligible!==true)throw Error('Unlabelled normalization rows cannot enter reference evaluation');
   const parts=phonemes(c.pinyin);
   if(!c.id||ids.has(c.id)||audioHashes.has(c.sha256)||!parts||!SHA.test(c.sha256)||!c.speaker||!['development','calibration','held-out'].includes(c.split))throw Error('Invalid or duplicate reference clip/audio');
   if(speakers.has(c.speaker)&&speakers.get(c.speaker)!==c.split)throw Error('Speaker crosses reference splits');

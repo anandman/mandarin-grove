@@ -473,6 +473,12 @@ speaker, reading-base and expected-label strata. A score is a model output,
 not a probability that a pronunciation is correct. Missing components, changed
 audio hashes and unsupported isolated neutral tones abstain.
 
+Calibrated confidence floors may depend on the predicted component label; the
+expected reading never chooses its threshold. The global floor always applies.
+Label floors and allowlists are validated and included in the frozen policy.
+Such selective calibration needs subsequent held-out confirmation; fitting the
+thresholds is not itself an independent accuracy result.
+
 The report distinguishes fully measured whole readings from partial decisions,
 and expected-label strata from observed-label precision. Critical coverage lists
 untested pairs, represented pairs, directed comparisons and distinct clips.
@@ -537,3 +543,13 @@ The current acoustic methods remain in development. Strong within-source tone
 agreement failed to generalize sufficiently to an independent corpus, so it
 has not approved any recordings. Further source/cross-speaker calibration is
 ongoing; this checkpoint changes no playback, saved voice or learner data.
+
+`scripts/audio-annotation.cjs` compares supported Hanyu Pinyin spelling variants
+in reference metadata, separately from acoustic verification. It implements the
+ordinary-u `uei/ui` and `uen/un` conventions in the
+[Pinyin Scheme's spelling rules](https://yywz.ecnu.edu.cn/1f/56/c30556a335702/page.htm),
+also explained by [Hunan First Normal University](https://jwc.hnfnu.edu.cn/info/1055/3129.htm).
+It preserves initials, tones and u/ü distinctions. Literal `üen` remains unresolved
+under the established sources. Annotation agreement does not establish what a
+waveform actually says, and neither raw source labels nor earlier failed results
+are rewritten by this formatting comparison.

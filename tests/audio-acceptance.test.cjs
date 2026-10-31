@@ -65,12 +65,42 @@ test('audio-only identity, score validity and duplicate clips fail closed',()=>{
  }
 });
 
+test('unlabelled normalization rows cannot be counted as verified reference labels',()=>{
+ const {verify}=api(),f=fixture();f.manifest.clips[0].referenceEligible=false;
+ assert.throws(()=>verify(f.manifest,f.capture,f.policy),/unlabel|normalization|reference/i);
+});
+
 test('ties and uncertain scores abstain, and empty acceptance has no invented precision',()=>{
  const {verify}=api(),f=fixture();
  for(const p of f.capture.predictions)p.scores.tone={'1':.5,'2':.5};
  const r=verify(f.manifest,f.capture,f.policy);
  assert.equal(r.positive.tone.precision,null);assert.equal(r.positive.tone.coverage,0);
  assert.equal(r.full.matches,0);
+});
+
+test('label-specific confidence uses the predicted label and preserves the global floor',()=>{
+ const {verify}=api(),f=fixture();
+ f.capture.predictions[0].scores.final=structuredClone(f.capture.predictions[2].scores.final);
+ f.policy.final.minScoreByLabel={u:.995,e:.9};
+ let report=verify(f.manifest,f.capture,f.policy);
+ assert.equal(report.results[0].components.final.status,'abstained');
+ assert.equal(report.results[0].components.final.observed,'u');
+ assert.equal(report.results[8].components.final.status,'matches');
+ f.policy.final.minScoreByLabel.u=.98;f.policy.final.minScore=.999;
+ report=verify(f.manifest,f.capture,f.policy);
+ assert.equal(report.results[0].components.final.status,'abstained');
+});
+
+test('malformed label confidence or allowlists fail closed',()=>{
+ const {verify}=api();
+ for(const bad of [null,[],{u:NaN},{u:1.1},{u:-.1},{u:'0.9'}]){
+  const f=fixture();f.policy.final.minScoreByLabel=bad;
+  assert.throws(()=>verify(f.manifest,f.capture,f.policy),/policy|calibration|label/i);
+ }
+ for(const bad of ['u',null,['u','u'],[7]]){
+  const f=fixture();f.policy.final.allowedLabels=bad;
+  assert.throws(()=>verify(f.manifest,f.capture,f.policy),/policy|calibration|label/i);
+ }
 });
 
 test('final evaluation requires frozen policy/model identity and excludes fitted speakers',()=>{
@@ -82,6 +112,10 @@ test('final evaluation requires frozen policy/model identity and excludes fitted
  f.policy.tone.minScore=.8;assert.throws(()=>verify(f.manifest,f.capture,f.policy,{frozen}),/frozen/i);
  const g=fixture('held-out');g.capture.fittedSpeakers=['test-speaker'];
  assert.throws(()=>verify(g.manifest,g.capture,g.policy,{frozen:identity(g.capture,g.policy,{manifest:g.manifest})}),/fitted|speaker/i);
+ const h=fixture('held-out');h.policy.final.minScoreByLabel={u:.95};
+ const labelFrozen=identity(h.capture,h.policy,{manifest:h.manifest});
+ h.policy.final.minScoreByLabel.u=.96;
+ assert.throws(()=>verify(h.manifest,h.capture,h.policy,{frozen:labelFrozen}),/frozen/i);
 });
 
 test('qualification requires measured precision, coverage and natural controls for every component',()=>{
