@@ -51,6 +51,12 @@ class ScoringTests(unittest.TestCase):
                 self.scorer.write_new_json(path, {'first': False})
             self.assertIn('true', path.read_text())
 
+    def test_extended_head_requires_the_pinned_architecture_before_constructing(self):
+        entry={'architecture':'component-temporal-v1','architectureSha256':'0'*64,
+               'categories':{'initial':['','b'],'final':['a','e'],'tone':['1','2','3','4']}}
+        with self.assertRaisesRegex(ValueError,'architecture'):
+            self.scorer.build_head(entry)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -73,6 +73,26 @@ def write_new_json(path, value):
         stream.write('\n')
 
 
+def build_head(entry):
+    categories = entry['categories']
+    architecture = entry.get('architecture', 'phonetic-temporal-v1')
+    if architecture == 'phonetic-temporal-v1':
+        if set(categories) != {'initial', 'final'}:
+            raise ValueError('Unexpected phonetic architecture categories')
+        return core.make_phonetic_head(len(categories['initial']), len(categories['final']))
+    if architecture != 'component-temporal-v1':
+        raise ValueError('Unknown temporal architecture')
+    module_path = Path(__file__).with_name('audio-component-head.py')
+    if core.file_hash(module_path) != entry.get('architectureSha256'):
+        raise ValueError('Component architecture differs from pinned training code')
+    spec = importlib.util.spec_from_file_location('component_head', module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    if set(categories) != {'initial', 'final', 'tone'}:
+        raise ValueError('Unexpected component architecture categories')
+    return module.make_component_head(*(len(categories[name]) for name in ('initial', 'final', 'tone')))
+
+
 def score(args):
     manifest = json.loads(args.manifest.read_text())
     protocol = json.loads(args.protocol.read_text())
@@ -127,10 +147,10 @@ def score(args):
     ensemble = {'initial': [], 'final': [], 'tone': []}
     for entry in bundle['phoneticModels']:
         categories = entry['categories']
-        model = core.make_phonetic_head(len(categories['initial']), len(categories['final']))
+        model = build_head(entry)
         model.load_state_dict(torch.load(paths[entry['id']], map_location='cpu', weights_only=True), strict=True)
         model = model.to(device).eval()
-        result = {'initial': [], 'final': []}
+        result = {name: [] for name in categories}
         with torch.inference_mode():
             for start in range(0, len(rows), 128):
                 outputs = model(torch.tensor(hidden[start:start + 128], device=device))

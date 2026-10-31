@@ -138,6 +138,26 @@ class VerificationTests(unittest.TestCase):
                 self.assertIs(load.call_args.kwargs.get('local_files_only'), True)
                 self.assertIs(load.call_args.kwargs.get('weights_only'), True)
 
+    def test_batch_extraction_keeps_each_waveform_with_its_own_features(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import torch
+        class Encoder:
+            def __call__(self, input_values, **kwargs):
+                markers=input_values[:,0]
+                states=tuple(markers[:,None,None].expand(-1,5,1024)+i for i in range(25))
+                return SimpleNamespace(logits=torch.zeros(len(markers),5,210),hidden_states=states)
+            def _get_feat_extract_output_lengths(self, length):return torch.tensor(5)
+        def extractor(waves, **kwargs):
+            return SimpleNamespace(input_values=torch.tensor(np.stack(waves)),attention_mask=torch.ones(len(waves),1600))
+        waves=[np.full(1600,.1,dtype=np.float32),np.full(1600,.7,dtype=np.float32)]
+        with patch.object(self.module,'pitch_signature',side_effect=lambda y,r:np.full(203,y[0])):
+            values=self.module.extract_batch(Encoder(),extractor,waves,[16000,16000],'cpu')
+        self.assertAlmostEqual(float(values[0]['sequence'][0,0,0]),6.1,delta=.01)
+        self.assertAlmostEqual(float(values[1]['sequence'][0,0,0]),6.7,delta=.01)
+        self.assertAlmostEqual(float(values[0]['pitch'][0]),.1,places=5)
+        self.assertAlmostEqual(float(values[1]['pitch'][0]),.7,places=5)
+
 
 if __name__ == '__main__':
     unittest.main()

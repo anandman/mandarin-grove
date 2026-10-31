@@ -520,7 +520,11 @@ the static application and its ordinary Node checks.
 Feature extraction takes only waveforms, pins the local encoder, retains missing
 pitch and checks source speakers before inference. The scorer uses two temporal
 phonetic heads and two physical-pitch classifiers with pinned locally trained
-weights. It removes unlabelled speaker-batch channel bias and pitch register;
+weights. An optional pinned `audio-component-head.py` architecture adds an
+independently trainable temporal tone path; its tone scores are combined with the
+physical-pitch classifiers, and missing usable pitch still abstains. This is a
+development method, not approval of its training or candidate recordings.
+The scorer removes unlabelled speaker-batch channel bias and pitch register;
 the exact complete normalization population must therefore be frozen with each
 experiment. These are batch checks of adult reference recordings, not a method
 for scoring a single child. Missing usable pitch abstains. Final runs require
