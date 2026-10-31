@@ -26,3 +26,12 @@ async function activateOfflineUpdate(){
  });
 }
 addEventListener('load',installOffline,{once:true});
+
+// GitHub Pages projects share an origin. Maintenance must leave sibling apps alone.
+async function clearOfflineApp(){
+ const base=new URL('./',location.href),prefix='mandarin-grove-shell-'+(base.pathname==='/'?'':encodeURIComponent(base.pathname)+'-');
+ if(typeof caches!=='undefined')for(const key of await caches.keys()){
+  if(key.startsWith(prefix)&&/^\d{8}-[a-z0-9-]+$/.test(key.slice(prefix.length)))await caches.delete(key);
+ }
+ if(navigator.serviceWorker)for(const registration of await navigator.serviceWorker.getRegistrations())if(registration.scope===base.href)await registration.unregister();
+}

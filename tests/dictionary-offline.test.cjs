@@ -32,7 +32,7 @@ test('activating a new worker during an older document load keeps versioned scri
   ['mandarin-grove-shell-'+version,new Map([['offline-assets.json',manifest],['app.js','new app']])],
   ['mandarin-grove-shell-'+old,new Map([['offline-assets.json',manifest],['index.html','old HTML with version70 scripts'],['app.js','old app']])]
  ]);
- const ctx=vm.createContext({URL,Request,Response,Set,caches:{has:async k=>banks.has(k),open:async k=>({match:async p=>banks.get(k)?.has(p)?new Response(banks.get(k).get(p)):undefined})},fetch:async r=>{calls.push(r);return new Response('NETWORK CURRENT APP');},self:{location:{origin:'https://grove.test'},addEventListener:(n,f)=>handlers[n]=f}});
+ const ctx=vm.createContext({URL,Request,Response,Set,caches:{has:async k=>banks.has(k),open:async k=>({match:async p=>banks.get(k)?.has(p)?new Response(banks.get(k).get(p)):undefined})},fetch:async r=>{calls.push(r);return new Response('NETWORK CURRENT APP');},self:{location:{origin:'https://grove.test',href:'https://grove.test/sw.js'},addEventListener:(n,f)=>handlers[n]=f}});
  vm.runInContext(source,ctx);
  // The old HTML was obtained before activation. Its remaining requests arrive at the new worker.
  assert.match(banks.get('mandarin-grove-shell-'+old).get('index.html'),/old HTML/);
