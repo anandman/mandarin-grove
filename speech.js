@@ -143,9 +143,11 @@ async function speakPrompt(text, token, reading) {
       return false;
     }
     const recording=mainlandRecording(card,expected);
+    const sourceReviewed=MAINLAND_AUDIO.acceptanceBasis==='native-source-review';
+    const checkPending=MAINLAND_AUDIO.pendingReadings?.includes(recordingKey(expected));
     window.lastSpeechRequest={character:text,pinyin:expected,prompt:recording?text:prompt,preference,
       voice:null,source:recording?'MSU Putonghua recording':'browser speech',recording:recording?.file||null,
-      selectionNote:recording?'Native-source isolated recording with separate calibrated consonant, vowel and tone checks; exact source and limits in audio-sources/mainland.json.':'No approved recording for this reading; device voice pronunciation is not verified.'};
+      selectionNote:recording?(sourceReviewed?'MSU native-source review; automatic pronunciation checker is not qualified. '+(checkPending?'Additional component check pending. ':'Three app component checks match; this is not a correctness guarantee. '):'Native-source isolated recording with separate calibrated consonant, vowel and tone checks. ')+'Exact source and limits in audio-sources/mainland.json.':'No source recording for this reading; device voice pronunciation is not verified.'};
     if (!recording) {
       if(expected!==readings(card)[0]){speechStatus('No checked recording for this alternate reading yet. Choose another pronunciation voice in Grown-ups.');return false;}
       const unchecked=uncheckedNeutralRecording(card,expected);
@@ -165,6 +167,7 @@ async function speakPrompt(text, token, reading) {
       if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
       return ok;
     }
+    if(checkPending)speechStatus('MSU recording · additional pronunciation check pending.');
     const ok=await playRecording(text,token,recording.file);
     if(!ok&&token===speechSequence)speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
     return ok;
@@ -212,6 +215,7 @@ function voiceSettingsMarkup() {
     <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假 · 满</button>
     <button type="button" class="btn gray" id="voice-refresh">Refresh voices</button>
     <p class="reading-note">The app targets Mainland Mandarin (Putonghua) and simplified Chinese. CNS11643 recordings are Taiwan Mandarin and remain an optional regional voice, not a verified Mainland pronunciation model. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
+    ${expectsMainlandRecordings()?'<p class="reading-note">MSU audio: Tone Perfect MP3 Dataset, Michigan State University Libraries, East Lansing, MI. Selected recordings are unchanged and used under <a href="audio-sources/LICENSE-MSU.txt" target="_blank" rel="noopener">CC BY-NC 4.0 · citation and license</a>. <a href="audio-sources/MSU-VERIFICATION.json" target="_blank" rel="noopener">Source and remaining checks</a>.</p>':''}
     <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try the browser default; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
     <details><summary class="reading-note">Browser voice report</summary>
       <p class="reading-note">This lists every voice the browser reports, before filtering. If a downloaded voice is absent here, this page cannot select it by name. You can copy this report to help troubleshoot.</p>
@@ -222,7 +226,7 @@ function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
   const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
   const available = ['auto','recorded','reference','mainland'].includes(preference)||!!selected;
-  const html=(expectsMainlandRecordings()?'<option value="mainland">Mainland Mandarin recordings · MSU</option>':'')+
+  const html=(expectsMainlandRecordings()?'<option value="mainland">MSU Mainland recordings</option>':'')+
     '<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
     (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');
@@ -231,7 +235,7 @@ function refreshVoiceSettings() {
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
   note.textContent = preference === 'mainland'
-    ? 'Plays checked, reading-specific Putonghua recordings from MSU Tone Perfect. Gaps may use older Google or device audio, marked unchecked, including in listening activities. Other words and sentences use the device voice. Existing voice choices are preserved.'
+    ? 'Native Putonghua recordings from MSU Tone Perfect, reviewed by the source team. Additional app checks remain unfinished; some readings are marked for an extra check. Nine neutral-tone gaps may use older Google or device audio, marked unchecked, including in listening activities. Other words and sentences use the device voice. Your saved voice choices are preserved.'
     : preference === 'reference'
     ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'

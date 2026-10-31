@@ -1,5 +1,10 @@
 # Change history
 
+## Source-reviewed MSU Mainland recordings — 2026-10-31
+
+Use548exact-reading native MSU Tone Perfect recordings for unset voice choices, with source citation and noncommercial license. Preserve explicit old voices and all progress/backups.521readings have matching component checks;27show an additional-check notice, and nine neutral gaps keep clearly unchecked Google/device fallback. Automatic verification remains unfinished after the failed external vowel test. Cache selected recordings offline, support both hosting paths, and show asset failures without silently changing pronunciation.
+
+
 ## Additional pronunciation model evaluation — 2026-10-22
 
 - Retained the actual blind outputs from an additional isolated-syllable model

@@ -1,3 +1,19 @@
+# Source-reviewed MSU delivery — October31,2026
+
+The current default for an unset voice is **MSU Mainland recordings**,548 exact curriculum reading keys from the unchanged Tone Perfect MP3 archive. The owner explicitly authorized an incremental source-reviewed replacement while further pronunciation checks continue. The release basis is native-source curation and comparative fitness for the Mainland target; **the automatic assessor is not qualified**. Earlier V3 and V6 failures are retained.521selected recordings have matching component checks;27remain pending. Nine absent neutral readings use clearly unchecked older Google/device audio. Saved explicit voices remain unchanged.
+
+The [MSU production paper](https://ideah.pubpub.org/pub/hh90jpsu/release/5) documents Beijing native speakers, specialist review and re-recording. This is stronger locale/review/source evidence for this app than variable device speech or the legacy Google bank, whose841character filenames cannot distinguish12alternate reading requests. CNS already provides557exact readings as an optional Taiwan source; it remains available. This comparison does not measure the sources' relative phonetic error rates. The checker was partly trained on MSU and must not be used to manufacture an unbiased superiority claim.
+
+The release contains548readings (493MV3,55FV3),14,123,278 unchanged bytes. Selection prefers complete component agreement, then a source-backed candidate without an accepted disagreement;27have abstentions/unsupported checks. `gou1_FV3` is selected instead of the checker-disputed MV3 candidate; neither that disagreement nor model agreement is an independent listening verdict. The four original lexical-gap flags for `cuo4 she4 xing2 zuo3` remain in the manifest alongside separately established school/dictionary mappings. Publisher-deleted `jiao1_FV3` is never fabricated.
+
+[Exact manifest](../audio-sources/mainland.json), [sanitized comparison and failed-test summary](../audio-sources/MSU-VERIFICATION.json), [citation/license](../audio-sources/LICENSE-MSU.txt). Selected source MP3s are unmodified; only filenames change. The full private archive, external research corpus, model weights and learner data are excluded from the public app. Source-curated release is a distinct importer path that requires explicit owner authorization and source-review evidence and preserves `methodQualified:false`; it does not turn a failed research selection into a qualified result. Reproduction uses `scripts/import-mainland-audio.py` with the private authorized selection and immutable original ZIP.
+
+The final independent test used1085eligible recordings from two external speakers after freezing models, policy, populations and gates. Initial accepted-label agreement was1035/1043(99.23%);final968/982(98.57%,FAIL);tone1020/1020(100%). All17measuredcriticalpairs had zero false acceptance; zi2wasunavailable. These describe finite tested adult references, not accuracy guarantees for released clips or child-speech grading. Whole-reading agreement and per-speaker counts are reported separately. Native listening may diagnose remaining cases; it is no longer a prerequisite for this source-based upgrade.
+
+The following sections retain the earlier research and release history. Statements that MSU was not yet shipped describe their dated checkpoints.
+
+---
+
 # Automated pronunciation evaluation
 
 This is release tooling. The student app remains static; it never downloads an
