@@ -22,8 +22,19 @@ def file_hash(path):
 
 
 def import_subset(selection, archive_path, output_root, curriculum_keys):
+    basis = selection.get('acceptanceBasis', 'qualified-component-method')
+    source_reviewed = basis == 'native-source-review'
+    review = selection.get('sourceReview', {})
+    if source_reviewed:
+        if (selection.get('methodQualified') is not False
+                or not re.fullmatch(r'[a-f0-9]{64}', selection.get('ownerAuthorizationSha256', ''))
+                or not isinstance(review, dict)
+                or review.get('nativeReviewDocumented') is not True
+                or review.get('productionPaperURL') != 'https://ideah.pubpub.org/pub/hh90jpsu/release/5'):
+            raise ValueError('Source-reviewed release requires owner authorization and documented native curation; method remains unqualified')
+    elif basis != 'qualified-component-method' or selection.get('methodQualified') is not True:
+        raise ValueError('Expected a separately qualified method or explicit source-reviewed release')
     if (selection.get('schemaVersion') != 1 or selection.get('releaseApproved') is not True
-            or selection.get('methodQualified') is not True
             or selection.get('sourceArchiveSha256') != SOURCE_SHA256
             or file_hash(archive_path) != SOURCE_SHA256
             or any(not re.fullmatch(r'[a-f0-9]{64}', selection.get(key, ''))
@@ -40,9 +51,13 @@ def import_subset(selection, archive_path, output_root, curriculum_keys):
             if (not re.fullmatch(r'[a-z]+[1-4]', key) or key not in curriculum_keys
                     or key in manifest_rows or speaker not in ('FV3', 'MV3')
                     or row['sourceId'] != key + '_' + speaker
-                    or row['member'] != 'tone_perfect/' + row['sourceId'] + '_MP3.mp3'
-                    or row['components'] != dict.fromkeys(('initial', 'final', 'tone'), 'matches')):
+                    or row['member'] != 'tone_perfect/' + row['sourceId'] + '_MP3.mp3'):
                 raise ValueError('Unapproved reading, source speaker, duplicate or component evidence')
+            components = row.get('components')
+            if (not isinstance(components, dict) or set(components) != {'initial', 'final', 'tone'}
+                    or any(v not in ('matches', 'abstained') for v in components.values())
+                    or (not source_reviewed and any(v != 'matches' for v in components.values()))):
+                raise ValueError('Incomplete or disputed component evidence for release basis')
             gap = row.get('originalSourceLexicalGap', False)
             exception = row.get('lexicalMetadataException')
             if not isinstance(gap, bool):
@@ -68,7 +83,8 @@ def import_subset(selection, archive_path, output_root, curriculum_keys):
             manifest_rows[key] = {'file': file, 'sha256': row['sha256'], 'bytes': len(body),
                                   'speaker': speaker, 'sourceId': row['sourceId'],
                                   'sourceMember': row['member'], 'processing': 'Unchanged original MP3 bytes',
-                                  'originalSourceLexicalGap': gap}
+                                  'originalSourceLexicalGap': gap, 'componentChecks': components,
+                                  'automaticCheckStatus': 'components-match' if all(v == 'matches' for v in components.values()) else 'pending'}
             if exception is not None:
                 manifest_rows[key]['lexicalMetadataException'] = exception
     manifest = {'schemaVersion': 1, 'source': {'title': 'Tone Perfect MP3 Dataset',
@@ -78,10 +94,16 @@ def import_subset(selection, archive_path, output_root, curriculum_keys):
                 'archiveSha256': SOURCE_SHA256},
                 'verification': {'frozenMethodSha256': selection['frozenMethodSha256'],
                                  'evaluationSha256': selection['evaluationSha256'],
+                                 'acceptanceBasis': basis,
+                                 'methodQualified': selection['methodQualified'],
                                  'scope': 'Selected adult-source isolated Putonghua readings; not child-speech grading or connected-speech certification'},
                 'readings': dict(sorted(manifest_rows.items())),
                 'unsupported': sorted(set(curriculum_keys) - set(manifest_rows))}
-    runtime = {'source': 'MSU Tone Perfect', 'readings': {k: v['file'] for k, v in manifest['readings'].items()}}
+    if source_reviewed:
+        manifest['verification'].update(sourceReview=review, ownerAuthorizationSha256=selection['ownerAuthorizationSha256'])
+    runtime = {'source': 'MSU Tone Perfect', 'acceptanceBasis': basis,
+               'pendingReadings': [k for k, v in manifest['readings'].items() if v['automaticCheckStatus'] == 'pending'],
+               'readings': {k: v['file'] for k, v in manifest['readings'].items()}}
     assets['audio-sources/mainland.json'] = (json.dumps(manifest, ensure_ascii=False, indent=2) + '\n').encode()
     assets['mainland-pronunciations.js'] = ('// Selected original MSU recordings; source, checks and limits: audio-sources/mainland.json\nconst MAINLAND_AUDIO=' + json.dumps(runtime, ensure_ascii=False, indent=2) + ';\n').encode()
     # Validate every destination before creating any public file. Repeat imports

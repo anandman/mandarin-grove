@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "releaseBasis": "Native-source review and explicit incremental-release decision; not a qualified automatic pronunciation method",
+  "source": {
+    "title": "Tone Perfect MP3 Dataset",
+    "publisher": "Michigan State University Libraries",
+    "url": "https://listings.lib.msu.edu/toneperfect/",
+    "license": "CC-BY-NC-4.0",
+    "licenseURL": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "archiveSha256": "e2ced57c6bb5f48342dc7c72ff8b06d94dbe785895435ab8b3d7c2fb3e69843f"
+  },
+  "productionPaper": "https://ideah.pubpub.org/pub/hh90jpsu/release/5",
+  "coverage": {
+    "curriculumReadings": 557,
+    "sourceRecordings": 548,
+    "componentChecksMatch": 521,
+    "additionalChecksPending": 27,
+    "pendingReadings": [
+      "ai4",
+      "ba4",
+      "da3",
+      "dou1",
+      "dou4",
+      "fu3",
+      "gai3",
+      "gou1",
+      "gou3",
+      "gou4",
+      "guai4",
+      "jun1",
+      "kuai4",
+      "le4",
+      "liao4",
+      "qun2",
+      "rou4",
+      "shou1",
+      "shou3",
+      "shou4",
+      "ti3",
+      "wai4",
+      "wu3",
+      "xun2",
+      "yun2",
+      "yun4",
+      "zhou1"
+    ],
+    "neutralGaps": [
+      "a5",
+      "ba5",
+      "de5",
+      "le5",
+      "ma5",
+      "me5",
+      "men5",
+      "ne5",
+      "zhe5"
+    ],
+    "totalBytes": 14123278
+  },
+  "selection": {
+    "order": "Prefer MV3 then FV3 for complete component agreement; otherwise prefer non-disputed matching observations, then no accepted disagreement",
+    "speakers": {
+      "MV3": 493,
+      "FV3": 55
+    },
+    "gou1": "FV3 selected; MV3 final disagrees with the checker, retained in private research for diagnosis",
+    "sourceLexicalGapExceptions": [
+      "cuo4",
+      "she4",
+      "xing2",
+      "zuo3"
+    ],
+    "audioProcessing": "Unchanged original MP3 bytes; filenames changed only"
+  },
+  "automaticVerification": {
+    "qualified": false,
+    "method": "Two temporal component heads plus two physical-pitch tone classifiers; source-speaker normalization; predicted-label confidence floors",
+    "limitations": [
+      "Trained partly on MSU speakers; higher MSU agreement does not establish unbiased superiority over other sources.",
+      "MSU FV3/MV3 selection candidates were excluded from fitting but explored during calibration.",
+      "Component agreement is not a probability of correctness or universal accuracy.",
+      "No child-speech scoring, neutral-tone or connected-speech certification."
+    ],
+    "finalReferenceTest": {
+      "speakers": [
+        "CASS-M12",
+        "CASS-M14"
+      ],
+      "eligibleRecordings": 1085,
+      "originalNormalizationRecordings": 1096,
+      "prospectivelyExcludedSourceLabels": 11,
+      "passed": false,
+      "components": {
+        "initial": {
+          "passed": true,
+          "positives": 1085,
+          "accepted": 1043,
+          "precision": 0.9923298178331735,
+          "coverage": 0.9612903225806452,
+          "controls": 1047,
+          "falseAccepted": 2
+        },
+        "final": {
+          "passed": false,
+          "positives": 1085,
+          "accepted": 982,
+          "precision": 0.9857433808553971,
+          "coverage": 0.9050691244239631,
+          "controls": 1079,
+          "falseAccepted": 9
+        },
+        "tone": {
+          "passed": true,
+          "positives": 1085,
+          "accepted": 1020,
+          "precision": 1,
+          "coverage": 0.9400921658986175,
+          "controls": 787,
+          "falseAccepted": 0
+        }
+      },
+      "bySpeaker": {
+        "CASS-M12": {
+          "initial": {
+            "total": 542,
+            "matches": 520,
+            "mismatch": 5,
+            "abstained": 17,
+            "accepted": 525,
+            "precision": 0.9904761904761905,
+            "coverage": 0.9686346863468634
+          },
+          "final": {
+            "total": 542,
+            "matches": 493,
+            "mismatch": 3,
+            "abstained": 46,
+            "accepted": 496,
+            "precision": 0.9939516129032258,
+            "coverage": 0.915129151291513
+          },
+          "tone": {
+            "total": 542,
+            "matches": 509,
+            "mismatch": 0,
+            "abstained": 33,
+            "accepted": 509,
+            "precision": 1,
+            "coverage": 0.9391143911439115
+          }
+        },
+        "CASS-M14": {
+          "initial": {
+            "total": 543,
+            "matches": 515,
+            "mismatch": 3,
+            "abstained": 25,
+            "accepted": 518,
+            "precision": 0.9942084942084942,
+            "coverage": 0.9539594843462247
+          },
+          "final": {
+            "total": 543,
+            "matches": 475,
+            "mismatch": 11,
+            "abstained": 57,
+            "accepted": 486,
+            "precision": 0.977366255144033,
+            "coverage": 0.8950276243093923
+          },
+          "tone": {
+            "total": 543,
+            "matches": 511,
+            "mismatch": 0,
+            "abstained": 32,
+            "accepted": 511,
+            "precision": 1,
+            "coverage": 0.9410681399631676
+          }
+        }
+      },
+      "wholeReading": {
+        "total": 1085,
+        "matches": 876,
+        "mismatch": 20,
+        "abstained": 189,
+        "accepted": 896,
+        "precision": 0.9776785714285714,
+        "coverage": 0.8258064516129032
+      },
+      "critical": {
+        "declaredPairs": 18,
+        "representedPairs": 17,
+        "measuredPairs": 17,
+        "decisionCoverage": 0.9852941176470589,
+        "directedPairs": 34,
+        "distinctClips": 60,
+        "untestedPairs": [
+          {
+            "pair": [
+              "zhi2",
+              "zi2"
+            ],
+            "missingReadings": [
+              "zi2"
+            ]
+          }
+        ]
+      },
+      "criticalFalseAccepted": 0
+    },
+    "priorAttempts": "Earlier V3 actual curriculum and independent external confirmation failed. Those failures remain unchanged; V4 source-conflicted training was interrupted and not used. No attempt is relabeled as passing."
+  },
+  "comparison": {
+    "currentUnsetVoiceBeforeRelease": "Browser-controlled Mandarin zh-CN, variable across devices; actual output not measured as a corpus.",
+    "legacyGoogle": "841 character-keyed files; not enough filename identity for 12 listed alternate readings; no recovered source native-review evidence.",
+    "CNS11643": "557 exact-reading files; Taiwan Mandarin source remains an optional regional voice. Not wrong Mandarin and not certified as Mainland.",
+    "conclusion": "MSU improves Mainland-source alignment, native-review provenance, exact-reading control and playback consistency over device/legacy Google. This is not a measured head-to-head phonetic accuracy claim."
+  },
+  "humanReview": "Additional fluent-speaker checking may resolve uncertainties and fill gaps; not a prerequisite for this source-curated release."
+}

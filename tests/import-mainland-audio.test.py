@@ -93,5 +93,36 @@ class ImportTests(unittest.TestCase):
             self.assertIs(manifest['readings']['cuo4']['originalSourceLexicalGap'],True)
             self.assertEqual(manifest['readings']['cuo4']['lexicalMetadataException'],row['lexicalMetadataException'])
 
+    def source_review_selection(self, selection):
+        return {**selection, 'acceptanceBasis':'native-source-review', 'methodQualified':False,
+                'ownerAuthorizationSha256':'d'*64,
+                'sourceReview':{'productionPaperURL':'https://ideah.pubpub.org/pub/hh90jpsu/release/5',
+                                'nativeReviewDocumented':True}}
+
+    def test_owner_authorized_source_release_retains_unfinished_checker_status(self):
+        with tempfile.TemporaryDirectory() as temp:
+            archive, selection=self.fixture(temp);selection=self.source_review_selection(selection)
+            selection['readings'][0]['components']['final']='abstained'
+            with patch.object(self.tool,'SOURCE_SHA256',selection['sourceArchiveSha256']):
+                manifest=self.tool.import_subset(selection,archive,Path(temp)/'output',{'jia3','jia4'})
+            self.assertFalse(manifest['verification']['methodQualified'])
+            self.assertEqual(manifest['verification']['acceptanceBasis'],'native-source-review')
+            self.assertEqual(manifest['readings']['jia3']['automaticCheckStatus'],'pending')
+            self.assertEqual(manifest['readings']['jia4']['automaticCheckStatus'],'components-match')
+            runtime=(Path(temp)/'output/mainland-pronunciations.js').read_text()
+            self.assertIn('pendingReadings',runtime);self.assertIn('jia3',runtime)
+
+    def test_source_release_requires_owner_source_evidence_and_cannot_claim_method_pass(self):
+        with tempfile.TemporaryDirectory() as temp:
+            archive, selection=self.fixture(temp);selection=self.source_review_selection(selection)
+            cases=[{**selection,'ownerAuthorizationSha256':''},{**selection,'sourceReview':{}},
+                   {**selection,'methodQualified':True}]
+            for i,bad in enumerate(cases):
+                with patch.object(self.tool,'SOURCE_SHA256',selection['sourceArchiveSha256']):
+                    with self.assertRaises(ValueError):self.tool.import_subset(bad,archive,Path(temp)/str(i),{'jia3','jia4'})
+            selection['readings'][0]['components']['final']='mismatch'
+            with patch.object(self.tool,'SOURCE_SHA256',selection['sourceArchiveSha256']):
+                with self.assertRaises(ValueError):self.tool.import_subset(selection,archive,Path(temp)/'disputed',{'jia3','jia4'})
+
 
 if __name__ == '__main__':unittest.main()
