@@ -29,10 +29,13 @@ function voiceLabel(voice, voices=mandarinVoices()) {
   const index=sameName.findIndex(v=>voiceKey(v)===voiceKey(voice));
   return `${voice.name} · ${voice.lang}${sameName.length>1?' · variant '+(index+1):''}`;
 }
-function voicePreference() { return localStorage.getItem('zh_voice') || 'auto'; }
+function hasMainlandRecordings() {
+  return typeof MAINLAND_AUDIO!=='undefined' && Object.keys(MAINLAND_AUDIO.readings).length>0;
+}
+function voicePreference() { return localStorage.getItem('zh_voice') || (hasMainlandRecordings()?'mainland':'auto'); }
 function selectedMandarinVoice() {
   const preference=voicePreference();
-  if (preference==='auto' || preference==='recorded' || preference==='reference') return null;
+  if (['auto','recorded','reference','mainland'].includes(preference)) return null;
   // Preserve preferences saved by earlier versions, which stored just voiceURI.
   return mandarinVoices().find(v=>voiceKey(v)===preference||v.voiceURI===preference)||null;
 }
@@ -81,6 +84,12 @@ function referenceRecording(card, reading) {
   const file=typeof REFERENCE_AUDIO==='undefined' ? null : REFERENCE_AUDIO.readings[recordingKey(expected)];
   return file ? {file,pinyin:expected} : null;
 }
+function mainlandRecording(card, reading) {
+  const expected=reading || readings(card)[0];
+  if (!readings(card).includes(expected)) return null;
+  const file=typeof MAINLAND_AUDIO==='undefined' ? null : MAINLAND_AUDIO.readings[recordingKey(expected)];
+  return file ? {file,pinyin:expected} : null;
+}
 function playRecording(text, token, file) {
   return new Promise(resolve => {
     const a = new Audio(file || 'audio/' + encodeURIComponent(text) + '.mp3');
@@ -109,9 +118,31 @@ async function speakPrompt(text, token, reading) {
       selectionNote:'Dictionary word or character without a bundled recording; requests browser Mandarin. Actual pronunciation is not verified.'};
     if(!window.speechSynthesis){speechStatus('No recording is available for this word or character, and browser speech is unavailable on this device.');return false;}
     // Start within the deliberate button gesture: waiting for a nonexistent MP3 can lose Safari user activation.
-    if(preference==='reference'||preference==='recorded')speechStatus('No recording for this word or character. Using browser Mandarin.');
+    if(['reference','recorded','mainland'].includes(preference))speechStatus('No recording for this word or character. Using the device voice.');
     const ok=await speakDevice(prompt,token);
     if(!ok&&token===speechSequence)speechStatus('Could not play this browser voice. Try again, or choose a voice in Grown-ups.');
+    return ok;
+  }
+  if (card && preference==='mainland') {
+    const expected=reading||readings(card)[0];
+    if (!readings(card).includes(expected)) {
+      speechStatus('This reading is not listed for this character. Choose a listed reading.');
+      return false;
+    }
+    const recording=mainlandRecording(card,expected);
+    window.lastSpeechRequest={character:text,pinyin:expected,prompt:recording?text:prompt,preference,
+      voice:null,source:recording?'MSU Putonghua recording':'browser speech',recording:recording?.file||null,
+      selectionNote:recording?'Native-source isolated recording with separate calibrated consonant, vowel and tone checks; exact source and limits in audio-sources/mainland.json.':'No approved recording for this reading; device voice pronunciation is not verified.'};
+    if (!recording) {
+      if(expected!==readings(card)[0]){speechStatus('No checked recording for this alternate reading yet. Choose another pronunciation voice in Grown-ups.');return false;}
+      if(!window.speechSynthesis){speechStatus('No checked recording for this reading yet, and the device voice is unavailable.');return false;}
+      speechStatus('No checked recording for this reading yet. Playing the device voice.');
+      const ok=await speakDevice(prompt,token);
+      if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
+      return ok;
+    }
+    const ok=await playRecording(text,token,recording.file);
+    if(!ok&&token===speechSequence)speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
     return ok;
   }
   if (card && preference==='reference') {
@@ -164,15 +195,18 @@ function voiceSettingsMarkup() {
 function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
   const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
-  const available = preference==='auto'||preference==='recorded'||preference==='reference'||!!selected;
-  const html='<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
+  const available = ['auto','recorded','reference','mainland'].includes(preference)||!!selected;
+  const html=(hasMainlandRecordings()?'<option value="mainland">Mainland Mandarin recordings · MSU</option>':'')+
+    '<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
     (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');
   // Avoid rebuilding an unchanged native iOS picker during catalog refreshes.
   if (select._voiceOptions!==html) { select.innerHTML=html; select._voiceOptions=html; }
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
-  note.textContent = preference === 'reference'
+  note.textContent = preference === 'mainland'
+    ? 'Plays checked, reading-specific Putonghua recordings from MSU Tone Perfect. Some readings still need a checked recording; other words and sentences use the device voice with a notice. Existing voice choices are preserved.'
+    : preference === 'reference'
     ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'
     ? 'Plays the bundled Google Cloud Text-to-Speech audio. This does not use your downloaded iOS voices.'

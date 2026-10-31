@@ -1,5 +1,5 @@
 const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
-function harness(voice='auto') {
+function harness(voice='auto',mainland=false) {
  const spoken=[],audio=[],saved=new Map(voice===null?[]:[['zh_voice',voice]]),events={};
  const voices=[{name:'Mandarin',lang:'zh-CN',voiceURI:'mandarin',localService:true},{name:'Cantonese',lang:'zh-HK',voiceURI:'cantonese'}];
  const synth={getVoices:()=>voices,cancel(){},speak(u){spoken.push(u)},addEventListener(n,f){events[n]=f}};
@@ -8,6 +8,7 @@ function harness(voice='auto') {
  vm.runInContext(fs.readFileSync('practice.js','utf8'),ctx);
  vm.runInContext("const ALL=[{c:'狗',p:'gǒu'},{c:'子',p:'zǐ'},{c:'假',p:'jià / jiǎ'},{c:'满',p:'mǎn'}];",ctx);
  vm.runInContext("const REFERENCE_AUDIO={source:'CNS11643',readings:{gou3:'audio/cns-gou3.mp3',zi3:'audio/cns-zi3.mp3',jia4:'audio/cns-jia4.mp3',jia3:'audio/cns-jia3.mp3',man3:'audio/cns-man3.mp3'}};",ctx);
+ if(mainland)vm.runInContext("const MAINLAND_AUDIO={source:'MSU Tone Perfect',readings:{gou3:'audio/msu-gou3.mp3',zi3:'audio/msu-zi3.mp3',jia4:'audio/msu-jia4.mp3',jia3:'audio/msu-jia3.mp3',man3:'audio/msu-man3.mp3'}};",ctx);
  vm.runInContext(fs.readFileSync('speech.js','utf8'),ctx);
  return {ctx,spoken,audio,voices,saved,events};
 }
@@ -110,4 +111,32 @@ test('failed dictionary-word speech reports failure without changing the saved v
 test('unavailable browser speech for a dictionary word is explicit and never invents a recording URL',async()=>{
  const h=harness('reference'),status={textContent:'',hidden:true};delete h.ctx.window.speechSynthesis;h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
  const pending=h.ctx.say('关于');if(h.audio[0])h.audio[0].onerror();assert.equal(await pending,false);assert.equal(h.audio.length,0);assert.match(status.textContent,/unavailable/i);assert.equal(h.saved.get('zh_voice'),'reference');
+});
+
+test('available Mainland recordings become the unset default without writing preferences or learner state',()=>{
+ const h=harness(null,true);h.saved.set('zh_profiles','preserved');h.ctx.say('狗');
+ assert.equal(h.ctx.voicePreference(),'mainland');assert.equal(h.audio[0].url,'audio/msu-gou3.mp3');
+ assert.equal(h.spoken.length,0);assert.equal(h.saved.get('zh_profiles'),'preserved');assert.equal(h.saved.has('zh_voice'),false);
+ for(const choice of ['auto','recorded','reference','mandarin'])assert.equal(harness(choice,true).ctx.voicePreference(),choice);
+});
+
+test('Mainland audio is reading-specific and never substitutes after a failed asset',async()=>{
+ const h=harness('mainland',true);h.ctx.say('假','jiǎ');assert.equal(h.audio[0].url,'audio/msu-jia3.mp3');
+ const pending=h.ctx.say('假','jià');h.audio[1].onerror();assert.equal(await pending,false);
+ assert.equal(h.spoken.length,0);assert.equal(h.saved.get('zh_voice'),'mainland');
+ assert.equal(await h.ctx.say('假','jiā'),false);assert.equal(h.audio.length,2);assert.equal(h.spoken.length,0);
+});
+
+test('Mainland coverage gaps use an explicitly identified device voice without inventing a file',async()=>{
+ const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
+ vm.runInContext("ALL.push({c:'吗',p:'ma'})",h.ctx);const pending=h.ctx.say('吗');
+ assert.equal(h.audio.length,0);assert.equal(h.spoken.length,1);assert.match(status.textContent,/device voice/i);
+ assert.equal(h.ctx.window.lastSpeechRequest.source,'browser speech');assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not verified/i);
+ h.spoken[0].onend();assert.equal(await pending,true);
+});
+
+test('an uncovered alternate reading cannot fall back to the primary-reading context',async()=>{
+ const h=harness('mainland',true);vm.runInContext('delete MAINLAND_AUDIO.readings.jia3',h.ctx);
+ const pending=h.ctx.say('假','jiǎ');if(h.spoken[0])h.spoken[0].onend();
+ assert.equal(await pending,false);assert.equal(h.audio.length,0);assert.equal(h.spoken.length,0);
 });

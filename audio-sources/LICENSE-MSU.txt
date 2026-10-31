@@ -1,0 +1,28 @@
+Selected Tone Perfect recordings
+
+Source: Tone Perfect MP3 Dataset, Michigan State University Libraries,
+East Lansing, Michigan. https://listings.lib.msu.edu/toneperfect/
+Accessed October 30, 2026.
+
+These selected recordings are licensed by their publisher under Creative Commons
+Attribution-NonCommercial 4.0 International (CC BY-NC 4.0):
+https://creativecommons.org/licenses/by-nc/4.0/
+Legal code: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Requested dataset citation:
+Tone Perfect MP3 Dataset. Michigan State University Libraries. East Lansing, MI.
+https://listings.lib.msu.edu/toneperfect/ (accessed October 30, 2026).
+
+Processing: selected original MP3 bytes are unchanged. Files are renamed with
+their pinyin reading, source speaker and source hash. No trimming, resampling,
+gain, normalization or pitch changes. Selection and verification metadata are
+Mandarin Grove's additions; original publisher labels remain separately recorded.
+
+Only the finite selected subset in mainland.json is distributed here. The full
+private preservation archive, research models and other reference corpora are
+not included. The university, publisher and speakers do not endorse this app.
+Recordings demonstrate isolated adult Putonghua syllables. They do not certify
+connected speech, all regional accents or children's pronunciation assessment.
+
+The noncommercial restriction applies to these recordings independently of the
+application code and other separately licensed assets.
