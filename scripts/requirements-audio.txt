@@ -1,3 +1,4 @@
 # Optional release tooling only; no packages are shipped to the student app.
 numpy==1.26.4
 praat-parselmouth==0.4.7
+soundfile==0.13.1

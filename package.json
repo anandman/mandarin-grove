@@ -10,7 +10,7 @@
     "build": "node scripts/export-static.cjs",
     "audio:plan": "node scripts/audio-pilot.cjs plan",
     "audio:audit": "node scripts/audio-audit.cjs",
-    "audio:test": "node tests/audio-assessment.test.cjs && node tests/audio-audit.test.cjs && python3 tests/audio-acoustics.test.py && python3 tests/audio-tone-controls.test.py && node tests/reference-audio.test.cjs && python3 tests/import-cns-audio.test.py && node tests/audio-natural-benchmark.test.cjs",
+    "audio:test": "node tests/audio-assessment.test.cjs && node tests/audio-audit.test.cjs && python3 tests/audio-acoustics.test.py && python3 tests/audio-tone-controls.test.py && python3 tests/audio-msu-inventory.test.py && python3 tests/audio-msu-signals.test.py && node tests/reference-audio.test.cjs && python3 tests/import-cns-audio.test.py && node tests/audio-natural-benchmark.test.cjs",
     "content:audit": "node scripts/audit-vocabulary.cjs",
     "content:probe": "node scripts/probe-online-content.cjs --live"
   }

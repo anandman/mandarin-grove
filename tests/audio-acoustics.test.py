@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import wave
 
 import numpy as np
@@ -91,6 +92,14 @@ class AcousticsTests(unittest.TestCase):
         self.assertGreater(report['signal']['rms'], .01)
         self.assertGreater(len(report['f0']['frames']), 20)
         self.assertNotIn('approved', json.dumps(report))
+
+    def test_packaged_decoder_supports_macos_without_system_libsndfile(self):
+        module = self.module_required()
+        with patch.object(module.ctypes.util, 'find_library', return_value=None):
+            samples, rate = module.decode_audio(ROOT / 'audio/满.mp3')
+        self.assertEqual(rate, 24000)
+        self.assertGreater(len(samples), 20000)
+        self.assertTrue(np.isfinite(samples).all())
 
     def test_cli_continues_after_missing_and_invalid_files(self):
         self.module_required()

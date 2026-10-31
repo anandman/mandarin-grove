@@ -397,3 +397,64 @@ clips including reported cases, alternate readings, u/ü and neutral tone; verif
 served bytes, saved progress/preferences and visible failure without substitution.
 These checks establish usable files and source correspondence, not an individual
 child's accent or a general automatic pronunciation-grading capability.
+
+## MSU source suitability — October 30, 2026
+
+Pronunciation verification has resumed by explicit owner instruction. The
+university **Tone Perfect** corpus is distinct from the commercial TonePerfect
+assessment API. Original downloads and the requested citation are preserved in
+a separate private local Git archive and recovery bundle; no corpus files,
+access links, credentials or detailed reports are distributed here.
+
+The [MSU team's production paper](https://ideah.pubpub.org/pub/hh90jpsu/release/5)
+describes six speakers recruited from Beijing, coached sessions, independent
+native-speaker listening review and re-recording of flagged sets. This supports
+using the corpus as a candidate Mainland reference. It does not independently
+certify every file or validate an automatic pronunciation judge.
+
+Measured from the unchanged bulk MP3/XML archives:
+
+- 9,839 paired recordings/custom XML records; filenames, identifiers, speakers,
+  syllables and tone fields agree. All files decode: 44.1 kHz stereo, durations
+  0.236–2.187 seconds. No silence, low-level, clipping, channel-cancellation or
+  duplicate decoded-audio flags under the documented diagnostic thresholds.
+- 548 of 557 app reading keys have recordings. Nine neutral-tone keys are
+  absent: `a5 ba5 de5 le5 ma5 me5 men5 ne5 zhe5`. Four-tone isolated syllables
+  cannot establish contextual neutral-tone behavior or connected-speech rules.
+- Only 544 keys pass the conservative metadata screen: every speaker labels
+  `cuo4 she4 xing2 zuo3` as lexical gaps while also supplying real character
+  forms. These contradictory labels are retained and quarantined for review;
+  no pronunciation error or nonword status is inferred from that flag.
+- `jiao1` has five voices because the publisher deleted FV3; no replacement is
+  invented. The preserved empty individual `ben1_FV1` download is distinct from
+  its nonempty bulk-ZIP counterpart; the measured bulk file is valid.
+
+Reproduce the structural inventory without extracting the corpus:
+
+```sh
+python3 scripts/audio-msu-inventory.py --audio-zip PRIVATE_MP3.zip \
+  --xml-zip PRIVATE_XML.zip --curriculum audio-sources/cns11643.json \
+  --output PRIVATE_INVENTORY.json
+python3 scripts/audio-msu-signals.py --audio-zip PRIVATE_MP3.zip \
+  --inventory PRIVATE_INVENTORY.json --output PRIVATE_SIGNALS.json
+```
+
+The first command needs only Python's standard library; the second uses the
+optional packages in `scripts/requirements-audio.txt`. Both reports explicitly
+set `canPromote: false`. Signal flags and metadata coverage are source QA, not
+acoustic acceptance. The full archive and each member are hash-checked; the
+signal pass also checks decoded-byte duplicates. No audio is normalized,
+trimmed, relabeled or copied into the student application.
+Report outputs must be new files: neither command overwrites inputs or prior
+reports, including symlink/hardlink aliases. Signal reports include skipped
+metadata denominators and return an incomplete status if any are excluded.
+
+Before any new acoustic inference, speaker roles were fixed: FV1/MV1 for
+development, FV2/MV2 for calibration, FV3/MV3 reserved for final testing.
+Structural/decode QA covers all speakers; held-out acoustic outputs must not
+be used for feature/threshold tuning. SCSC M03 was inspected in previous work
+and is no longer an untouched holdout. Initials, finals and tones still require
+separate measured acceptance, natural wrong-reading controls and abstentions.
+No MSU audio is approved or shipped by this checkpoint; the student app,
+explicit voice preferences and learner state are unchanged. Issues #11/#14
+remain open.

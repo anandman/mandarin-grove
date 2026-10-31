@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/audio-acoustics.py FILE [FILE ...]
 Writes one JSON report to stdout. File failures are included and do not stop the
-batch. Requires NumPy and a system libsndfile with the input codec enabled.
+batch. Requires NumPy and libsndfile (system library or soundfile wheel).
 F0 confidence measures periodicity, not the probability of correct Mandarin.
 No signal result approves pronunciation, phonemes, lexical tones or sandhi.
 """
@@ -42,7 +42,22 @@ def decode_audio(path):
     """Decode a bounded audio file; always close a successfully opened handle."""
     name = ctypes.util.find_library('sndfile')
     if not name:
-        raise RuntimeError('System libsndfile is unavailable')
+        # macOS wheels can include libsndfile without registering a system dylib.
+        # Keep the same allocation limits before asking that decoder for samples.
+        try:
+            import soundfile
+        except ImportError as exc:
+            raise RuntimeError('Install soundfile or a system libsndfile') from exc
+        with soundfile.SoundFile(str(path)) as stream:
+            if not (8000 <= stream.samplerate <= 192000 and 1 <= stream.channels <= 8 and stream.frames > 0):
+                raise ValueError('Unsupported or invalid decoded audio dimensions')
+            if (stream.frames / stream.samplerate > SETTINGS['maxDurationSeconds']
+                    or stream.frames * stream.channels > SETTINGS['maxDecodedSamples']):
+                raise ValueError('Decoded audio exceeds the local analysis limit')
+            samples = stream.read(dtype='float32', always_2d=True)
+            if len(samples) != stream.frames:
+                raise ValueError('Audio decoding did not complete successfully')
+            return samples, stream.samplerate
     library = ctypes.CDLL(name)
     library.sf_open.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(SFInfo)]
     library.sf_open.restype = ctypes.c_void_p
