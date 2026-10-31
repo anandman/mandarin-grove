@@ -1,6 +1,6 @@
 // This function is deployed by Vercel from api/; it is never exported into dist.
 // The only destination is the owner's private feedback inbox in this repository.
-const GITHUB='https://api.github.com/repos/anandman/mandarin-grove';
+const GITHUB='https://api.github.com/repos/anandman/mandarin-grove-feedback';
 const ORIGIN='https://mandarin-grove.vercel.app';
 const MAX_BYTES=16384;
 const CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};

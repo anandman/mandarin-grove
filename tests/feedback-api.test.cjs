@@ -12,7 +12,7 @@ test('explicit missing-content suggestions accept bounded attempted text without
  assert.equal(res.statusCode,201);assert.equal(res.data.receipt,48);
  const created=JSON.parse(gh.calls.at(-1).body);assert.match(created.title,/could not find or check/i);assert.match(created.body,/学甲乙丙/);assert.ok(!created.body.includes('"content":'));
 });
-function github(){const calls=[];const fetch=async(url,opts)=>{calls.push({url,...opts});if(url.endsWith('/mandarin-grove'))return response(200,{private:true});if(opts.method==='GET')return response(200,[]);return response(201,{number:48});};return {calls,fetch};}
+function github(){const calls=[];const fetch=async(url,opts)=>{calls.push({url,...opts});if(url.endsWith('/mandarin-grove-feedback'))return response(200,{private:true});if(opts.method==='GET')return response(200,[]);return response(201,{number:48});};return {calls,fetch};}
 async function request(handler,body=report(),headers={},method='POST'){
  const req=Readable.from([typeof body==='string'?body:JSON.stringify(body)]);req.method=method;req.headers={origin,'content-type':'application/json','x-real-ip':'192.0.2.5',...headers};
  const res={headers:{},setHeader(k,v){this.headers[k]=v},status(n){this.statusCode=n;return this},json(data){this.data=data;return this}};
@@ -21,7 +21,7 @@ async function request(handler,body=report(),headers={},method='POST'){
 test('explicit valid report creates only a fixed private-repository issue and returns a receipt',async()=>{
  const gh=github(),res=await request(createHandler({env,fetch:gh.fetch}));
  assert.equal(res.statusCode,201);assert.equal(res.data.sent,true);assert.equal(res.data.id,report().id);assert.equal(res.data.receipt,48);
- assert.equal(gh.calls.length,3);assert.ok(gh.calls.every(c=>c.url.startsWith('https://api.github.com/repos/anandman/mandarin-grove')));
+ assert.equal(gh.calls.length,3);assert.ok(gh.calls.every(c=>(c.url==='https://api.github.com/repos/anandman/mandarin-grove-feedback'||c.url.startsWith('https://api.github.com/repos/anandman/mandarin-grove-feedback/'))));
  const created=JSON.parse(gh.calls[2].body);assert.match(created.title,/Sound seems wrong/);assert.match(created.body,/49bb5d96/);assert.equal(created.assignees,undefined);assert.equal(created.labels,undefined);
  assert.equal(res.headers['Cache-Control'],'no-store');assert.ok(!JSON.stringify(res.data).includes(env.GH_FEEDBACK_TOKEN));
 });
@@ -50,7 +50,7 @@ test('escapes report content into inert preformatted data instead of issue instr
 });
 test('retry checks recent open and closed issues for receipt before creating a duplicate',async()=>{
  const gh=github();let creates=0;const handler=createHandler({env,fetch:async(url,opts)=>{
-  if(url.endsWith('/mandarin-grove'))return response(200,{private:true});
+  if(url.endsWith('/mandarin-grove-feedback'))return response(200,{private:true});
   if(opts.method==='GET'){assert.match(url,/state=all/);return response(200,[{number:47,body:'<!-- mandarin-grove-feedback:'+report().id+' -->'}]);}
   creates++;return response(201,{number:48});
  }});
@@ -113,6 +113,6 @@ test('versioned content reports still require a private inbox and keep durable i
  const body={...report(),content:contentMetadata()},publicCalls=[];
  const closed=createHandler({env,fetch:async(url,opts)=>{publicCalls.push({url,method:opts.method});return response(200,{private:false});}});
  const denied=await request(closed,body);assert.equal(denied.statusCode,503);assert.equal(denied.data.sent,false);assert.deepEqual(publicCalls.map(call=>call.method),['GET']);
- const issues=[],created=[];const fetch=async(url,opts)=>{if(url.endsWith('/mandarin-grove'))return response(200,{private:true});if(opts.method==='GET')return response(200,issues);const issue=JSON.parse(opts.body);created.push(issue);issues.push({number:67,body:issue.body,state:'closed'});return response(201,{number:67});};
+ const issues=[],created=[];const fetch=async(url,opts)=>{if(url.endsWith('/mandarin-grove-feedback'))return response(200,{private:true});if(opts.method==='GET')return response(200,issues);const issue=JSON.parse(opts.body);created.push(issue);issues.push({number:67,body:issue.body,state:'closed'});return response(201,{number:67});};
  const first=await request(createHandler({env,fetch}),body),retry=await request(createHandler({env,fetch}),body);assert.equal(first.statusCode,201);assert.equal(retry.statusCode,200);assert.deepEqual(first.data,{sent:true,id:body.id,receipt:67});assert.deepEqual(retry.data,first.data);assert.equal(created.length,1);assert.deepEqual(issueReport(created[0].body),body);
 });
