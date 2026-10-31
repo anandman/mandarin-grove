@@ -5,6 +5,17 @@
 // This is a starter collection, not a curriculum.
 const CHARACTER_IDEAS = [
     ...CURRICULUM_IDEAS,
+    // Additional everyday words requested for the starter collection.
+    { words: ['电脑', '電腦'], meaning: 'computer', ideas: [
+        'Write about something useful you learned on a computer.',
+        'Write about using a computer to make something for a school project.',
+        'Write about helping a family member with a computer.'
+    ] },
+    { words: ['脏乱', '髒亂'], meaning: 'dirty and messy', ideas: [
+        'Write about a dirty, messy desk and how you cleaned it.',
+        'Write about finding something in a dirty, messy room.',
+        'Write about working with a friend to make a dirty, messy place tidy.'
+    ] },
     // Weather and nature
     { words: ['下雨'], meaning: 'rain', ideas: [
         'Write about walking to school on a rainy morning.',

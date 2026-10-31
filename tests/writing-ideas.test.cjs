@@ -24,8 +24,16 @@ test('a one-card deck remains usable and empty decks have no result',()=>{
 });
 test('browse lists contain unique simplified forms and support meaning searches',()=>{
  const words=c.writingBrowseEntries('words'),chars=c.writingBrowseEntries('characters');
- assert.equal(words.length,323);assert.equal(chars.length,433);assert.equal(new Set(words.map(x=>x.value)).size,words.length);
+ assert.equal(words.length,325);assert.equal(chars.length,435);assert.equal(new Set(words.map(x=>x.value)).size,words.length);
  assert.ok(words.some(x=>x.value==='学校'));assert.ok(!words.some(x=>x.value==='學校'));assert.ok(chars.some(x=>x.value==='雨'));
  assert.ok(c.writingBrowseEntries('words','school').every(x=>x.meaning.toLowerCase().includes('school')));
  assert.ok(c.writingBrowseEntries('words','學校').some(x=>x.value==='学校'));
+});
+
+test('computer and dirty-messy writing ideas match whole simplified/traditional words and browse',()=>{
+ for(const [input,word]of [['电脑','电脑'],['電腦','电脑'],['脏乱','脏乱'],['髒亂','脏乱']]){
+  const found=c.writingIdeasLookup(input);assert.equal(found.error,'');assert.equal(found.cards.length,3);assert.ok(found.cards.every(row=>row.word===word&&row.text.length>20));
+  assert.ok(c.writingBrowseEntries('words',input).some(row=>row.value===word));
+ }
+ assert.equal(c.writingIdeasLookup('电脑脏乱').cards.length,0,'unlisted combinations still do not receive a guessed prompt');
 });
