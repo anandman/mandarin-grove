@@ -32,7 +32,10 @@ function voiceLabel(voice, voices=mandarinVoices()) {
 function hasMainlandRecordings() {
   return typeof MAINLAND_AUDIO!=='undefined' && Object.keys(MAINLAND_AUDIO.readings).length>0;
 }
-function voicePreference() { return localStorage.getItem('zh_voice') || (hasMainlandRecordings()?'mainland':'auto'); }
+function expectsMainlandRecordings() {
+  return document.body?.dataset?.mainlandRecordings==='true' || hasMainlandRecordings();
+}
+function voicePreference() { return localStorage.getItem('zh_voice') || (expectsMainlandRecordings()?'mainland':'auto'); }
 function selectedMandarinVoice() {
   const preference=voicePreference();
   if (['auto','recorded','reference','mainland'].includes(preference)) return null;
@@ -130,6 +133,10 @@ async function speakPrompt(text, token, reading) {
     return ok;
   }
   if (card && preference==='mainland') {
+    if(!hasMainlandRecordings()){
+      speechStatus('The recording list could not load. Reload and try again.');
+      return false;
+    }
     const expected=reading||readings(card)[0];
     if (!readings(card).includes(expected)) {
       speechStatus('This reading is not listed for this character. Choose a listed reading.');
@@ -215,7 +222,7 @@ function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
   const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
   const available = ['auto','recorded','reference','mainland'].includes(preference)||!!selected;
-  const html=(hasMainlandRecordings()?'<option value="mainland">Mainland Mandarin recordings · MSU</option>':'')+
+  const html=(expectsMainlandRecordings()?'<option value="mainland">Mainland Mandarin recordings · MSU</option>':'')+
     '<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
     (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');

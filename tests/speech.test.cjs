@@ -149,3 +149,12 @@ test('an uncovered alternate reading cannot fall back to the primary-reading con
  const pending=h.ctx.say('假','jiǎ');if(h.spoken[0])h.spoken[0].onend();
  assert.equal(await pending,false);assert.equal(h.audio.length,0);assert.equal(h.spoken.length,0);
 });
+
+test('a failed expected Mainland catalog cannot silently become an unchecked browser default',async()=>{
+ const h=harness(null),status={textContent:'',hidden:true};
+ h.ctx.document.body={dataset:{mainlandRecordings:'true'}};
+ h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
+ assert.equal(h.ctx.voicePreference(),'mainland');
+ assert.equal(await h.ctx.say('狗'),false);
+ assert.equal(h.audio.length,0);assert.equal(h.spoken.length,0);assert.match(status.textContent,/recording list.*load/i);
+});
