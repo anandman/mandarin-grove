@@ -473,6 +473,12 @@ speaker, reading-base and expected-label strata. A score is a model output,
 not a probability that a pronunciation is correct. Missing components, changed
 audio hashes and unsupported isolated neutral tones abstain.
 
+The report distinguishes fully measured whole readings from partial decisions,
+and expected-label strata from observed-label precision. Critical coverage lists
+untested pairs, represented pairs, directed comparisons and distinct clips.
+Component results do not imply 99% whole-reading agreement or equal results for
+every phonetic label.
+
 For each clip and component, the negative test uses at most one hardest
 represented natural reading that changes only that component. Explicit critical
 pairs also cover changes such as `zhi`/`zi`. These tests reuse recordings; their
@@ -480,13 +486,18 @@ counts are not independent additional speakers or trials. Repeated audio bytes
 cannot inflate the reference count. The same recording must not serve as its
 own independent validation reference.
 
+Qualification requires measured critical pairs, at least 80% critical decision
+coverage and no critical false acceptance. Merely listing a pair whose outcomes
+all abstain cannot qualify a method.
+
 The current development target is at least 99% observed accepted-component
 precision and at most 1% false acceptance of nearby wrong references, with a
 desired 80% component coverage. Thresholds must be calibrated, then frozen
 before final-speaker evaluation. The tool checks frozen policy, feature/model
 and evaluator identities, excludes fitted speakers from validation, requires
 multiple evaluation speakers and checks precision/coverage for each speaker.
-Those empirical results describe the tested adult reference set; they do not
+The frozen identity includes the imported pinyin parser, exact reference scope,
+critical pairs and qualification settings. Those empirical results describe the tested adult reference set; they do not
 establish universal pronunciation accuracy or child-speech grading validity.
 
 ```sh
@@ -497,6 +508,27 @@ node --test tests/audio-acceptance.test.cjs
 
 Add a frozen-identity JSON path as the final argument for held-out evaluation.
 Reports use exclusive file creation, preserving inputs and earlier results.
+
+Optional local feature extraction and scoring are reproducible with
+`scripts/audio-verification.py` and `scripts/score-audio-features.py`. Create a
+separate Python environment using `scripts/requirements-audio-verification.txt`,
+then run `npm run audio:verification:test` with that environment active. No
+publisher weights or corpus recordings are downloaded by these tests. Models,
+source recordings and experiment manifests remain private and are separate from
+the static application and its ordinary Node checks.
+
+Feature extraction takes only waveforms, pins the local encoder, retains missing
+pitch and checks source speakers before inference. The scorer uses two temporal
+phonetic heads and two physical-pitch classifiers with pinned locally trained
+weights. It removes unlabelled speaker-batch channel bias and pitch register;
+the exact complete normalization population must therefore be frozen with each
+experiment. These are batch checks of adult reference recordings, not a method
+for scoring a single child. Missing usable pitch abstains. Final runs require
+matching pipeline/model/protocol/source identities; old caches and reports are
+preserved rather than overwritten. Hash checks do not make an unknown serialized
+model trustworthy: only the researcher's own trusted fitted estimators may be
+loaded. Publisher model weights are never redistributed.
+
 The current acoustic methods remain in development. Strong within-source tone
 agreement failed to generalize sufficiently to an independent corpus, so it
 has not approved any recordings. Further source/cross-speaker calibration is

@@ -11,6 +11,7 @@
     "audio:plan": "node scripts/audio-pilot.cjs plan",
     "audio:audit": "node scripts/audio-audit.cjs",
     "audio:test": "node tests/audio-assessment.test.cjs && node tests/audio-audit.test.cjs && python3 tests/audio-acoustics.test.py && python3 tests/audio-tone-controls.test.py && python3 tests/audio-msu-inventory.test.py && python3 tests/audio-msu-signals.test.py && node tests/reference-audio.test.cjs && python3 tests/import-cns-audio.test.py && node tests/audio-natural-benchmark.test.cjs && node --test tests/audio-acceptance.test.cjs",
+    "audio:verification:test": "python3 tests/audio-verification.test.py && python3 tests/score-audio-features.test.py && node --test tests/audio-acceptance.test.cjs",
     "content:audit": "node scripts/audit-vocabulary.cjs",
     "content:probe": "node scripts/probe-online-content.cjs --live"
   }

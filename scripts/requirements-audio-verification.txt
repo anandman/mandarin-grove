@@ -1,0 +1,11 @@
+# Optional local research environment; not a student-app dependency.
+numpy==1.26.4
+scipy==1.14.1
+praat-parselmouth==0.4.7
+soundfile==0.13.1
+torch==2.8.0
+transformers==4.57.1
+scikit-learn==1.7.2
+safetensors==0.6.2
+joblib==1.6.0
+threadpoolctl==3.7.0
