@@ -165,3 +165,8 @@ test('source-curated MSU playback distinguishes unfinished checks without claimi
  h.audio[0].onended();assert.equal(await pending,true);
  const next=h.ctx.say('子');assert.equal(status.textContent,'');assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not qualified/i);h.audio[1].onended();assert.equal(await next,true);
 });
+test('sequential preview clears the preceding clip check status without a new speech request',async()=>{
+ const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;vm.runInContext("MAINLAND_AUDIO.acceptanceBasis='native-source-review';MAINLAND_AUDIO.pendingReadings=['gou3'];",h.ctx);
+ const first=h.ctx.speakPrompt('狗',0);h.audio[0].onended();assert.equal(await first,true);assert.match(status.textContent,/check pending/);
+ const second=h.ctx.speakPrompt('子',0);assert.equal(status.textContent,'');h.audio[1].onended();assert.equal(await second,true);
+});

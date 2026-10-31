@@ -48,8 +48,19 @@ function voiceReport() {
   }))},null,2);
 }
 function speechStatus(message) {
+  const dialogs=[...(document.querySelectorAll?.('dialog[open],[role="dialog"][aria-modal="true"]')||[])];
+  const dialog=dialogs.filter(el=>el.getClientRects().length).at(-1);
+  for(const status of document.querySelectorAll?.('[data-speech-status]')||[]){status.textContent='';status.hidden=true;}
   const element = document.getElementById('speech-status');
-  if (element) { element.textContent = message; element.hidden = !message; }
+  if (element) { element.textContent = message; element.hidden = !message||!!dialog; }
+  if(dialog&&message){
+    let status=dialog.querySelector('[data-speech-status]');
+    if(!status){
+      status=document.createElement('p');status.className='reading-note';status.dataset.speechStatus='';status.setAttribute('role','status');
+      (dialog.querySelector('.detail-reading,.lookup-detail-actions')||dialog).append(status);
+    }
+    status.textContent=message;status.hidden=false;
+  }
 }
 function stopSpeech() {
   speechStatus('');
@@ -167,7 +178,7 @@ async function speakPrompt(text, token, reading) {
       if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
       return ok;
     }
-    if(checkPending)speechStatus('MSU recording · additional pronunciation check pending.');
+    speechStatus(checkPending?'MSU recording · additional pronunciation check pending.':'');
     const ok=await playRecording(text,token,recording.file);
     if(!ok&&token===speechSequence)speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
     return ok;
@@ -214,6 +225,7 @@ function voiceSettingsMarkup() {
     <p id="voice-note" class="reading-note" role="status"></p>
     <button type="button" class="btn" id="voice-preview">Play 狗 · 子 · 假 · 满</button>
     <button type="button" class="btn gray" id="voice-refresh">Refresh voices</button>
+    <p class="reading-note" data-speech-status role="status" hidden></p>
     <p class="reading-note">The app targets Mainland Mandarin (Putonghua) and simplified Chinese. CNS11643 recordings are Taiwan Mandarin and remain an optional regional voice, not a verified Mainland pronunciation model. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
     ${expectsMainlandRecordings()?'<p class="reading-note">MSU audio: Tone Perfect MP3 Dataset, Michigan State University Libraries, East Lansing, MI. Selected recordings are unchanged and used under <a href="audio-sources/LICENSE-MSU.txt" target="_blank" rel="noopener">CC BY-NC 4.0 · citation and license</a>. <a href="audio-sources/MSU-VERIFICATION.json" target="_blank" rel="noopener">Source and remaining checks</a>.</p>':''}
     <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try the browser default; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
