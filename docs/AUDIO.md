@@ -458,3 +458,46 @@ separate measured acceptance, natural wrong-reading controls and abstentions.
 No MSU audio is approved or shipped by this checkpoint; the student app,
 explicit voice preferences and learner state are unchanged. Issues #11/#14
 remain open.
+
+## Continuous verification contract — October 30, 2026
+
+`scripts/audio-acceptance.cjs` evaluates captured acoustic component scores
+against natural reference readings. It is release research tooling, with no
+student-runtime dependency. Its report remains `canPromote: false`: a qualified
+method still needs exact source/candidate evidence and a separately reviewed
+recording selection before anything ships.
+
+The evaluator reports initials, finals and tones separately: observed precision
+among accepted predictions, coverage, mismatches and abstentions. It records
+speaker, reading-base and expected-label strata. A score is a model output,
+not a probability that a pronunciation is correct. Missing components, changed
+audio hashes and unsupported isolated neutral tones abstain.
+
+For each clip and component, the negative test uses at most one hardest
+represented natural reading that changes only that component. Explicit critical
+pairs also cover changes such as `zhi`/`zi`. These tests reuse recordings; their
+counts are not independent additional speakers or trials. Repeated audio bytes
+cannot inflate the reference count. The same recording must not serve as its
+own independent validation reference.
+
+The current development target is at least 99% observed accepted-component
+precision and at most 1% false acceptance of nearby wrong references, with a
+desired 80% component coverage. Thresholds must be calibrated, then frozen
+before final-speaker evaluation. The tool checks frozen policy, feature/model
+and evaluator identities, excludes fitted speakers from validation, requires
+multiple evaluation speakers and checks precision/coverage for each speaker.
+Those empirical results describe the tested adult reference set; they do not
+establish universal pronunciation accuracy or child-speech grading validity.
+
+```sh
+node scripts/audio-acceptance.cjs PRIVATE_REFERENCES.json PRIVATE_CAPTURE.json \
+  PRIVATE_POLICY.json NEW_PRIVATE_REPORT.json
+node --test tests/audio-acceptance.test.cjs
+```
+
+Add a frozen-identity JSON path as the final argument for held-out evaluation.
+Reports use exclusive file creation, preserving inputs and earlier results.
+The current acoustic methods remain in development. Strong within-source tone
+agreement failed to generalize sufficiently to an independent corpus, so it
+has not approved any recordings. Further source/cross-speaker calibration is
+ongoing; this checkpoint changes no playback, saved voice or learner data.
