@@ -43,6 +43,19 @@ def import_subset(selection, archive_path, output_root, curriculum_keys):
                     or row['member'] != 'tone_perfect/' + row['sourceId'] + '_MP3.mp3'
                     or row['components'] != dict.fromkeys(('initial', 'final', 'tone'), 'matches')):
                 raise ValueError('Unapproved reading, source speaker, duplicate or component evidence')
+            gap = row.get('originalSourceLexicalGap', False)
+            exception = row.get('lexicalMetadataException')
+            if not isinstance(gap, bool):
+                raise ValueError('Original lexical-gap flag must be preserved explicitly')
+            if gap and (key not in ('cuo4', 'she4', 'xing2', 'zuo3')
+                        or not isinstance(exception, dict) or exception.get('reading') != key
+                        or not re.fullmatch(r'[a-f0-9]{64}', exception.get('evidenceSha256', ''))
+                        or not exception.get('schoolCharacters')
+                        or not isinstance(exception['schoolCharacters'], list)
+                        or any(not isinstance(c, str) or len(c) != 1 for c in exception['schoolCharacters'])):
+                raise ValueError('Flagged source requires separately reviewed lexical evidence')
+            if not gap and exception is not None:
+                raise ValueError('Unexpected lexical metadata exception')
             info = archive.getinfo(row['member'])
             if not 0 < info.file_size <= 256000:
                 raise ValueError('Unexpected source recording size')
@@ -54,7 +67,10 @@ def import_subset(selection, archive_path, output_root, curriculum_keys):
             assets[file] = body
             manifest_rows[key] = {'file': file, 'sha256': row['sha256'], 'bytes': len(body),
                                   'speaker': speaker, 'sourceId': row['sourceId'],
-                                  'sourceMember': row['member'], 'processing': 'Unchanged original MP3 bytes'}
+                                  'sourceMember': row['member'], 'processing': 'Unchanged original MP3 bytes',
+                                  'originalSourceLexicalGap': gap}
+            if exception is not None:
+                manifest_rows[key]['lexicalMetadataException'] = exception
     manifest = {'schemaVersion': 1, 'source': {'title': 'Tone Perfect MP3 Dataset',
                 'publisher': 'Michigan State University Libraries',
                 'url': 'https://listings.lib.msu.edu/toneperfect/',

@@ -2,11 +2,26 @@
 const VERSION='20261030-feedback-78',BASE=new URL('./',self.location.href),ROOT=BASE.pathname,
  SHELL_PREFIX='mandarin-grove-shell-'+(ROOT==='/'?'':encodeURIComponent(ROOT)+'-'),SHELL=SHELL_PREFIX+VERSION;
 let allowed=null;
+function mainlandFiles(manifest){
+ const rows=manifest?.readings;
+ if(manifest?.schemaVersion!==1||!rows||typeof rows!=='object'||Array.isArray(rows)||Object.keys(rows).length<1||Object.keys(rows).length>557)throw Error('Invalid offline recordings');
+ const files=Object.entries(rows).map(([key,row])=>{
+  if(!/^[a-z]+[1-4]$/.test(key)||!['FV3','MV3'].includes(row?.speaker)||!/^[a-f0-9]{64}$/.test(row?.sha256)||row.sourceId!==key+'_'+row.speaker||row.file!==`audio/msu-${key}-${row.speaker.toLowerCase()}-${row.sha256.slice(0,12)}.mp3`)throw Error('Invalid offline recording');
+  return row.file;
+ });
+ // These nine older clips remain explicitly unchecked in speech.js.
+ return [...files,...['啊','吧','的','了','吗','么','们','呢','着'].map(c=>'audio/'+encodeURIComponent(c)+'.mp3')];
+}
 async function assets(){
  if(allowed)return allowed;
  const cache=await caches.open(SHELL),response=await cache.match('offline-assets.json')||await fetch('offline-assets.json',{cache:'no-store'});
  const list=await response.json();
  if(!Array.isArray(list)||list.length>150||!list.includes('index.html')||list.some(p=>typeof p!=='string'||!/^[-a-zA-Z0-9_/.]+$/.test(p)||p.includes('..')||p.startsWith('/')||/^(api|docs|audio)\//.test(p)))throw Error('Invalid offline manifest');
+ if(list.includes('audio-sources/mainland.json')){
+  const response=await cache.match('audio-sources/mainland.json')||await fetch('audio-sources/mainland.json',{cache:'no-store'});
+  if(!response.ok)throw Error('Offline recording catalog unavailable');
+  list.push(...mainlandFiles(await response.json()));
+ }
  return allowed=new Set(list);
 }
 self.addEventListener('install',event=>event.waitUntil((async()=>{

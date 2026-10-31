@@ -35,3 +35,21 @@ test('Pages export includes public assets and local-only feedback without privat
  assert.ok(fs.existsSync(path.join(out,'vendor/cc-cedict/dictionary.json')));assert.ok(fs.existsSync(path.join(out,'.nojekyll')));
  }finally{fs.rmSync(temp,{recursive:true,force:true});}
 });
+test('offline audio cache admits only the finite MSU manifest and known unchecked neutral clips',async()=>{
+ const code=fs.readFileSync('sw.js','utf8'),ctx=vm.createContext({URL,Request,Response,self:{location:{href:'https://example.github.io/mandarin-grove/sw.js'},addEventListener(){}}});vm.runInContext(code,ctx);
+ const sha='a'.repeat(64),row={file:'audio/msu-gou3-mv3-'+sha.slice(0,12)+'.mp3',sha256:sha,speaker:'MV3',sourceId:'gou3_MV3'};
+ const files=ctx.mainlandFiles({schemaVersion:1,readings:{gou3:row}});
+ assert.equal(files.length,10);assert.ok(files.includes(row.file));assert.ok(files.includes('audio/'+encodeURIComponent('吗')+'.mp3'));
+ for(const bad of [{...row,file:'exports/private.wav'},{...row,file:'audio/anything.mp3'},{...row,sha256:'b'.repeat(64)},{...row,sourceId:'gou4_MV3'}])assert.throws(()=>ctx.mainlandFiles({schemaVersion:1,readings:{gou3:bad}}));
+ assert.throws(()=>ctx.mainlandFiles({schemaVersion:1,readings:{'../bad':row}}));assert.throws(()=>ctx.mainlandFiles({schemaVersion:1,readings:{}}));
+});
+test('root and Pages workers serve admitted checked and unchecked audio from their own offline cache',async()=>{
+ for(const scope of ['/','/mandarin-grove/']){
+  const code=fs.readFileSync('sw.js','utf8'),v=code.match(/const VERSION='([^']+)'/)[1],handlers={},network=[],sha='a'.repeat(64),file='audio/msu-gou3-mv3-'+sha.slice(0,12)+'.mp3',neutral='audio/'+encodeURIComponent('吗')+'.mp3';
+  const bank=new Map([['offline-assets.json',JSON.stringify(['index.html','audio-sources/mainland.json'])],['audio-sources/mainland.json',JSON.stringify({schemaVersion:1,readings:{gou3:{file,sha256:sha,speaker:'MV3',sourceId:'gou3_MV3'}}})],[file,'CHECKED BYTES'],[neutral,'UNCHECKED BYTES']]);
+  const prefix='mandarin-grove-shell-'+(scope==='/'?'':encodeURIComponent(scope)+'-');
+  const ctx=vm.createContext({URL,Request,Response,Set,caches:{open:async name=>{assert.equal(name,prefix+v);return{match:async p=>bank.has(p)?new Response(bank.get(p)):undefined};}},fetch:async r=>{network.push(r);return new Response('NETWORK');},self:{location:{href:'https://example.github.io'+scope+'sw.js'},addEventListener:(n,f)=>handlers[n]=f}});vm.runInContext(code,ctx);
+  for(const [relative,body]of [[file,'CHECKED BYTES'],[neutral,'UNCHECKED BYTES']]){let response;handlers.fetch({request:new Request('https://example.github.io'+scope+relative),respondWith:p=>response=p});assert.equal(await(await response).text(),body);}
+  assert.equal(network.length,0);
+ }
+});

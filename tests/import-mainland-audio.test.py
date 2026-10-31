@@ -69,5 +69,29 @@ class ImportTests(unittest.TestCase):
                 with self.assertRaises(ValueError):self.tool.import_subset(selection, archive, out, {'jia3','jia4'})
             self.assertFalse(out.exists())
 
+    def test_source_lexical_flags_and_derived_exception_are_never_silently_dropped(self):
+        with tempfile.TemporaryDirectory() as temp:
+            archive, selection = self.fixture(temp);out = Path(temp)/'output'
+            selection['readings'][0]['originalSourceLexicalGap'] = False
+            with patch.object(self.tool, 'SOURCE_SHA256', selection['sourceArchiveSha256']):
+                manifest = self.tool.import_subset(selection, archive, out, {'jia3','jia4'})
+            self.assertIs(manifest['readings']['jia3']['originalSourceLexicalGap'], False)
+            selection['readings'][0]['originalSourceLexicalGap'] = True
+            with patch.object(self.tool, 'SOURCE_SHA256', selection['sourceArchiveSha256']):
+                with self.assertRaises(ValueError):self.tool.import_subset(selection, archive, Path(temp)/'bad', {'jia3','jia4'})
+
+    def test_reviewed_flag_exception_keeps_original_classification_and_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            archive, selection = self.fixture(temp)
+            row=selection['readings'][0]
+            with zipfile.ZipFile(archive, 'a') as z:z.writestr('tone_perfect/cuo4_FV3_MP3.mp3', b'original jia3 recording')
+            row.update(reading='cuo4',sourceId='cuo4_FV3',member='tone_perfect/cuo4_FV3_MP3.mp3',originalSourceLexicalGap=True,
+                       lexicalMetadataException={'reading':'cuo4','evidenceSha256':'c'*64,'schoolCharacters':['错']})
+            selection['sourceArchiveSha256']=self.tool.file_hash(archive)
+            with patch.object(self.tool, 'SOURCE_SHA256', selection['sourceArchiveSha256']):
+                manifest=self.tool.import_subset(selection,archive,Path(temp)/'output',{'cuo4','jia4'})
+            self.assertIs(manifest['readings']['cuo4']['originalSourceLexicalGap'],True)
+            self.assertEqual(manifest['readings']['cuo4']['lexicalMetadataException'],row['lexicalMetadataException'])
+
 
 if __name__ == '__main__':unittest.main()
