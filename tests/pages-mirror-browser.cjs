@@ -16,7 +16,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
   await context.route('**/api/feedback',r=>{posts.push(r.request().method());return r.abort();});
   await page.goto(base);await page.evaluate(()=>{PR={cur:'pages-synthetic',list:[{id:'pages-synthetic',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S.stars=77;S.opaque={preserve:'yes'};save();say=()=>{};home();});
   const before=await page.evaluate(()=>backup());
-  await page.evaluate(()=>{document.documentElement.dataset.feedback='local';showFeedback({category:'broken',note:'Synthetic saved report'});});
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.feedback),'local','verify the deployed artifact exposes local feedback');
+  await page.evaluate(()=>showFeedback({category:'broken',note:'Synthetic saved report'}));
   assert.equal(await page.locator('#feedback-send').isVisible(),false,'static mirror must not offer an unavailable server send');
   assert.equal(await page.locator('#feedback-save').isVisible(),true);await page.locator('#feedback-save').click();
   assert.equal((await page.evaluate(()=>feedbackReports()))[0].delivery.state,'local');assert.match(await page.locator('#feedback-status').innerText(),/Nothing has been sent/);
