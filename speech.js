@@ -90,6 +90,12 @@ function mainlandRecording(card, reading) {
   const file=typeof MAINLAND_AUDIO==='undefined' ? null : MAINLAND_AUDIO.readings[recordingKey(expected)];
   return file ? {file,pinyin:expected} : null;
 }
+function uncheckedNeutralRecording(card, reading) {
+  // Recovered Google clips are optional unchecked audio, never part of the
+  // approved Mainland mapping. Keep polyphonic filenames out of other readings.
+  const characters={a5:'啊',ba5:'吧',de5:'的',le5:'了',ma5:'吗',me5:'么',men5:'们',ne5:'呢',zhe5:'着'};
+  return characters[recordingKey(reading)]===card.c ? 'audio/'+encodeURIComponent(card.c)+'.mp3' : null;
+}
 function playRecording(text, token, file) {
   return new Promise(resolve => {
     const a = new Audio(file || 'audio/' + encodeURIComponent(text) + '.mp3');
@@ -135,8 +141,19 @@ async function speakPrompt(text, token, reading) {
       selectionNote:recording?'Native-source isolated recording with separate calibrated consonant, vowel and tone checks; exact source and limits in audio-sources/mainland.json.':'No approved recording for this reading; device voice pronunciation is not verified.'};
     if (!recording) {
       if(expected!==readings(card)[0]){speechStatus('No checked recording for this alternate reading yet. Choose another pronunciation voice in Grown-ups.');return false;}
+      const unchecked=uncheckedNeutralRecording(card,expected);
+      if(unchecked){
+        window.lastSpeechRequest={...window.lastSpeechRequest,source:'Google recording · unchecked',recording:unchecked,
+          selectionNote:'Existing recovered Google clip; this reading has not passed pronunciation verification.'};
+        speechStatus('Older Google recording · pronunciation unchecked.');
+        const ok=await playRecording(text,token,unchecked);
+        if(ok||token!==speechSequence)return ok;
+        window.lastSpeechRequest={...window.lastSpeechRequest,source:'browser speech',recording:null,
+          selectionNote:'Unchecked Google clip could not play; device voice pronunciation is not verified.'};
+        speechStatus('Playing the device voice · pronunciation unchecked.');
+      }
       if(!window.speechSynthesis){speechStatus('No checked recording for this reading yet, and the device voice is unavailable.');return false;}
-      speechStatus('No checked recording for this reading yet. Playing the device voice.');
+      if(!unchecked)speechStatus('No checked recording for this reading yet. Playing the device voice · pronunciation unchecked.');
       const ok=await speakDevice(prompt,token);
       if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
       return ok;
@@ -160,11 +177,13 @@ async function speakPrompt(text, token, reading) {
   }
   if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt,preference,voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:preference==='recorded'||!window.speechSynthesis?'Google Cloud TTS bundled recording (device fallback if unavailable)':'browser speech',selectionNote:'Requested voice; actual browser audio is not verified.'};}
   if (!english && preference !== 'recorded' && preference !== 'reference' && window.speechSynthesis) {
+    if(card)speechStatus('Device voice · pronunciation unchecked.');
     const ok = await speakDevice(prompt, token);
     // Do not substitute a potentially different recording after cancelled speech.
     if (!ok && token === speechSequence) speechStatus('Could not play this voice. Tap the speaker to retry, or choose another voice in Grown-ups.');
     return ok;
   }
+  if(card&&preference==='recorded')speechStatus('Older Google recording · pronunciation unchecked.');
   const ok = await playRecording(text, token);
   if (!ok && token === speechSequence) return speakDevice(prompt, token, !!english);
   return ok;
@@ -205,7 +224,7 @@ function refreshVoiceSettings() {
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
   note.textContent = preference === 'mainland'
-    ? 'Plays checked, reading-specific Putonghua recordings from MSU Tone Perfect. Some readings still need a checked recording; other words and sentences use the device voice with a notice. Existing voice choices are preserved.'
+    ? 'Plays checked, reading-specific Putonghua recordings from MSU Tone Perfect. Gaps may use older Google or device audio, marked unchecked, including in listening activities. Other words and sentences use the device voice. Existing voice choices are preserved.'
     : preference === 'reference'
     ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'

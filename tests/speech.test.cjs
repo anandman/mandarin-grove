@@ -129,9 +129,18 @@ test('Mainland audio is reading-specific and never substitutes after a failed as
 
 test('Mainland coverage gaps use an explicitly identified device voice without inventing a file',async()=>{
  const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
- vm.runInContext("ALL.push({c:'吗',p:'ma'})",h.ctx);const pending=h.ctx.say('吗');
+ vm.runInContext("ALL.push({c:'安',p:'ān'})",h.ctx);const pending=h.ctx.say('安');
  assert.equal(h.audio.length,0);assert.equal(h.spoken.length,1);assert.match(status.textContent,/device voice/i);
  assert.equal(h.ctx.window.lastSpeechRequest.source,'browser speech');assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not verified/i);
+ h.spoken[0].onend();assert.equal(await pending,true);
+});
+
+test('known neutral gaps use existing Google audio explicitly unchecked, then identified device fallback',async()=>{
+ const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
+ vm.runInContext("ALL.push({c:'吗',p:'ma'})",h.ctx);const pending=h.ctx.say('吗');
+ assert.equal(h.audio[0]?.url,'audio/%E5%90%97.mp3');assert.match(status.textContent,/unchecked/i);
+ assert.equal(h.ctx.window.lastSpeechRequest.source,'Google recording · unchecked');
+ h.audio[0].onerror();await Promise.resolve();assert.equal(h.spoken.length,1);assert.match(status.textContent,/device voice.*unchecked/i);
  h.spoken[0].onend();assert.equal(await pending,true);
 });
 
