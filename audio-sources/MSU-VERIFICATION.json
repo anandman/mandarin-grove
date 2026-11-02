@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseBasis": "Native-source review and explicit incremental-release decision; not a qualified automatic pronunciation method",
+  "releaseBasis": "Accepted static playback: documented MSU native-source review, bounded model review and ordinary user feedback; automatic checker remains unqualified research",
   "source": {
     "title": "Tone Perfect MP3 Dataset",
     "publisher": "Michigan State University Libraries",
@@ -55,13 +55,13 @@
       "ne5",
       "zhe5"
     ],
-    "totalBytes": 14123278
+    "totalBytes": 14105631
   },
   "selection": {
-    "order": "Prefer MV3 then FV3 for complete component agreement; otherwise prefer non-disputed matching observations, then no accepted disagreement",
+    "order": "Owner-approved selection overrides, then prefer MV3/FV3 complete component agreement or matching observations without accepted disagreement",
     "speakers": {
-      "MV3": 493,
-      "FV3": 55
+      "FV3": 54,
+      "MV3": 494
     },
     "gou1": "FV3 selected; MV3 final disagrees with the checker, retained in private research for diagnosis",
     "sourceLexicalGapExceptions": [
@@ -70,7 +70,15 @@
       "xing2",
       "zuo3"
     ],
-    "audioProcessing": "Unchanged original MP3 bytes; filenames changed only"
+    "audioProcessing": "Unchanged original MP3 bytes; filenames changed only",
+    "overrides": {
+      "fu3": {
+        "sourceId": "fu3_MV3",
+        "previousSourceId": "fu3_FV3",
+        "reason": "Shorter original MSU recording preferred for learner clarity in bounded model review and accepted by owner",
+        "previousRecordingRetained": "audio/msu-fu3-fv3-ad2cbcaf0faf.mp3"
+      }
+    }
   },
   "automaticVerification": {
     "qualified": false,
@@ -209,7 +217,9 @@
       },
       "criticalFalseAccepted": 0
     },
-    "priorAttempts": "Earlier V3 actual curriculum and independent external confirmation failed. Those failures remain unchanged; V4 source-conflicted training was interrupted and not used. No attempt is relabeled as passing."
+    "priorAttempts": "Earlier V3 actual curriculum and independent external confirmation failed. Those failures remain unchanged; V4 source-conflicted training was interrupted and not used. No attempt is relabeled as passing.",
+    "status": "archived-unqualified",
+    "requiredForStaticPlayback": false
   },
   "comparison": {
     "currentUnsetVoiceBeforeRelease": "Browser-controlled Mandarin zh-CN, variable across devices; actual output not measured as a corpus.",
@@ -217,5 +227,25 @@
     "CNS11643": "557 exact-reading files; Taiwan Mandarin source remains an optional regional voice. Not wrong Mandarin and not certified as Mainland.",
     "conclusion": "MSU improves Mainland-source alignment, native-review provenance, exact-reading control and playback consistency over device/legacy Google. This is not a measured head-to-head phonetic accuracy claim."
   },
-  "humanReview": "Additional fluent-speaker checking may resolve uncertainties and fill gaps; not a prerequisite for this source-curated release."
+  "humanReview": "Additional fluent-speaker checking may resolve uncertainties and fill gaps; not a prerequisite for this source-curated release.",
+  "productAcceptance": {
+    "date": "2026-11-01",
+    "status": "accepted-for-static-playback",
+    "basis": [
+      "Documented native-source review",
+      "Bounded independent model review",
+      "Ongoing user feedback"
+    ],
+    "modelReview": {
+      "model": "Gemini 4 Argon",
+      "clipEntries": 60,
+      "distinctSourceAssets": 57,
+      "catalogAgreements": 55,
+      "differentFromCatalog": 1,
+      "uncertain": 1,
+      "scope": "54 prior selected readings and three other-speaker alternatives, plus three exact duplicate copies; not a full-corpus accuracy estimate",
+      "audioAccess": "Native audio input reported by reviewer; tool delivery not independently audited"
+    },
+    "limits": "No numerical corpus accuracy guarantee, qualified automatic assessor, child-speech grading, or connected-speech certification. Historical failed research remains unchanged."
+  }
 }

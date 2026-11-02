@@ -16,9 +16,20 @@
     "scope": "Selected adult-source isolated Putonghua readings; not child-speech grading or connected-speech certification",
     "sourceReview": {
       "productionPaperURL": "https://ideah.pubpub.org/pub/hh90jpsu/release/5",
-      "nativeReviewDocumented": true
+      "nativeReviewDocumented": true,
+      "staticAudioAcceptance": {
+        "date": "2026-11-01",
+        "status": "accepted-for-static-playback",
+        "basis": "Documented native-source review, bounded model review and ordinary user feedback",
+        "automaticCheckerResearch": "Archived as failed/unqualified; successful qualification is not required for static playback",
+        "selectionOverride": {
+          "reading": "fu3",
+          "sourceId": "fu3_MV3",
+          "reason": "Owner chose the shorter original MSU recording for learner clarity after bounded model review; not a labeling correction or qualified automatic approval"
+        }
+      }
     },
-    "ownerAuthorizationSha256": "6f987cf610f974aed4267556efe525e5d90fdb7d577b67d7a0f5eafd067f5f6f"
+    "ownerAuthorizationSha256": "27087ed0af78bece098c941bc3305b960764b55ee9cb9f25655185d4d790b647"
   },
   "readings": {
     "ai4": {
@@ -1758,17 +1769,17 @@
       "automaticCheckStatus": "components-match"
     },
     "fu3": {
-      "file": "audio/msu-fu3-fv3-ad2cbcaf0faf.mp3",
-      "sha256": "ad2cbcaf0fafe4b151fd030dfcd78a6aad3cd0ea8f03cb18826aba3d1a3eb2e3",
-      "bytes": 47138,
-      "speaker": "FV3",
-      "sourceId": "fu3_FV3",
-      "sourceMember": "tone_perfect/fu3_FV3_MP3.mp3",
+      "file": "audio/msu-fu3-mv3-dda17bab9e51.mp3",
+      "sha256": "dda17bab9e51cc5a7c027e2acf943fd636d30d3d72b1078e4a67ea992a435819",
+      "bytes": 29491,
+      "speaker": "MV3",
+      "sourceId": "fu3_MV3",
+      "sourceMember": "tone_perfect/fu3_MV3_MP3.mp3",
       "processing": "Unchanged original MP3 bytes",
       "originalSourceLexicalGap": false,
       "componentChecks": {
-        "initial": "matches",
-        "final": "abstained",
+        "initial": "abstained",
+        "final": "matches",
         "tone": "matches"
       },
       "automaticCheckStatus": "pending"

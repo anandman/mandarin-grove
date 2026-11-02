@@ -1,3 +1,32 @@
+# Static-audio acceptance — November 1, 2026
+
+The owner accepts MSU native-source review, a bounded independent model review
+and normal user feedback as the basis for static pronunciation playback. The
+custom automatic checker is archived as failed/unqualified research; qualifying
+it is no longer a release requirement. It must not be used to grade children.
+All previous failed measurements remain unchanged below and in the source report.
+
+The 548 selected readings now include the shorter original `fu3_MV3` recording
+for learner clarity. This is an explicit selection choice, not a finding that
+`fu3_FV3` is mislabeled. Both original recordings are preserved. The other 547
+selections, saved voice choices, learning state and backup formats are unchanged.
+Nine neutral-tone gaps still use explicitly unchecked Google/device fallback.
+
+The bounded model review covered 60 entries / 57 distinct source assets; 55
+transcriptions agreed with catalog labels, one differed and one was uncertain.
+This targeted sample does not establish a corpus accuracy rate. The original
+longer fu3 recording was the uncertain item; its shorter alternative was heard
+as fu3. Source metadata records the accepted override and preserves all earlier
+automatic component abstentions instead of turning them into passing results.
+
+[Source and limits](../audio-sources/MSU-VERIFICATION.json),
+[exact selected files](../audio-sources/mainland.json), and
+[MSU citation and license](../audio-sources/LICENSE-MSU.txt).
+
+Historical dated evidence follows.
+
+---
+
 # Source-reviewed MSU delivery — October31,2026
 
 The current default for an unset voice is **MSU Mainland recordings**,548 exact curriculum reading keys from the unchanged Tone Perfect MP3 archive. The owner explicitly authorized an incremental source-reviewed replacement while further pronunciation checks continue. The release basis is native-source curation and comparative fitness for the Mainland target; **the automatic assessor is not qualified**. Earlier V3 and V6 failures are retained.521selected recordings have matching component checks;27remain pending. Nine absent neutral readings use clearly unchecked older Google/device audio. Saved explicit voices remain unchanged.

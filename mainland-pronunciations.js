@@ -140,7 +140,7 @@ const MAINLAND_AUDIO={
     "feng1": "audio/msu-feng1-mv3-da5ecde36f0f.mp3",
     "fu1": "audio/msu-fu1-mv3-f98e7d16b470.mp3",
     "fu2": "audio/msu-fu2-mv3-4ccb43d35f98.mp3",
-    "fu3": "audio/msu-fu3-fv3-ad2cbcaf0faf.mp3",
+    "fu3": "audio/msu-fu3-mv3-dda17bab9e51.mp3",
     "fu4": "audio/msu-fu4-mv3-cdada4a49dd1.mp3",
     "gai1": "audio/msu-gai1-mv3-7ada86eb149c.mp3",
     "gai3": "audio/msu-gai3-mv3-2ddbbc151911.mp3",
