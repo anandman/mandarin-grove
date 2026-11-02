@@ -18,3 +18,17 @@ exports/
 dist/
 .vercel/
 __pycache__/
+
+# Native generated assets, local SDK configuration and build output
+mobile/www/
+mobile/dist/
+mobile/.build-history/
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/**/build/
+mobile/ios/App/App/public/
+mobile/ios/App/build/
+mobile/ios/App/DerivedData/
+mobile/ios/App/App/capacitor.config.json
+mobile/**/*.jks
+mobile/**/*.keystore
