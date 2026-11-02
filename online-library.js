@@ -14,7 +14,7 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  const root=$('online-library'),panel=$('online-panel'),offline=$('online-offline');let current=null,revision=0,flushReading=null;
  root.addEventListener('keydown',feedbackButtonKeydown);
  const active=()=>root.isConnected&&$('online-library')===root&&PR.cur===owner&&GR()===grade;
- const stop=async()=>{const flush=flushReading;flushReading=null;if(flush)await flush();revision++;current?.abort();current=null;};
+ const stop=async()=>{const flush=flushReading;if(flush)await flush();if(flushReading===flush)flushReading=null;revision++;current?.abort();current=null;};
  const connection=()=>{if(!active())return;offline.hidden=navigator.onLine!==false;offline.textContent=offline.hidden?'':'You’re offline. Starter readings and saved readings are available.';};
  addEventListener('online',connection);addEventListener('offline',connection);connection();
  const observer=new MutationObserver(()=>{if(!active()){stop().catch(()=>{});observer.disconnect();removeEventListener('online',connection);removeEventListener('offline',connection);}});observer.observe(A,{childList:true});

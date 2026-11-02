@@ -43,6 +43,15 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
    await p.locator('#reading-check').click();await p.locator('#reading-save-retry').waitFor();assert.equal(await p.locator('#reading-check').isDisabled(),true);assert.equal(await p.evaluate(()=>localStorage.getItem('zh_p_'+PR.cur)),before);
    await p.evaluate(()=>Storage.prototype.setItem=originalReadingSet);await p.locator('#reading-save-retry').click();await p.locator('#reading-answer-feedback').waitFor();assert.match(await p.locator('#reading-answer-feedback').innerText(),/^Correct/);assert.equal(await p.locator('#reading-next').isEnabled(),true);
   });
+  await run('failed Back retries saving the first comprehension answer before leaving',async p=>{
+   await p.evaluate(()=>showOnlineLibrary({selection:{chars:['猫','狗'],units:['2:1'],modes:['trace'],limit:5}}));await p.locator('[data-reading="grove-pets"]').click();await p.locator('#reading-start-questions').click();await p.locator('input[name="reading-answer"][value="friend"]').check();
+   const before=await p.evaluate(()=>{window.originalReadingSet=Storage.prototype.setItem;const raw=localStorage.getItem('zh_p_'+PR.cur);Storage.prototype.setItem=function(k,v){if(k==='zh_p_supported-synthetic')throw new DOMException('quota','QuotaExceededError');return originalReadingSet.call(this,k,v);};return raw;});
+   await p.locator('#reading-check').click();await p.locator('#reading-save-retry').waitFor();await p.locator('#page-back').click();await p.getByRole('button',{name:'Retry saving and go back',exact:true}).waitFor();
+   assert.equal(await p.evaluate(()=>localStorage.getItem('zh_p_'+PR.cur)),before);assert.equal(await p.locator('#online-detail').count(),1);
+   await p.evaluate(()=>Storage.prototype.setItem=originalReadingSet);await p.getByRole('button',{name:'Retry saving and go back',exact:true}).click();await p.locator('[data-reading="grove-pets"]').waitFor();
+   await p.reload();await p.evaluate(()=>{say=()=>{};showOnlineLibrary({selection:{chars:['猫','狗'],units:['2:1'],modes:['trace'],limit:5}});});await p.locator('[data-reading="grove-pets"]').click();await p.locator('#reading-answer-feedback').waitFor();
+   assert.match(await p.locator('#reading-answer-feedback').innerText(),/^Correct/);assert.equal(await p.locator('input[name="reading-answer"][value="friend"]').isChecked(),true);
+  });
   await run('delayed dictionary completes an open school entry without losing focus or selection',async(p,c)=>{
    let release;const gate=new Promise(r=>release=r);await c.route('**/vendor/cc-cedict/dictionary.json',async r=>{await gate;await r.continue();});
    await p.evaluate(()=>showHomeworkLookup());await p.locator('#lookup-input').fill('行');await p.locator('#lookup-search').click();await p.locator('[data-lookup-text="行"]').click();await p.locator('[data-lookup-char="行"]').check();await p.getByRole('button',{name:'Hear pronunciation',exact:true}).focus();
