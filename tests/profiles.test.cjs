@@ -29,3 +29,16 @@ test('native Escape close cancels speech, removes dialog and restores focus once
  assert.equal(c.stopCount,1);assert.equal(dialog.isConnected,false);assert.equal(previous.focusCount,1);
  dialog.onclose();assert.equal(c.stopCount,1);assert.equal(previous.focusCount,1);
 });
+
+test('Continue into Grown-ups closes once and cannot replace newer settings on queued close',()=>{
+ const {c,previous}=dialogHarness();let dialog,continueAction,settingsOpened=0;
+ c.document.body={append(value){dialog=value;value.isConnected=true;}};
+ c.profileButton=(parent,text,id,action)=>{if(id==='parent-entry-continue')continueAction=action;return {focus(){}};};
+ c.grown=()=>settingsOpened++;
+ const make=c.profileElement;c.profileElement=(tag)=>{const el=make(tag);el.showModal=()=>el.open=true;return el;};
+ c.parentEntry(previous);continueAction();
+ assert.equal(c.stopCount,1,'Continue stops the old dialog speech');
+ assert.equal(settingsOpened,1);const focusCount=previous.focusCount;
+ dialog.queuedClose();assert.equal(settingsOpened,1,'Queued close cannot replace the new settings');
+ assert.equal(c.stopCount,1,'Queued close cannot stop new audio');assert.equal(previous.focusCount,focusCount,'Queued close cannot steal new focus');
+});

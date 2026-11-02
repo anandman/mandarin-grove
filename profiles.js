@@ -74,7 +74,8 @@ function parentEntry(button){
  dialog.append(profileElement('p','These settings are for grown-ups. Continue to open them.',{class:'reading-note'}));
  const cancel=profileButton(dialog,'Cancel','parent-entry-cancel',()=>profileClose(dialog),true);
  profileButton(dialog,'Continue','parent-entry-continue',()=>{
-  dialog.onclose=()=>{dialog.remove();if(button.isConnected){button.focus({preventScroll:true});grown();}};
+  const close=dialog.onclose;
+  dialog.onclose=()=>{if(!dialog.isConnected)return;close();if(button.isConnected){button.focus({preventScroll:true});grown();}};
   profileClose(dialog);
  });
  document.body.append(dialog);dialog.showModal();cancel.focus();
