@@ -7,3 +7,25 @@ test('backup summaries use each profile grade and retained unit selection, and t
  const c=labels();assert.equal(typeof c.BKW,'function','independent profile-summary API exists');
  assert.equal(c.BKW({gr:'4'},JSON.stringify({cfg:{quiz:'止离'}})),'Grade 4, Unit 2');assert.equal(c.BKW({gr:'2'},JSON.stringify({cfg:{set:['狗','猫']}})),'Grade 2, Unit 1');assert.equal(c.BKW({gr:'K'},'broken'),'Kindergarten');assert.equal(c.BKW({gr:'4'},JSON.stringify({stars:25})),'Grade 4');
 });
+
+// A queued native dialog close must finish once, before a newer view starts audio.
+function dialogHarness(){
+ const previous={isConnected:true,focusCount:0,focus(){this.focusCount++;}};
+ const c=labels();c.stopCount=0;c.stopSpeech=()=>c.stopCount++;
+ c.document={activeElement:previous,getElementById:()=>null};c.profileStyles=()=>{};
+ c.profileElement=(tag)=>({tag,isConnected:false,open:false,append(){},setAttribute(){},remove(){this.isConnected=false;},close(){this.open=false;this.queuedClose=this.onclose;}});
+ const dialog=c.profileDialog('test-dialog','Synthetic');dialog.isConnected=true;dialog.open=true;
+ return {c,dialog,previous};
+}
+test('closing a dialog finishes before newer audio and queued close cannot cancel it',()=>{
+ const {c,dialog,previous}=dialogHarness();c.profileClose(dialog);
+ assert.equal(previous.focusCount,1,'Return focus before the next view opens');
+ const stopped=c.stopCount;dialog.queuedClose();
+ assert.equal(c.stopCount,stopped,'Old queued close cannot stop newer speech');
+ assert.equal(previous.focusCount,1,'Old queued close cannot steal focus from newer view');
+});
+test('native Escape close cancels speech, removes dialog and restores focus once',()=>{
+ const {c,dialog,previous}=dialogHarness();dialog.open=false;dialog.onclose();
+ assert.equal(c.stopCount,1);assert.equal(dialog.isConnected,false);assert.equal(previous.focusCount,1);
+ dialog.onclose();assert.equal(c.stopCount,1);assert.equal(previous.focusCount,1);
+});

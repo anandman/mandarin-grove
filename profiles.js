@@ -22,7 +22,7 @@ function profileReveal(element){
 function backupPreparationFailure(error){const status=document.getElementById('backup-status');if(status){status.textContent='Could not prepare a backup file. '+error.message+' Your saved progress is unchanged. Please try again.';profileReveal(status);}}
 function profileRegistryRefresh(){PR=GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));}
 function profileGradeName(grade){return grade==='K'?'Kindergarten':'Grade '+grade;}
-function profileClose(dialog){stopSpeech();if(dialog.open)dialog.close();dialog.remove();}
+function profileClose(dialog){if(dialog.open)dialog.close();if(dialog.onclose)dialog.onclose();else{stopSpeech();dialog.remove();}}
 function profileButtonKeydown(event){
  if(event.repeat&&(event.key==='Enter'||event.key===' ')&&event.target.closest('button'))event.preventDefault();
 }
@@ -33,7 +33,7 @@ function profileDialog(id,title,alert=false){
  const heading=profileElement('header'),name=profileElement('h2',title,{id:id+'-title'});heading.append(name);
  if(!alert){const close=profileElement('button','×',{'aria-label':'Close',type:'button'});close.onclick=()=>profileClose(dialog);heading.append(close);}dialog.append(heading);
  dialog.onkeydown=profileButtonKeydown;
- dialog.onclose=()=>{stopSpeech();dialog.remove();if(previous?.isConnected)previous.focus({preventScroll:true});};
+ dialog.onclose=()=>{if(!dialog.isConnected)return;stopSpeech();dialog.remove();if(previous?.isConnected)previous.focus({preventScroll:true});};
  dialog.onclick=event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)profileClose(dialog);};
  return dialog;
 }

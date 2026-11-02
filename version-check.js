@@ -1,4 +1,4 @@
-const VER='20261101-audio-81';
+const VER='20261101-dialog-82';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
