@@ -2,6 +2,16 @@
   "appId": "io.github.anandman.mandaringrove",
   "appName": "Mandarin Grove",
   "webDir": "www",
-  "ios": {"contentInset": "automatic"},
-  "android": {"allowMixedContent": false}
+  "loggingBehavior": "none",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "CapacitorSQLite": {
+      "iosDatabaseLocation": "Library/CapacitorDatabase"
+    }
+  }
 }

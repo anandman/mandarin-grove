@@ -81,14 +81,14 @@ async function savePR(){
   PR=saved;GROVE_SAVED_REGISTRY=groveCopy(PR);
  }catch(error){if(JSON.stringify(PR)===stamp){PR=groveCopy(GROVE_SAVED_REGISTRY);showStorageFailure(error);}throw error;}});
 }
-async function save(cramSelectionChanged=false){
+async function save(cramSelectionChanged=false,options={}){
  if(!GROVE_PROGRESS_READY||GROVE_STATE_OWNER!==PR.cur){const error=Error('This child’s progress has not loaded. Reload before saving.');showStorageFailure(error);throw error;}
- const owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE,candidate=groveCopy(S),earned=refreshRewardState(candidate,GR());
+ options=groveCopy(options);const owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE,candidate=groveCopy(S),earned=refreshRewardState(candidate,GR());
  return durableCommit(async()=>{
   let saved;
   try{
    if(!cramSelectionChanged)candidate.cfg.cramUnits=await storedCramSelections(owner,candidate.cfg.cramUnits);
-   requireActiveSave(owner,sequence);saved=owner?await GROVE_REPOSITORY.saveProfile(owner,candidate):candidate;
+   requireActiveSave(owner,sequence);saved=owner?await GROVE_REPOSITORY.saveProfile(owner,candidate,options):candidate;
   }catch(error){if(activeSave(owner,sequence)&&!error.groveActionObsolete){if(GROVE_SAVED_STATE){S=groveCopy(GROVE_SAVED_STATE);setCards();}error.groveSaveRejected=true;showStorageFailure(error);}throw error;}
   // An acknowledged old-child write remains durable but cannot publish into
   // another child or continue its navigation/reward callbacks.

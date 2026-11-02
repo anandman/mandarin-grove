@@ -2,12 +2,15 @@
   "name": "mandarin-grove-mobile",
   "version": "0.1.0",
   "private": true,
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "build:bridge": "esbuild src/bridge.ts --bundle --platform=browser --format=iife --outfile=dist/bridge.js",
+    "build:bridge": "esbuild src/bridge.ts --bundle --platform=browser --format=iife --define:__GROVE_INTERNAL_TESTS__=false --minify-syntax --outfile=dist/bridge.js",
     "build": "npm run build:bridge && node ../scripts/export-mobile.cjs",
     "sync": "cap sync",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:testing": "esbuild src/bridge.ts --bundle --platform=browser --format=iife --define:__GROVE_INTERNAL_TESTS__=true --minify-syntax --outfile=dist/bridge-testing.js && node ../scripts/export-mobile.cjs --internal-tests"
   },
   "dependencies": {
     "@capacitor/core": "8.6.0",

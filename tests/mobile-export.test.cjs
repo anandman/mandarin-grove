@@ -10,12 +10,21 @@ test('mobile package contains every required sourced asset and excludes workspac
  for(const file of ['HANDOFF.md','docs/DEVELOPMENT.md','tests/profiles.test.cjs','.git/config','exports/private-datasets/msu-tone-perfect/originals/tone_perfect_all_mp3.zip','mobile/package-lock.json'])assert.equal(fs.existsSync(path.join(out,file)),false,file);
  assert.equal(hash(path.join(out,catalog.readings.fu3.file)),'dda17bab9e51cc5a7c027e2acf943fd636d30d3d72b1078e4a67ea992a435819');
 });
-test('internal shell waits for native readiness and cannot run browser persistence or web updates',()=>{
+test('native bootstrap precedes learner and preference code and cannot start the web updater',()=>{
  const out=exporter()(root,destination()),html=fs.readFileSync(path.join(out,'index.html'),'utf8');
  const scripts=[...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(m=>m[1].split('?')[0]);
- for(const file of ['app.js','backups.js','adapters/web-storage.js','offline.js','version-check.js','theme.js'])assert.equal(scripts.includes(file),false,file+' must not execute before durable storage exists');
- assert.ok(scripts.includes('native/bridge.js'));assert.match(html,/data-grove-native="true"/);assert.match(html,/data-native-persistence="disabled"/);
+ assert.equal(scripts[0],'native/bridge.js','Install native readiness before any browser defaults');
+ for(const file of ['app.js','backups.js','theme.js'])assert.ok(scripts.includes(file),'Reuse '+file);
+ for(const file of ['offline.js','version-check.js'])assert.equal(scripts.includes(file),false,file+' must not execute in an installed app');
+ assert.match(html,/data-grove-native="true"/);assert.match(html,/data-native-persistence="sqlite"/);
+ assert.equal(fs.readFileSync(path.join(out,'native/bridge.js'),'utf8').includes('GroveNativeTest'),false,'Ordinary packages contain no internal transaction controls');
  const config=require('../mobile/capacitor.config.json');assert.equal(config.appId,'io.github.anandman.mandaringrove');assert.equal(config.webDir,'www');assert.equal(config.server?.url,undefined);assert.equal(config.server?.cleartext,undefined);
+});
+test('native HTML without its bridge refuses readiness instead of opening browser storage',async()=>{
+ const vm=require('node:vm'),context=vm.createContext({window:{},document:{documentElement:{dataset:{groveNative:'true'}}}});
+ vm.runInContext(fs.readFileSync(path.join(root,'platform/runtime.js'),'utf8'),context);
+ assert.notEqual(context.window.GrovePlatform.platform,'web');assert.equal(context.window.GrovePlatform.persistenceReady,false);
+ await assert.rejects(context.window.GrovePlatform.ready(),/native|bridge|unavailable/i);
 });
 test('web export and source bytes remain identical after a mobile export',()=>{
  const {exportStatic}=require('../scripts/export-static.cjs');const before=hash(path.join(root,'index.html'));const first=exportStatic(root,destination());exporter()(root,destination());const second=exportStatic(root,destination());

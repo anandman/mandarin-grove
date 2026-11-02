@@ -17,6 +17,11 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		2D33BC7F79D5260845B1619C = {isa = PBXBuildFile; fileRef = 1FB109AF27259D1E6D1BFBB1; };
+		A33D10000000000000000001 /* original-v1.json in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000001; };
+		A33D10000000000000000002 /* grove-v1.json in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000002; };
+		A33D10000000000000000003 /* native-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000003; };
+		A33D30000000000000000001 /* GroveFilesPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000001; };
+		BB850D716B076ED4728E7C60 = {isa = PBXBuildFile; fileRef = C8740D43CC27D58654F7528D; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +38,12 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		1FB109AF27259D1E6D1BFBB1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackagedShellTests.swift; sourceTree = "<group>"; };
 		F7C819BC8A011D5EDCA6E87A = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A33D00000000000000000001 /* original-v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "original-v1.json"; path = "../../../tests/fixtures/backups/original-v1.json"; sourceTree = SOURCE_ROOT; };
+		A33D00000000000000000002 /* grove-v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "grove-v1.json"; path = "../../../tests/fixtures/backups/grove-v1.json"; sourceTree = SOURCE_ROOT; };
+		A33D00000000000000000003 /* native-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-scenarios.js"; path = "../../../tests/fixtures/native-scenarios.js"; sourceTree = SOURCE_ROOT; };
+		A33D20000000000000000001 /* GroveFilesPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroveFilesPlugin.swift; sourceTree = "<group>"; };
+		C8740D43CC27D58654F7528D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackupUITests.swift; sourceTree = "<group>"; };
+		DB8C01332310637EA679F028 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +56,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		18EB475780B7DE3E5AC9149B = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		D2074ADDF1189BAFAAB31D44 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -54,6 +66,7 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				59E48028CCBD907AA414A793 /* AppTests */,
+				A3284FA8B0D7D4E594B6EC3E /* AppUITests */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -63,6 +76,7 @@
 			children = (
 				504EC3041FED79650016851F /* App.app */,
 				F7C819BC8A011D5EDCA6E87A /* AppTests.xctest */,
+				DB8C01332310637EA679F028 /* AppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,6 +87,7 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				A33D20000000000000000001 /* GroveFilesPlugin.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -83,7 +98,8 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		59E48028CCBD907AA414A793 = {isa = PBXGroup; children = (1FB109AF27259D1E6D1BFBB1,); path = AppTests; sourceTree = "<group>"; };
+		59E48028CCBD907AA414A793 = {isa = PBXGroup; children = (1FB109AF27259D1E6D1BFBB1,A33D00000000000000000001,A33D00000000000000000002,A33D00000000000000000003,); path = AppTests; sourceTree = "<group>"; };
+		A3284FA8B0D7D4E594B6EC3E = {isa = PBXGroup; children = (C8740D43CC27D58654F7528D,); path = AppUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -108,6 +124,7 @@
 			productType = "com.apple.product-type.application";
 		};
 		4A1B5BA8FEB5222865E54B73 = {isa = PBXNativeTarget; buildConfigurationList = F908213472CC52C5B56E47A7; buildPhases = (9D2E91C9BFDD59370CD998ED,18EB475780B7DE3E5AC9149B,B2B6FF110931020DCC8FD13A,); buildRules = (); dependencies = (2D77E4FC12B3C9D93584A6E1,); name = AppTests; productName = AppTests; productReference = F7C819BC8A011D5EDCA6E87A; productType = "com.apple.product-type.bundle.unit-test"; };
+		E5C071684996779D53F1E758 = {isa = PBXNativeTarget; buildConfigurationList = 0C678CC8EAB165BE690C14E1; buildPhases = (5702754003B320F6E70B6D5B,D2074ADDF1189BAFAAB31D44,0283363DADF76881D19F8F59,); buildRules = (); dependencies = (2D77E4FC12B3C9D93584A6E1,); name = AppUITests; productName = AppUITests; productReference = DB8C01332310637EA679F028; productType = "com.apple.product-type.bundle.ui-testing"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXContainerItemProxy section */
@@ -150,6 +167,7 @@
 			targets = (
 				504EC3031FED79650016851F /* App */,
 				4A1B5BA8FEB5222865E54B73 /* AppTests */,
+				E5C071684996779D53F1E758 /* AppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -168,7 +186,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B2B6FF110931020DCC8FD13A = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B2B6FF110931020DCC8FD13A = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A33D10000000000000000003,A33D10000000000000000002,A33D10000000000000000001,); runOnlyForDeploymentPostprocessing = 0; };
+		0283363DADF76881D19F8F59 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -177,11 +196,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				A33D30000000000000000001 /* GroveFilesPlugin.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9D2E91C9BFDD59370CD998ED = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (2D33BC7F79D5260845B1619C,); runOnlyForDeploymentPostprocessing = 0; };
+		5702754003B320F6E70B6D5B = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (BB850D716B076ED4728E7C60,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -359,6 +380,8 @@
 		};
 		0FFAD31BF7981954D7B794D3 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = io.github.anandman.mandaringrove.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App"; TEST_TARGET_NAME = App; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)","@executable_path/Frameworks","@loader_path/Frameworks",);}; name = Debug; };
 		B5BE7B69F1861A84484D933D = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = io.github.anandman.mandaringrove.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App"; TEST_TARGET_NAME = App; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)","@executable_path/Frameworks","@loader_path/Frameworks",);}; name = Release; };
+		BFED9903A6E27182BD7DB326 = {isa = XCBuildConfiguration; buildSettings = {GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = io.github.anandman.mandaringrove.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = App; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)","@executable_path/Frameworks","@loader_path/Frameworks",); }; name = Debug; };
+		9B37F2AE1F7EF57DCEDC398B = {isa = XCBuildConfiguration; buildSettings = {GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = io.github.anandman.mandaringrove.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = App; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)","@executable_path/Frameworks","@loader_path/Frameworks",); }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -381,6 +404,7 @@
 			defaultConfigurationName = Release;
 		};
 		F908213472CC52C5B56E47A7 = {isa = XCConfigurationList; buildConfigurations = (0FFAD31BF7981954D7B794D3,B5BE7B69F1861A84484D933D,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		0C678CC8EAB165BE690C14E1 = {isa = XCConfigurationList; buildConfigurations = (BFED9903A6E27182BD7DB326,9B37F2AE1F7EF57DCEDC398B,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */

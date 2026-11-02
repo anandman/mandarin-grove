@@ -1,0 +1,76 @@
+import XCTest
+
+final class NativeBackupUITests: XCTestCase {
+    @MainActor func testSystemBackupTransferAndCancel() throws {
+        let syntheticDevices = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard let simulator = ProcessInfo.processInfo.environment["SIMULATOR_UDID"], syntheticDevices.contains(simulator) else {
+            throw XCTSkip("This file-replacement test is restricted to the dedicated synthetic simulators")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        app.launch()
+        let gear = app.webViews.buttons["Grown-ups settings, press and hold or activate with keyboard"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 20), app.debugDescription)
+        gear.press(forDuration: 2.2)
+        let backupSection = app.webViews.buttons["Backup"]
+        XCTAssertTrue(backupSection.waitForExistence(timeout: 10), app.debugDescription)
+        backupSection.tap()
+        let export = app.webViews.buttons["Download backup file"]
+        XCTAssertTrue(export.waitForExistence(timeout: 10))
+        export.tap()
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription)
+        let screenshot = XCTAttachment(screenshot: app.screenshot()); screenshot.name = "Actual system backup export picker"; screenshot.lifetime = .keepAlways; add(screenshot)
+        cancel.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Backup save cancelled. Your progress is unchanged."].waitForExistence(timeout: 10), app.debugDescription)
+        app.webViews.buttons["Restore from backup file"].tap()
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription)
+        let opened = XCTAttachment(screenshot: app.screenshot()); opened.name = "Actual system backup import picker"; opened.lifetime = .keepAlways; add(opened)
+        cancel.tap()
+        XCTAssertTrue(app.webViews.buttons["Download backup file"].waitForExistence(timeout: 10))
+
+        // Save through the actual system Files UI. A previous file is never
+        // replaced automatically; any unexpected overwrite prompt fails here.
+        export.tap()
+        let save = app.buttons["DOCPicker.actionButton"]
+        XCTAssertTrue(save.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(save.label, "Save")
+        let filename = app.textFields["DOCPicker.filenameTextField"]
+        XCTAssertTrue(filename.exists)
+        let oldName = filename.value as? String ?? ""
+        let unique = "grove-native-ios-" + UUID().uuidString.lowercased()
+        filename.tap(); filename.press(forDuration: 1.1)
+        if app.menuItems["Select All"].exists { app.menuItems["Select All"].tap() }
+        else if app.buttons["Select All"].exists { app.buttons["Select All"].tap() }
+        filename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: oldName.count + 10))
+        filename.typeText(unique)
+        XCTAssertTrue((filename.value as? String)?.contains(unique) == true, "Use a new unique filename; never overwrite a prior backup")
+        print("GROVE_OS_EXPORT_STEM:" + unique)
+        save.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Backup file saved. It includes every child’s progress and names."].waitForExistence(timeout: 15), app.debugDescription)
+
+        // Import the file that Files just saved. This is the normal backup
+        // round trip, without injecting a URL or calling the picker delegate.
+        // The separate hosted test covers exact BOM/CRLF decoding.
+        app.webViews.buttons["Restore from backup file"].tap()
+        let local = app.cells["DOC.sidebar.item.On My iPad"]
+        XCTAssertTrue(local.waitForExistence(timeout: 15), app.debugDescription)
+        local.tap()
+        let original = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", unique)).firstMatch
+        XCTAssertTrue(original.waitForExistence(timeout: 10), app.debugDescription)
+        original.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25)).tap()
+        let replace = app.webViews.buttons["Replace all device progress"]
+        if !replace.waitForExistence(timeout: 3) {
+            let open = app.buttons["DOCPicker.actionButton"]
+            if open.exists && open.label == "Open" { open.tap() }
+            else if original.exists { original.doubleTap() }
+        }
+        XCTAssertTrue(replace.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.webViews.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Synthetic Learner B")).firstMatch.exists)
+        replace.tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.webViews.buttons["Close"])
+        wait(for: [closed], timeout: 15)
+        XCTAssertTrue(app.webViews.buttons["Practice"].waitForExistence(timeout: 10), app.debugDescription)
+        let restored = XCTAttachment(screenshot: app.screenshot()); restored.name = "Restored OS-saved backup through actual Files picker"; restored.lifetime = .keepAlways; add(restored)
+    }
+}

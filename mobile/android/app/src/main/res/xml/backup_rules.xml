@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="database" path="mandarin_groveSQLite.db" requireFlags="clientSideEncryption" />
+    <include domain="database" path="mandarin_groveSQLite.db-wal" requireFlags="clientSideEncryption" />
+    <include domain="database" path="mandarin_groveSQLite.db-shm" requireFlags="clientSideEncryption" />
+</full-backup-content>

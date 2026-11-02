@@ -1,38 +1,61 @@
 import {Capacitor} from '@capacitor/core';
+import {CapacitorSQLite,SQLiteConnection,type SQLiteDBConnection} from '@capacitor-community/sqlite';
+import {createDatabase,inspectSchema,type SQLiteDriver,type NativeDatabase} from './database';
+import {createRepository,type NativeRepository} from '../../adapters/native-storage.js';
+import {files,type NativeFiles} from './files';
 
-type Writer={animateCharacter():Promise<void>};
+declare const __GROVE_INTERNAL_TESTS__:boolean;
+type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase};
 declare global {
  interface Window {
-  GrovePlatform:{platform:string;ready():Promise<void>;persistenceReady:boolean};
-  HanziWriter:{create(element:HTMLElement,char:string,options:Record<string,unknown>):Writer};
+  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
+  GroveNativeTest?:TestControl;
+  prepareWebProgress?(value:any,now:number,profile:any):any;
  }
 }
-const ready=Promise.resolve();
-window.GrovePlatform=Object.freeze({platform:Capacitor.getPlatform(),ready:()=>ready,persistenceReady:false});
-
-// Internal L1 asset check only. The learner UI is enabled after transactional storage.
-async function boot(){
- await window.GrovePlatform.ready();
- const main=document.getElementById('app')!;
- main.innerHTML='<h1>Native engineering check</h1><p class="reading-note">Packaged content check. Practice and saving are disabled in this internal build.</p><p id="native-platform"></p><div id="native-strokes" style="width:260px;height:260px;margin:16px auto"></div><button type="button" class="btn" id="native-watch">Watch 府 strokes</button> <button type="button" class="btn" id="native-audio">Play fǔ recording</button> <button type="button" class="btn" id="native-dictionary">Look up 学校 offline</button><p role="status" id="native-status"></p><p id="native-definition"></p>';
- document.getElementById('native-platform')!.textContent='Platform: '+window.GrovePlatform.platform;
- const report=(message:string)=>{document.getElementById('native-status')!.textContent=message;};
- const strokeResponse=await fetch('strokes/'+encodeURIComponent('府')+'.json');
- if(!strokeResponse.ok)throw Error('Bundled stroke data unavailable');
- const strokes=await strokeResponse.json();
- const writer=window.HanziWriter.create(document.getElementById('native-strokes')!,'府',{width:260,height:260,padding:14,strokeColor:'#1F2937',charDataLoader:(_char:string,loaded:(value:unknown)=>void)=>loaded(strokes)});
- document.getElementById('native-watch')!.onclick=()=>{void writer.animateCharacter().catch(()=>report('Could not animate the bundled strokes.'));};
- const audio=new Audio('audio/msu-fu3-mv3-dda17bab9e51.mp3');
- audio.onended=()=>report('Bundled fǔ recording finished.');audio.onerror=()=>report('Bundled recording could not play.');
- document.getElementById('native-audio')!.onclick=()=>{audio.currentTime=0;void audio.play().then(()=>report('Playing bundled fǔ recording.')).catch(()=>report('Bundled recording could not play.'));};
- document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.pause();});
- document.getElementById('native-dictionary')!.onclick=async()=>{
-  try{
-   const response=await fetch('vendor/cc-cedict/dictionary.json');if(!response.ok)throw Error('missing dictionary');
-   const data=await response.json() as {entries:string[][]};const entry=data.entries.find(row=>row[0]==='学校');
-   if(!entry)throw Error('missing entry');document.getElementById('native-definition')!.textContent=entry[0]+' · '+entry[2]+' · '+entry[3];report('Bundled dictionary loaded.');
-  }catch{report('Bundled dictionary could not load.');}
+const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
+let repository:NativeRepository|undefined;
+let installationId:string|undefined;
+function driver(connection:SQLiteDBConnection):SQLiteDriver{
+ if(!__GROVE_INTERNAL_TESTS__)return connection;
+ let next:'before'|'after'|null=null,release:(()=>void)|undefined;
+ const control:TestControl={phase:null,connection,holdNextCommit(stage){next=stage;control.phase=null;},releaseCommit(){release?.();}};
+ window.GroveNativeTest=control;
+ const pause=async(stage:'before'|'after')=>{if(next!==stage)return;next=null;control.phase=stage;await new Promise<void>(resolve=>release=resolve);control.phase=null;release=undefined;};
+ return {
+  execute:connection.execute.bind(connection),query:connection.query.bind(connection),run:connection.run.bind(connection),beginTransaction:connection.beginTransaction.bind(connection),rollbackTransaction:connection.rollbackTransaction.bind(connection),isTransactionActive:connection.isTransactionActive.bind(connection),
+  commitTransaction:async()=>{await pause('before');const result=await connection.commitTransaction();await pause('after');return result;}
  };
- report('Packaged content ready. Saving remains disabled.');
 }
-void boot().catch(()=>{document.getElementById('app')!.textContent='The native asset check could not start. Saving remains disabled.';});
+const ready=(async()=>{
+ try{
+  if(!['ios','android'].includes(platform))throw Error('Open this package in the installed native app. Browser storage will not be used.');
+  installationId=(await files.installationIdentity()).id;
+  await sqlite.checkConnectionsConsistency();
+  if((await sqlite.isDatabase('mandarin_grove')).result){
+   const probe=await sqlite.createConnection('mandarin_grove',false,'no-encryption',1,true);
+   try{await probe.open();await inspectSchema(probe);}
+   finally{await sqlite.closeConnection('mandarin_grove',true);}
+  }
+  const connection=await sqlite.createConnection('mandarin_grove',false,'no-encryption',1,false);await connection.open();
+  const database=await createDatabase(driver(connection));
+  if(__GROVE_INTERNAL_TESTS__&&window.GroveNativeTest)window.GroveNativeTest.database=database;
+  const codec={
+   decodeUtf8:(code:string)=>new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(code),char=>char.charCodeAt(0))),
+   encodeUtf8:(text:string)=>{let bytes='';for(const byte of new TextEncoder().encode(text))bytes+=String.fromCharCode(byte);return btoa(bytes);}
+  };
+  repository=createRepository({database,codec,migrate:(value,now,profile)=>{
+   if(!window.prepareWebProgress)throw Error('The learner initialization is not ready. Existing data has been kept.');
+   return window.prepareWebProgress(value,now,profile);
+  }});
+ }catch(error){throw error instanceof Error?error:Error(String(error));}
+})();
+// Startup observes ready; also handle a failure before the next script loads.
+void ready.catch(()=>{});
+window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,files,get installationId(){return installationId;},async exportRecovery(){
+ await ready.catch(()=>{});
+ if(repository){try{return await repository.exportRecovery();}catch{/* Preserve raw files when semantic recovery cannot read this schema. */}}
+ // Close the owned connection before reading fixed DB/WAL/SHM paths. Never
+ // open an empty database, reset a schema, or include identity/auth files.
+ await sqlite.closeAllConnections();repository=undefined;return files.rawRecovery();
+}});
