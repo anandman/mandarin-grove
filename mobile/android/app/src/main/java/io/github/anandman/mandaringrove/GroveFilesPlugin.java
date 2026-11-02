@@ -3,6 +3,7 @@ package io.github.anandman.mandaringrove;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.util.Base64;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSArray;
@@ -22,7 +23,23 @@ import java.util.UUID;
 @CapacitorPlugin(name = "GroveFiles")
 public class GroveFilesPlugin extends Plugin {
     private static final int LIMIT = 64 * 1024 * 1024;
-    private boolean pickerPending;
+    private final GroveFileOperations operations = new GroveFileOperations();
+    private static final String OPERATION = "grovePickerOperation";
+    private GroveExportFiles exports() { return new GroveExportFiles(new File(getContext().getNoBackupFilesDir(), "grove-pending-exports")); }
+    @Override protected Bundle saveInstanceState() {
+        Bundle state = super.saveInstanceState(); String id = operations.savedId();
+        if (state != null && id != null) state.putString(OPERATION, id);
+        return state;
+    }
+    @Override protected void restoreState(Bundle state) {
+        super.restoreState(state); if (state != null) operations.restore(state.getString(OPERATION));
+    }
+    private boolean claim(PluginCall call, String method) {
+        if (call == null || !method.equals(call.getMethodName())) return false;
+        String id = call.getString(OPERATION); boolean restored = PluginCall.CALLBACK_ID_DANGLING.equals(call.getCallbackId());
+        if (id == null && restored && !operations.isPending()) call.reject("The file picker was interrupted. Choose the file again. Progress and original files were kept.");
+        return operations.claim(id, restored);
+    }
     private byte[] readBounded(InputStream input) throws Exception {
         if (input == null) throw new IOException("The selected document is unavailable.");
         try (InputStream stream = input; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -47,61 +64,87 @@ public class GroveFilesPlugin extends Plugin {
             call.resolve(new JSObject().put("id", id));
         } catch (Exception error) { call.reject("Could not prepare private installation storage. Existing files were kept.", error); }
     }
-    @PluginMethod public void saveText(PluginCall call) {
+    @PluginMethod public synchronized void saveText(PluginCall call) {
         String name = call.getString("name"), text = call.getString("text"), mime = call.getString("mimeType", "text/plain");
         if (name == null || !name.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,119}") || text == null || !(mime.equals("text/plain") || mime.equals("application/json"))) { call.reject("Invalid backup file request."); return; }
-        if (pickerPending) { call.reject("Finish the current file picker first."); return; }
+        if (operations.isPending()) { call.reject("Finish the current file picker first."); return; }
+        String operation = operations.begin(); call.getData().put(OPERATION, operation);
+        File staged = null;
         try {
             // Capacitor persists pending call options in the Activity Bundle.
             // A backup must never enter that size-limited state (or its logs).
             // Keep the payload in private, non-backed-up staging and only a
             // generated basename in the saved callback options.
-            File directory = new File(getContext().getNoBackupFilesDir(), "grove-pending-exports");
-            if (!directory.isDirectory() && !directory.mkdirs()) throw new IOException("Private export staging is unavailable.");
-            File staged = File.createTempFile("export-", ".utf8", directory);
-            try (FileOutputStream out = new FileOutputStream(staged); Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
-                writer.write(text); writer.flush(); out.getFD().sync();
-            }
+            staged = exports().stage(text);
             call.getData().remove("text"); call.getData().put("groveExportToken", staged.getName());
-            pickerPending = true;
             Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(mime).putExtra(Intent.EXTRA_TITLE, name);
             startActivityForResult(call, intent, "savedDocument");
+            operations.launched(operation);
         }
-        catch (Exception error) { pickerPending = false; call.reject("Could not open the system file picker.", error); }
+        catch (Exception error) {
+            operations.end(operation);
+            if (staged != null) try { exports().discard(staged.getName()); } catch (Exception cleanup) { error.addSuppressed(cleanup); }
+            call.reject("Could not open the system file picker. Progress was kept.", error);
+        }
     }
-    @ActivityCallback private void savedDocument(PluginCall call, ActivityResult result) {
-        pickerPending = false; if (call == null) return;
-        if (result.getResultCode() != Activity.RESULT_OK) { call.resolve(new JSObject().put("saved", false)); return; }
-        Uri uri = result.getData() == null ? null : result.getData().getData();
-        if (uri == null) { call.reject("No backup destination was selected."); return; }
-        String token = call.getString("groveExportToken");
-        if (token == null || !token.matches("export-[A-Za-z0-9-]+[.]utf8")) { call.reject("The prepared export is unavailable. All progress was kept; try exporting again."); return; }
-        File staged = new File(new File(getContext().getNoBackupFilesDir(), "grove-pending-exports"), token);
-        try (InputStream input = new FileInputStream(staged); OutputStream out = getContext().getContentResolver().openOutputStream(uri, "wt")) {
-            if (out == null) throw new IOException("The selected destination is unavailable.");
-            byte[] buffer = new byte[16384]; int count;
-            while ((count = input.read(buffer)) != -1) out.write(buffer, 0, count);
-            out.flush();
-        } catch (Exception error) { call.reject("Could not finish writing the backup file. Progress was kept.", error); return; }
-        call.resolve(new JSObject().put("saved", true));
+    @ActivityCallback private synchronized void savedDocument(PluginCall call, ActivityResult result) {
+        if (!claim(call, "saveText")) return;
+        String operation = call.getString(OPERATION);
+        getBridge().execute(() -> {
+            String token = call.getString("groveExportToken"); boolean saved = false;
+            Exception writeError = null, cleanupError = null;
+            try {
+                File staged = exports().file(token);
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Uri uri = result.getData() == null ? null : result.getData().getData();
+                    if (uri == null) throw new IOException("No backup destination was selected.");
+                    try (InputStream input = new FileInputStream(staged); OutputStream out = getContext().getContentResolver().openOutputStream(uri, "wt")) {
+                        if (out == null) throw new IOException("The selected destination is unavailable.");
+                        byte[] buffer = new byte[16384]; int count;
+                        while ((count = input.read(buffer)) != -1) out.write(buffer, 0, count);
+                        out.flush();
+                    }
+                    saved = true;
+                }
+            } catch (Exception error) { writeError = error; }
+            try { exports().discard(token); } catch (Exception error) { cleanupError = error; }
+            operations.end(operation);
+            if (cleanupError != null) call.reject(saved ? "The backup file was saved, but its private temporary copy could not be removed. Your progress is unchanged." : "Could not remove the private temporary backup. Progress was kept.", saved ? "GROVE_EXPORT_SAVED" : "GROVE_EXPORT_STAGING", cleanupError);
+            else if (writeError != null) call.reject("Could not finish writing the backup file. Progress was kept.", writeError);
+            else call.resolve(new JSObject().put("saved", saved));
+        });
     }
-    @PluginMethod public void openText(PluginCall call) {
-        if (pickerPending) { call.reject("Finish the current file picker first."); return; }
-        pickerPending = true;
+    @PluginMethod public synchronized void clearTemporaryFiles(PluginCall call) {
+        if (operations.isPending()) { call.reject("Finish the current file picker before erasing this device."); return; }
+        try { exports().clear(); call.resolve(); }
+        catch (Exception error) { call.reject("Could not remove all private temporary backups. Progress has not been erased.", error); }
+    }
+    @PluginMethod public synchronized void openText(PluginCall call) {
+        if (operations.isPending()) { call.reject("Finish the current file picker first."); return; }
+        String operation = operations.begin(); call.getData().put(OPERATION, operation);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain");
-        try { startActivityForResult(call, intent, "openedDocument"); }
-        catch (Exception error) { pickerPending = false; call.reject("Could not open the system file picker.", error); }
+        try { startActivityForResult(call, intent, "openedDocument"); operations.launched(operation); }
+        catch (Exception error) { operations.end(operation); call.reject("Could not open the system file picker.", error); }
     }
-    @ActivityCallback private void openedDocument(PluginCall call, ActivityResult result) {
-        pickerPending = false; if (call == null) return;
-        if (result.getResultCode() != Activity.RESULT_OK) { call.resolve(new JSObject().put("cancelled", true)); return; }
-        Uri uri = result.getData() == null ? null : result.getData().getData();
-        if (uri == null) { call.reject("No backup file was selected."); return; }
-        try {
-            byte[] data = readBounded(getContext().getContentResolver().openInputStream(uri));
-            String text = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(data)).toString();
-            call.resolve(new JSObject().put("cancelled", false).put("text", text));
-        } catch (Exception error) { call.reject("Could not read a valid UTF-8 backup. The original and progress were kept.", error); }
+    @ActivityCallback private synchronized void openedDocument(PluginCall call, ActivityResult result) {
+        if (!claim(call, "openText")) return;
+        String operation = call.getString(OPERATION);
+        getBridge().execute(() -> {
+            JSObject response = null; Exception readError = null;
+            try {
+                if (result.getResultCode() != Activity.RESULT_OK) response = new JSObject().put("cancelled", true);
+                else {
+                    Uri uri = result.getData() == null ? null : result.getData().getData();
+                    if (uri == null) throw new IOException("No backup file was selected.");
+                    byte[] data = readBounded(getContext().getContentResolver().openInputStream(uri));
+                    String text = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(data)).toString();
+                    response = new JSObject().put("cancelled", false).put("text", text);
+                }
+            } catch (Exception error) { readError = error; }
+            operations.end(operation);
+            if (readError != null) call.reject("Could not read a valid UTF-8 backup. The original and progress were kept.", readError);
+            else call.resolve(response);
+        });
     }
     @PluginMethod public void rawRecovery(PluginCall call) {
         try {

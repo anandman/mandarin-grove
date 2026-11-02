@@ -40,7 +40,7 @@ function showProgressRecovery(error,{imported=false}={}){
   const link=document.createElement('a');link.href=url;link.download='mandarin-grove-recovery.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
   fileStatus.textContent='Recovery copy prepared. Existing progress was kept.';
   }finally{download.disabled=false;}
- },error=>{fileStatus.textContent='Could not export the recovery copy. '+error.message+' All existing files were kept.';});
+ },error=>{fileStatus.textContent=error.code==='GROVE_EXPORT_SAVED'?'Recovery file saved. Its private temporary copy could not be removed. All existing files were kept.':'Could not export the recovery copy. '+error.message+' All existing files were kept.';});
  const reload=document.createElement('button');reload.className='btn gray';reload.textContent='Reload';reload.onclick=()=>location.reload();app.append(title,note,download,fileStatus,reload);
 }
 // Compare durable progress without moving any caller's three-way merge baselines.

@@ -1,9 +1,67 @@
 import XCTest
 import UIKit
 import WebKit
+import Capacitor
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testLatePickerCallbacksCannotConsumeNewExport() throws {
+        let plugin = GroveFilesPlugin(), files = GroveExportFiles()
+        let oldPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.plainText], asCopy: true)
+        let newPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.plainText], asCopy: true)
+        var firstACK = 0, secondACK = 0, errors = 0
+        let first = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-first", methodName: "saveText", options: [:], success: { _, _ in firstACK += 1 }, error: { _ in errors += 1 }))
+        let second = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-second", methodName: "saveText", options: [:], success: { _, _ in secondACK += 1 }, error: { _ in errors += 1 }))
+        let a = try files.stage(name: "a.txt", text: "synthetic A"), b = try files.stage(name: "b.txt", text: "synthetic B")
+        try plugin.requests.begin(oldPicker, request: GrovePickerRequest(call: first, exportFile: a))
+        plugin.documentPickerWasCancelled(oldPicker); XCTAssertEqual(firstACK, 1)
+        try plugin.requests.begin(newPicker, request: GrovePickerRequest(call: second, exportFile: b))
+        plugin.documentPickerWasCancelled(oldPicker); plugin.documentPicker(oldPicker, didPickDocumentsAt: [])
+        XCTAssertTrue(plugin.requests.isPending); XCTAssertTrue(FileManager.default.fileExists(atPath: b.path)); XCTAssertEqual(secondACK, 0); XCTAssertEqual(errors, 0)
+        plugin.documentPickerWasCancelled(newPicker); XCTAssertEqual(secondACK, 1); XCTAssertFalse(FileManager.default.fileExists(atPath: b.path))
+    }
+    @MainActor func testEmptyExportResultRemovesOnlyItsOwnCopy() throws {
+        let plugin = GroveFilesPlugin(), file = try GroveExportFiles().stage(name: "empty-result.txt", text: "synthetic private copy")
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.plainText], asCopy: true)
+        var ACK = 0, errors = 0
+        let call = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-empty", methodName: "saveText", options: [:], success: { _, _ in ACK += 1 }, error: { _ in errors += 1 }))
+        try plugin.requests.begin(picker, request: GrovePickerRequest(call: call, exportFile: file))
+        plugin.documentPicker(picker, didPickDocumentsAt: [])
+        XCTAssertEqual(ACK, 0); XCTAssertEqual(errors, 1); XCTAssertFalse(FileManager.default.fileExists(atPath: file.path)); XCTAssertFalse(plugin.requests.isPending)
+    }
+    func testPrivateExportStagingOwnership() throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent("GroveStagingTests-" + UUID().uuidString)
+        let files = GroveExportFiles(root: base.appendingPathComponent("private-staging"))
+        let bytes = Data("\u{feff}\n合成 backup\r\n".utf8)
+        let staged = try files.stage(name: "backup.txt", text: String(decoding: bytes, as: UTF8.self))
+        XCTAssertEqual(try Data(contentsOf: staged), bytes)
+        let selected = base.appendingPathComponent("selected-backup.txt")
+        try FileManager.default.copyItem(at: staged, to: selected)
+        try files.discard(staged); try files.discard(staged)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staged.path))
+        let second = try files.stage(name: "backup.txt", text: "synthetic abandoned copy")
+        try files.clear(); XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
+        XCTAssertEqual(try Data(contentsOf: selected), bytes)
+        XCTAssertThrowsError(try files.discard(selected))
+        XCTAssertEqual(try Data(contentsOf: selected), bytes)
+    }
+    func testPrivateExportStagingRejectsUnknownAndSymlinkPaths() throws {
+        let manager = FileManager.default, base = manager.temporaryDirectory.appendingPathComponent("GroveStagingGuardTests-" + UUID().uuidString)
+        let files = GroveExportFiles(root: base)
+        _ = try files.stage(name: "backup.txt", text: "synthetic copy")
+        let unknown = base.appendingPathComponent("GroveExport-unrecognized")
+        try manager.createDirectory(at: unknown, withIntermediateDirectories: true)
+        XCTAssertThrowsError(try files.clear()); XCTAssertTrue(manager.fileExists(atPath: unknown.path))
+        let other = manager.temporaryDirectory.appendingPathComponent("GroveStagingLinkTests-" + UUID().uuidString)
+        try manager.createDirectory(at: other, withIntermediateDirectories: true)
+        let selected = other.appendingPathComponent("selected-backup.txt")
+        try Data("keep selected original".utf8).write(to: selected)
+        let link = other.appendingPathComponent("GroveExport-" + UUID().uuidString)
+        try manager.createSymbolicLink(at: link, withDestinationURL: base)
+        XCTAssertThrowsError(try GroveExportFiles(root: other).clear())
+        XCTAssertEqual(try Data(contentsOf: selected), Data("keep selected original".utf8))
+        XCTAssertTrue(manager.fileExists(atPath: link.path))
+    }
     func testSelectedBackupUTF8Bytes() throws {
         let bytes = Data([0xef, 0xbb, 0xbf, 10, 65, 13, 10])
         XCTAssertEqual(Data(try GroveFilesPlugin.decodeBackupText(bytes).utf8), bytes, "Preserve the selected file's BOM and line endings")
@@ -27,10 +85,20 @@ final class PackagedShellTests: XCTestCase {
         try Data(preparedString.utf8).write(to: evidence.appendingPathComponent("before.json"), options: .atomic)
         let selectedBackup = evidence.appendingPathComponent("preserved-backup.txt")
         try Data(priorCode.utf8).write(to: selectedBackup, options: .atomic)
+        let abandoned = try GroveExportFiles().stage(name: "synthetic-abandoned.txt", text: "synthetic private temporary copy")
+        let temporaryOriginals = evidence.appendingPathComponent("temporary-originals", isDirectory: true)
+        try FileManager.default.createDirectory(at: temporaryOriginals, withIntermediateDirectories: true)
+        let stagedDirectories = try FileManager.default.contentsOfDirectory(at: FileManager.default.temporaryDirectory, includingPropertiesForKeys: [.isSymbolicLinkKey]).filter { $0.lastPathComponent.hasPrefix("GroveExport-") }
+        for directory in stagedDirectories {
+            XCTAssertFalse(try directory.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink == true)
+            try FileManager.default.copyItem(at: directory, to: temporaryOriginals.appendingPathComponent(directory.lastPathComponent))
+        }
         let afterValue = try await asyncJavaScript("return JSON.stringify(await GroveNativeScenarios.eraseAndVerify(grovePreparedErase));", in: web)
         let after = try XCTUnwrap(afterValue as? String)
         try Data(after.utf8).write(to: evidence.appendingPathComponent("after.json"), options: .atomic)
         XCTAssertEqual(try Data(contentsOf: selectedBackup), Data(priorCode.utf8))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: abandoned.path))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(at: FileManager.default.temporaryDirectory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("GroveExport-") }.count, 0)
         // Preserve the dedicated simulator's previous synthetic progress too.
         let restored = try await asyncJavaScript("await GROVE_REPOSITORY.importBackup(grovePreparedErase.priorBackup); PR=await GROVE_REPOSITORY.readRegistry(); GROVE_SAVED_REGISTRY=groveCopy(PR); await loadS({persist:false}); await home(); return await backup();", in: web) as? String
         XCTAssertEqual(restored, priorCode)

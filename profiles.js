@@ -20,7 +20,7 @@ function profileReveal(element){
  const dialog=element.closest('dialog'),header=dialog?.querySelector(':scope > header');
  if(header){const top=element.getBoundingClientRect().top,bottom=header.getBoundingClientRect().bottom+12;if(top<bottom)dialog.scrollTop-=bottom-top;}
 }
-function backupPreparationFailure(error){const status=document.getElementById('backup-status');if(status){status.textContent='Could not prepare a backup file. '+error.message+' Your saved progress is unchanged. Please try again.';profileReveal(status);}}
+function backupPreparationFailure(error){const status=document.getElementById('backup-status');if(status){status.textContent=error.code==='GROVE_EXPORT_SAVED'?'Backup file saved. Its private temporary copy could not be removed. Your progress is unchanged.':'Could not prepare a backup file. '+error.message+' Your saved progress is unchanged. Please try again.';profileReveal(status);}}
 async function profileRegistryRefresh(){PR=await GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));}
 function profileGradeName(grade){return grade==='K'?'Kindergarten':'Grade '+grade;}
 function profileClose(dialog){if(dialog.open)dialog.close();if(dialog.onclose)dialog.onclose();else{stopSpeech();dialog.remove();}}

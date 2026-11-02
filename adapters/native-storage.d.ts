@@ -6,4 +6,5 @@ export function createRepository(options:{
  migrate?:(value:any,now:number,profile:any)=>any;
  now?:()=>number;
  makeId?:()=>string;
+ beforeErase?:()=>Promise<void>;
 }):NativeRepository;

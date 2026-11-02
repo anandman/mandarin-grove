@@ -5,10 +5,10 @@ try{({createDatabase}=require('../mobile/src/database.ts'));}catch(error){if(err
 const codec={decodeUtf8:code=>new TextDecoder('utf-8',{fatal:true}).decode(Buffer.from(code,'base64')),encodeUtf8:text=>Buffer.from(text,'utf8').toString('base64')};
 const fixture=name=>JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/backups',name),'utf8'));
 const code=value=>codec.encodeUtf8(JSON.stringify(value)),digest=value=>crypto.createHash('sha256').update(value).digest('hex');
-async function setup({file,migrate,wrap}={}){
+async function setup({file,migrate,wrap,beforeErase}={}){
  assert.equal(typeof createDatabase,'function','Real SQLite transaction implementation is available');assert.equal(typeof Native?.createRepository,'function','Native repository is available');
  file=file||path.join(fs.mkdtempSync(path.join(os.tmpdir(),'grove-native-repository-')),'grove.sqlite');const driver=openDriver(file);
- const database=await createDatabase(wrap?wrap(driver):driver,{now:()=>123});return {file,driver,database,repository:Native.createRepository({database,codec,migrate,now:()=>123,makeId:()=> 'fixed'})};
+ const database=await createDatabase(wrap?wrap(driver):driver,{now:()=>123});return {file,driver,database,repository:Native.createRepository({database,codec,migrate,beforeErase,now:()=>123,makeId:()=> 'fixed'})};
 }
 
 test('native initialization uses query for Android row-returning PRAGMAs and verifies durable settings',async()=>{
@@ -271,4 +271,12 @@ test('legacy schema2 erase receipt resumes private cleanup during the metadata u
  assert.ok(fs.readFileSync(a.file).includes(Buffer.from(marker)));
  const database=await createDatabase(a.d);assert.deepEqual((await database.readSnapshot()).entries,{});assert.equal((await a.d.query('SELECT erase_pending FROM grove_meta')).values[0].erase_pending,0);
  for(const suffix of ['','-wal'])if(fs.existsSync(a.file+suffix))assert.equal(fs.readFileSync(a.file+suffix).includes(Buffer.from(marker)),false);await a.d.close();
+});
+test('native erase waits for private file cleanup and keeps SQL data unchanged until it succeeds',async()=>{
+ let calls=0,release;const gate=new Promise(r=>release=r),a=await setup({beforeErase:async()=>{calls++;await gate;}});await a.repository.importBackup(code(fixture('original-v1.json')));const before=await a.database.exportRecovery();const erasing=a.repository.eraseLocal();
+ try{await new Promise(r=>setImmediate(r));assert.equal(calls,1);assert.deepEqual(await a.database.exportRecovery(),before);}finally{release();await erasing;}
+ assert.deepEqual((await a.database.readSnapshot()).entries,{});await a.driver.close();
+});
+test('failed private file cleanup refuses native erase without changing any progress or original',async()=>{
+ const a=await setup({beforeErase:async()=>{throw Error('Synthetic temporary file cleanup refused');}});await a.repository.importBackup(code(fixture('original-v1.json')));const before=await a.database.exportRecovery();await assert.rejects(a.repository.eraseLocal(),/temporary file cleanup refused/);assert.deepEqual(await a.database.exportRecovery(),before);await a.driver.close();
 });

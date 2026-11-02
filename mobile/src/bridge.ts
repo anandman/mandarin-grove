@@ -44,7 +44,7 @@ const ready=(async()=>{
    decodeUtf8:(code:string)=>new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(code),char=>char.charCodeAt(0))),
    encodeUtf8:(text:string)=>{let bytes='';for(const byte of new TextEncoder().encode(text))bytes+=String.fromCharCode(byte);return btoa(bytes);}
   };
-  repository=createRepository({database,codec,migrate:(value,now,profile)=>{
+  repository=createRepository({database,codec,beforeErase:()=>files.clearTemporaryFiles(),migrate:(value,now,profile)=>{
    if(!window.prepareWebProgress)throw Error('The learner initialization is not ready. Existing data has been kept.');
    return window.prepareWebProgress(value,now,profile);
   }});

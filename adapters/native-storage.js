@@ -9,7 +9,7 @@
   return {getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key),key:index=>[...values.keys()][index]??null,get length(){return values.size;},values};
  }
  async function hash(text){const data=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(data)].map(n=>n.toString(16).padStart(2,'0')).join('');}
- function createRepository({database,codec,migrate,now=Date.now,makeId}){
+ function createRepository({database,codec,migrate,now=Date.now,makeId,beforeErase}){
   let tail=Promise.resolve(),registryBase;const profileBases=new Map();
   function serial(action){const result=tail.then(action);tail=result.then(()=>undefined,()=>undefined);return result;}
   async function invoke(method,args){
@@ -38,6 +38,7 @@
     const reason=method==='importBackup'?'import':method==='deleteProfile'?'delete':method==='eraseLocal'?'erase':readOnly.has(method)?'bootstrap':method==='saveProfile'&&args[2]?.reason||'save';
     const metadata={reason};
     if(method==='importBackup'){metadata.originalCode=args[0];metadata.payloadHash=await hash(codec.decodeUtf8(args[0].replace(/\s/g,'')));}
+    if(method==='eraseLocal'&&beforeErase)await beforeErase();
     snapshot=await database.commit(before.revision,changes,metadata);
    }
    // A refused SQL commit must never move these baselines or publish a result.
