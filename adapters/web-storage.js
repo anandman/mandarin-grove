@@ -1,7 +1,8 @@
 /* Storage-shaped compatibility adapter; portable doubles use the same commit path. */
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('../core/state.js'),require('../core/backup.js'));else root.GroveStorage=factory(root.GroveState,root.GroveBackup);})(globalThis,(state,backup)=>{
  'use strict';
- const REGISTRY='zh_profiles',JOURNAL='zh_import_recovery_v1',EXTRAS='zh_backup_meta_v1';
+ const REGISTRY='zh_profiles',JOURNAL='zh_import_recovery_v1',EXTRAS='zh_backup_meta_v1',REPORTS='zh_feedback_v1';
+ const PREFERENCES=new Set(['zh_appearance','zh_voice','zh_bk']);
  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  const missing=Symbol('missing');
  let repositorySequence=0;
@@ -23,7 +24,7 @@
   function journalRows(record){
    if(!state.isObject(record)||record.version!==1||typeof record.id!=='string'||!Array.isArray(record.before))throw new Error('Progress recovery record needs attention; existing data was kept.');
    const keys=new Set();for(const pair of record.before){
-    if(!Array.isArray(pair)||pair.length!==2||typeof pair[0]!=='string'||!(pair[0]===REGISTRY||pair[0]===EXTRAS||pair[0].startsWith('zh_p_'))||keys.has(pair[0])||pair[1]!==null&&typeof pair[1]!=='string')throw new Error('Invalid progress recovery record; existing data was kept.');
+    if(!Array.isArray(pair)||pair.length!==2||typeof pair[0]!=='string'||!(pair[0]===REGISTRY||pair[0]===EXTRAS||pair[0].startsWith('zh_p_')||record.operation==='erase'&&managedKey(pair[0])&&pair[0]!==JOURNAL)||keys.has(pair[0])||pair[1]!==null&&typeof pair[1]!=='string')throw new Error('Invalid progress recovery record; existing data was kept.');
     keys.add(pair[0]);
    }
    if(record.after!==undefined){
@@ -44,9 +45,9 @@
    try{restore(record);storage.removeItem(JOURNAL);bases.clear();registryBase=undefined;return true;}
    catch{throw new Error('Progress recovery could not finish. Original values are retained on this device; free storage and reload.');}
   }
-  function commit(changes){
+  function commit(changes,{operation}={}){
    recoverImport();const before=changes.map(([key])=>[key,read(key)]),id=String(now())+':'+makeId();
-   const record={version:1,id,owner,phase:'writing',leaseUntil:now()+10000,before,after:changes};journalRows(record);
+   const record={version:1,id,owner,phase:'writing',leaseUntil:now()+10000,before,after:changes,...(operation?{operation}:{})};journalRows(record);
    // No child writes happen unless the complete rollback snapshot was saved.
    storage.setItem(JOURNAL,JSON.stringify(record));
    try{
@@ -79,13 +80,17 @@
    return {cur:null,list:[]};
   }
   function readRegistry(){const registry=registrySnapshot();registryBase=state.copy(registry);return registry;}
-  function readProfile(id){
+  function profileSnapshot(id){
    const registry=registrySnapshot();if(!registry.list.some(p=>p.id===id))throw new Error('Child profile is not listed');
    const raw=read('zh_p_'+id);if(raw===null)throw new Error('This child’s saved progress is missing. Existing data was kept.');
-   const original=JSON.parse(raw);state.validateProfile(original);bases.set(id,state.copy(original));
-   return state.prepareProfile(original,{now:now(),migrate:(value,time)=>migrate(value,time,registry.list.find(p=>p.id===id))});
+   const original=JSON.parse(raw);state.validateProfile(original);
+   return {original,profile:state.prepareProfile(original,{now:now(),migrate:(value,time)=>migrate(value,time,registry.list.find(p=>p.id===id))})};
+  }
+  function readProfile(id){
+   const snapshot=profileSnapshot(id);bases.set(id,state.copy(snapshot.original));return snapshot.profile;
   }
   function saveProfile(id,value,expectedRevision){
+   if(state.isObject(expectedRevision))expectedRevision=expectedRevision.expectedRevision;
    recoverImport();state.validateProfile(value);const key='zh_p_'+id,raw=read(key);
    if(raw===null)throw new Error('This child’s saved progress is missing.');
    const remote=state.validateProfile(JSON.parse(raw));
@@ -122,8 +127,9 @@
    for(const profile of candidate.registry.list)state.prepareProfile(candidate.rawProfiles[profile.id],{now:now(),migrate:(value,time)=>migrate(value,time,profile)});
    return candidate;
   }
-  function importBackup(code){
+  function importBackup(code,{expectedStamp}={}){
    const candidate=previewBackup(code);recoverImport();
+   if(expectedStamp!==undefined&&expectedStamp!==deviceStamp())throw new Error('Device progress changed after this preview. Refresh the comparison before replacing it.');
    const changes=Object.entries(candidate.rawProfiles).map(([id,raw])=>['zh_p_'+id,raw]);
    changes.push([EXTRAS,JSON.stringify(candidate.envelopeExtras)],[REGISTRY,JSON.stringify(candidate.registry)]);commit(changes);
    bases.clear();registryBase=state.copy(candidate.registry);return state.copy(candidate.registry);
@@ -142,7 +148,43 @@
    registry.list=registry.list.filter(p=>p.id!==id);if(registry.cur===id)registry.cur=registry.list[0].id;
    commit([['zh_p_'+id,null],[REGISTRY,JSON.stringify(registry)]]);bases.delete(id);registryBase=state.copy(registry);return state.copy(registry);
   }
-  return {peekRegistry:()=>state.copy(registrySnapshot()),readRegistry,readProfile,saveProfile,saveRegistry,saveChildSettings,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile};
+  // Device settings/reports deliberately remain outside learner backup data.
+  function preferenceKey(key){if(!PREFERENCES.has(key))throw new Error('Unsupported device preference');return key;}
+  function readPreference(key){return read(preferenceKey(key));}
+  function writePreference(key,value){
+   preferenceKey(key);if(value!==null&&typeof value!=='string')throw new Error('Device preference must be text or null');
+   write(key,value);return value;
+  }
+  function validateReports(rows){
+   if(!Array.isArray(rows)||rows.length>50||rows.some(row=>!state.isObject(row)))throw new Error('Saved reports need attention. Existing reports have been kept.');
+   return rows;
+  }
+  function readReports(){const raw=read(REPORTS);return raw===null?[]:validateReports(JSON.parse(raw));}
+  function saveReports(rows){validateReports(rows);storage.setItem(REPORTS,JSON.stringify(rows));return state.copy(rows);}
+  function saveReport(report){
+   if(!state.isObject(report)||typeof report.id!=='string'||!report.id)throw new Error('Report ID is required');
+   const rows=readReports(),index=rows.findIndex(row=>row.id===report.id);
+   if(index>=0)rows[index]=state.copy(report);
+   else{
+    if(rows.length>=50){const discard=rows.findIndex(row=>!['pending','failed'].includes(row.delivery?.state));if(discard<0)throw new Error('Report storage is full');rows.splice(discard,1);}
+    rows.push(state.copy(report));
+   }
+   saveReports(rows);return state.copy(report);
+  }
+  function managedKey(key){return typeof key==='string'&&(key.startsWith('zh_')||key==='owenzh_v1');}
+  function managedKeys(){const keys=[];for(let i=0;i<storage.length;i++){const key=storage.key(i);if(managedKey(key))keys.push(key);}return keys.sort();}
+  function deviceStamp(){return JSON.stringify(managedKeys().filter(key=>key===REGISTRY||key.startsWith('zh_p_')||key===EXTRAS||key==='owenzh_v1').map(key=>[key,read(key)]));}
+  function backupSummary(){
+   const before=deviceStamp(),registry=state.copy(registrySnapshot()),stamp=deviceStamp();
+   if(before!==stamp)throw new Error('Device progress changed while preparing the comparison. Please try again.');
+   return {registry,stamp};
+  }
+  // Recovery must work even when a corrupt journal prevents ordinary reads.
+  function exportRecovery(){return {format:'mandarin-grove-recovery-v1',storage:Object.fromEntries(managedKeys().map(key=>[key,read(key)]))};}
+  function eraseLocal(){
+   recoverImport();commit(managedKeys().map(key=>[key,null]),{operation:'erase'});bases.clear();registryBase=undefined;return true;
+  }
+  return {peekRegistry:()=>state.copy(registrySnapshot()),peekProfile:id=>state.copy(profileSnapshot(id).profile),readRegistry,readProfile,saveProfile,saveRegistry,saveChildSettings,previewBackup,importBackup,exportBackup,recoverImport,createProfile,deleteProfile,readPreference,writePreference,readReports,saveReports,saveReport,deviceStamp,backupSummary,exportRecovery,eraseLocal};
  }
  return {createRepository};
 });
