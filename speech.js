@@ -4,8 +4,16 @@ const ENGLISH_PROMPTS = {
   en_listen: 'Listen, then tap the character you hear.', en_trace: 'Follow the strokes to trace the character.',
   en_flip: 'Tap the card to flip it.', en_who: "Who is practicing?", en_new: 'New characters to practice!'
 };
+function nativeSpeechService(){return typeof GrovePlatform!=='undefined'?GrovePlatform.speech:window.GrovePlatform?.speech;}
+function hasDeviceSpeech(){return !!nativeSpeechService()||!!window.speechSynthesis;}
+function deviceSpeechSource(){return nativeSpeechService()?'native device speech':'browser speech';}
+function savedNativeVoiceURI(preference=voicePreference()){
+ if(['auto','recorded','reference','mainland'].includes(preference))return undefined;
+ if(preference.startsWith('voice:')){try{const fields=JSON.parse(decodeURIComponent(preference.slice(6)));return Array.isArray(fields)&&typeof fields[0]==='string'?fields[0]:undefined;}catch{return undefined;}}
+ return preference;
+}
 function browserVoices() {
-  return window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  return nativeSpeechService()?.voices || (window.speechSynthesis ? speechSynthesis.getVoices() : []);
 }
 function isMandarinVoice(v) {
   const lang=String(v.lang||'').replace(/_/g,'-').toLowerCase();
@@ -44,7 +52,7 @@ function selectedMandarinVoice() {
   const preference=voicePreference();
   if (['auto','recorded','reference','mainland'].includes(preference)) return null;
   // Preserve preferences saved by earlier versions, which stored just voiceURI.
-  return mandarinVoices().find(v=>voiceKey(v)===preference||v.voiceURI===preference)||null;
+  return mandarinVoices().find(v=>voiceKey(v)===preference||v.voiceURI===preference||(nativeSpeechService()&&v.voiceURI===savedNativeVoiceURI(preference)))||null;
 }
 function voiceReport() {
   return JSON.stringify({selection:voicePreference(), voices:browserVoices().map(v=>({
@@ -73,9 +81,24 @@ function stopSpeech() {
   if (speechFinish) { const finish = speechFinish; speechFinish = null; finish(false); }
   if (window.speechSynthesis) speechSynthesis.cancel();
   activeUtterance = null;
+  const native=nativeSpeechService();if(native){const token=speechSequence,stopping=native.cancel();stopping.catch(()=>{if(token===speechSequence&&!document.hidden)speechStatus('Could not stop the device voice. Try again before playing another sound.');});return stopping;}
 }
 function speakDevice(text, token, english = false) {
-  if (token !== speechSequence || !window.speechSynthesis) return Promise.resolve(false);
+  if (token !== speechSequence) return Promise.resolve(false);
+  const native=nativeSpeechService();
+  if(native)return new Promise(resolve=>{
+    const done=ok=>{if(speechFinish===done)speechFinish=null;resolve(ok&&token===speechSequence);};speechFinish=done;
+    const selected=english?null:selectedMandarinVoice(),voiceURI=english?undefined:selected?.voiceURI||savedNativeVoiceURI();
+    native.speak({text,lang:english?'en-US':'zh-CN',rate:english?0.9:0.75,voiceURI}).then(result=>{
+      if(!result.spoken&&token===speechSequence){
+        if(result.reason==='unavailable')speechStatus('No installed '+(english?'English':'Mandarin')+' device voice is available. Add a voice in device Settings and tap Refresh voices. Recordings still work.');
+        else if(!['cancelled','background'].includes(result.reason))speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
+        speechSequence++;
+      }
+      done(result.spoken);
+    },()=>{if(token===speechSequence){speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');speechSequence++;}done(false);});
+  });
+  if (!window.speechSynthesis) return Promise.resolve(false);
   return new Promise(resolve => {
     const u = new SpeechSynthesisUtterance(text);
     activeUtterance = u;
@@ -115,6 +138,7 @@ function uncheckedNeutralRecording(card, reading) {
   return characters[recordingKey(reading)]===card.c ? 'audio/'+encodeURIComponent(card.c)+'.mp3' : null;
 }
 function playRecording(text, token, file) {
+  if(token!==speechSequence||nativeSpeechService()?.active===false)return Promise.resolve(false);
   return new Promise(resolve => {
     const a = new Audio(file || 'audio/' + encodeURIComponent(text) + '.mp3');
     activeAudio = a;
@@ -127,6 +151,7 @@ function playRecording(text, token, file) {
     };
     speechFinish = done;
     a.onended = () => done(true); a.onerror = () => done(false);
+    a.onpause=()=>{if(a.ended)return;if(token===speechSequence)speechSequence++;done(false);a.removeAttribute?.('src');a.load?.();};
     try { a.play().catch(() => done(false)); } catch (_) { done(false); }
   });
 }
@@ -138,9 +163,9 @@ async function speakPrompt(text, token, reading) {
   if (!english && !card) {
     const voice=selectedMandarinVoice();
     window.lastSpeechRequest={character:text,pinyin:reading||null,prompt:text,preference,
-      voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:'browser speech',
+      voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:deviceSpeechSource(),
       selectionNote:'Dictionary word or character without a bundled recording; requests browser Mandarin. Actual pronunciation is not verified.'};
-    if(!window.speechSynthesis){speechStatus('No recording is available for this word or character, and browser speech is unavailable on this device.');return false;}
+    if(!hasDeviceSpeech()){speechStatus('No recording is available for this word or character, and browser speech is unavailable on this device.');return false;}
     // Start within the deliberate button gesture: waiting for a nonexistent MP3 can lose Safari user activation.
     if(['reference','recorded','mainland'].includes(preference))speechStatus('No recording for this word or character. Using the device voice.');
     const ok=await speakDevice(prompt,token);
@@ -161,7 +186,7 @@ async function speakPrompt(text, token, reading) {
     const sourceReviewed=MAINLAND_AUDIO.acceptanceBasis==='native-source-review';
     const checkPending=MAINLAND_AUDIO.pendingReadings?.includes(recordingKey(expected));
     window.lastSpeechRequest={character:text,pinyin:expected,prompt:recording?text:prompt,preference,
-      voice:null,source:recording?'MSU Putonghua recording':'browser speech',recording:recording?.file||null,
+      voice:null,source:recording?'MSU Putonghua recording':deviceSpeechSource(),recording:recording?.file||null,
       selectionNote:recording?(sourceReviewed?'MSU native-source review; automatic pronunciation checker is not qualified. '+(checkPending?'Experimental component check abstained. ':'Three app component checks match; this is not a correctness guarantee. '):'Native-source isolated recording with separate calibrated consonant, vowel and tone checks. ')+'Exact source and limits in audio-sources/mainland.json.':'No source recording for this reading; device voice pronunciation is not verified.'};
     if (!recording) {
       if(expected!==readings(card)[0]){speechStatus('No checked recording for this alternate reading yet. Choose another pronunciation voice in Grown-ups.');return false;}
@@ -172,11 +197,11 @@ async function speakPrompt(text, token, reading) {
         speechStatus('Older Google recording · pronunciation unchecked.');
         const ok=await playRecording(text,token,unchecked);
         if(ok||token!==speechSequence)return ok;
-        window.lastSpeechRequest={...window.lastSpeechRequest,source:'browser speech',recording:null,
+        window.lastSpeechRequest={...window.lastSpeechRequest,source:deviceSpeechSource(),recording:null,
           selectionNote:'Unchecked Google clip could not play; device voice pronunciation is not verified.'};
         speechStatus('Playing the device voice · pronunciation unchecked.');
       }
-      if(!window.speechSynthesis){speechStatus('No checked recording for this reading yet, and the device voice is unavailable.');return false;}
+      if(!hasDeviceSpeech()){speechStatus('No checked recording for this reading yet, and the device voice is unavailable.');return false;}
       if(!unchecked)speechStatus('No checked recording for this reading yet. Playing the device voice · pronunciation unchecked.');
       const ok=await speakDevice(prompt,token);
       if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
@@ -200,8 +225,8 @@ async function speakPrompt(text, token, reading) {
     if (!ok && token===speechSequence) speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
     return ok;
   }
-  if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt,preference,voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:preference==='recorded'||!window.speechSynthesis?'Google Cloud TTS bundled recording (device fallback if unavailable)':'browser speech',selectionNote:'Requested voice; actual browser audio is not verified.'};}
-  if (!english && preference !== 'recorded' && preference !== 'reference' && window.speechSynthesis) {
+  if(card){const voice=selectedMandarinVoice();window.lastSpeechRequest={character:text,pinyin:reading||readings(card)[0],prompt,preference,voice:voice?{name:voice.name,lang:voice.lang,uri:voice.voiceURI}:null,source:preference==='recorded'||!hasDeviceSpeech()?'Google Cloud TTS bundled recording (device fallback if unavailable)':deviceSpeechSource(),selectionNote:'Requested voice; actual browser audio is not verified.'};}
+  if (!english && preference !== 'recorded' && preference !== 'reference' && hasDeviceSpeech()) {
     if(card)speechStatus('Device voice · pronunciation unchecked.');
     const ok = await speakDevice(prompt, token);
     // Do not substitute a potentially different recording after cancelled speech.
@@ -214,16 +239,18 @@ async function speakPrompt(text, token, reading) {
   return ok;
 }
 function say(text, reading) {
-  stopSpeech();
-  return speakPrompt(text, speechSequence, reading);
+  const stopping=stopSpeech(),token=speechSequence;
+  if(nativeSpeechService())return Promise.resolve(stopping).then(()=>token===speechSequence?speakPrompt(text,token,reading):false,()=>false);
+  return speakPrompt(text,token,reading);
 }
 async function sayThen(first, second) {
-  stopSpeech();
-  const token = speechSequence;
+  const stopping=stopSpeech(),token=speechSequence;
+  if(nativeSpeechService()){try{await stopping;}catch{return;}if(token!==speechSequence)return;}
   if (await speakPrompt(first, token) && token === speechSequence) await speakPrompt(second, token);
 }
 function voiceEscape(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function voiceSettingsMarkup() {
+  const native=!!nativeSpeechService();
   return `<label class="voice-label" for="voice-choice">Pronunciation voice</label>
     <select id="voice-choice" class="voice-choice"></select>
     <p id="voice-note" class="reading-note" role="status"></p>
@@ -232,20 +259,20 @@ function voiceSettingsMarkup() {
     <p class="reading-note" data-speech-status role="status" hidden></p>
     <p class="reading-note">The app targets Mainland Mandarin (Putonghua) and simplified Chinese. CNS11643 recordings are Taiwan Mandarin and remain an optional regional voice, not a verified Mainland pronunciation model. The older Google Cloud TTS recordings remain available. Browser voices can choose a different reading or tone. Reference recordings cover school characters; longer words and instructions may use other audio.</p>
     ${expectsMainlandRecordings()?'<p class="reading-note">MSU audio: Tone Perfect MP3 Dataset, Michigan State University Libraries, East Lansing, MI. Selected recordings are unchanged and used under <a href="audio-sources/LICENSE-MSU.txt" target="_blank" rel="noopener">CC BY-NC 4.0 · citation and license</a>. <a href="audio-sources/MSU-VERIFICATION.json" target="_blank" rel="noopener">Source and remaining checks</a>.</p>':''}
-    <p class="reading-note">Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try the browser default; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.</p>
-    <details><summary class="reading-note">Browser voice report</summary>
-      <p class="reading-note">This lists every voice the browser reports, before filtering. If a downloaded voice is absent here, this page cannot select it by name. You can copy this report to help troubleshoot.</p>
+    <p class="reading-note">${native?'This app requests installed local system voices. Download additional voices in device Settings, then tap Refresh voices. This setting saves immediately.':'Downloaded iPhone/iPad Accessibility voices may not be available to websites. If Lanlan is missing, try the browser default; the browser still decides which voice it uses. This may differ from the voice enabled in iOS Settings. This setting saves immediately.'}</p>
+    <details><summary class="reading-note">${native?'Device voice report':'Browser voice report'}</summary>
+      <p class="reading-note">${native?'This lists the local system voices exposed to this app. You can copy this report to help troubleshoot.':'This lists every voice the browser reports, before filtering. If a downloaded voice is absent here, this page cannot select it by name. You can copy this report to help troubleshoot.'}</p>
       <textarea id="voice-report" aria-label="Browser voice report" readonly style="width:100%;height:180px;user-select:text;-webkit-user-select:text;font-size:13px"></textarea>
     </details>`;
 }
 function refreshVoiceSettings() {
   const select = document.getElementById('voice-choice'); if (!select) return;
-  const voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
+  const native=!!nativeSpeechService(),voices = mandarinVoices(), preference = voicePreference(), selected=selectedMandarinVoice();
   const available = ['auto','recorded','reference','mainland'].includes(preference)||!!selected;
   const html=(expectsMainlandRecordings()?'<option value="mainland">MSU Mainland recordings</option>':'')+
-    '<option value="auto">Mainland Mandarin · browser default</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
+    '<option value="auto">Mainland Mandarin · '+(native?'local device voice':'browser default')+'</option><option value="reference">Taiwan Mandarin recordings · optional</option><option value="recorded">Google Cloud TTS recordings</option>' +
     voices.map(v => `<option value="${voiceEscape(voiceKey(v))}">${voiceEscape(voiceLabel(v,voices))}</option>`).join('') +
-    (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable · browser default used</option>`:'');
+    (!available?`<option value="${voiceEscape(preference)}" disabled>Saved voice unavailable${native?' · choice kept':' · browser default used'}</option>`:'');
   // Avoid rebuilding an unchanged native iOS picker during catalog refreshes.
   if (select._voiceOptions!==html) { select.innerHTML=html; select._voiceOptions=html; }
   select.value = selected ? voiceKey(selected) : preference;
@@ -256,6 +283,7 @@ function refreshVoiceSettings() {
     ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'
     ? 'Plays the bundled Google Cloud Text-to-Speech audio. This does not use your downloaded iOS voices.'
+    : native ? (!available?'The saved device voice is unavailable. Choose a voice or recordings; your saved choice is kept.':preference==='auto'?'Requests an installed Mainland Mandarin system voice. Device pronunciation is not verified. No microphone or Grove speech upload is used.':`Requested local device voice: ${voiceLabel(selected,voices)}.`)
     : !window.speechSynthesis ? 'Browser speech is unavailable. Optional Taiwan Mandarin or older Google Cloud TTS recordings are available; neither is a newly verified Mainland voice.'
     : !available ? 'The saved voice is not currently exposed by this browser. Playback uses the browser’s Mandarin default instead.'
     : preference==='auto' ? 'Requests Mainland Mandarin (zh-CN). The browser chooses the voice; its actual pronunciation is not verified. This does not force Tingting or follow your Accessibility voice setting.'
@@ -264,6 +292,7 @@ function refreshVoiceSettings() {
 }
 let voiceRefreshTimers=[];
 function refreshVoiceCatalog() {
+  if(nativeSpeechService())void nativeSpeechService().refresh();
   voiceRefreshTimers.forEach(clearTimeout);voiceRefreshTimers=[];
   refreshVoiceSettings();
   // Some browsers populate the catalog after the first request or on returning from Settings.
@@ -282,11 +311,16 @@ function bindVoiceSettings() {
     refreshVoiceSettings();
   };
   document.getElementById('voice-refresh').onclick = refreshVoiceCatalog;
-  document.getElementById('voice-preview').onclick = async () => {
-    stopSpeech(); const token = speechSequence;
-    for (const text of ['狗','子','假','满']) {
-      if (token !== speechSequence || !await speakPrompt(text, token)) break;
-    }
+  document.getElementById('voice-preview').onclick = async event => {
+    const button=event.currentTarget;
+    if(button.dataset.playing==='true'){stopSpeech();return;}
+    const stopping=stopSpeech(),token=speechSequence;button.dataset.playing='true';button.textContent='Stop sample';
+    try{
+      if(nativeSpeechService()){try{await stopping;}catch{return;}}
+      for (const text of ['狗','子','假','满']) {
+        if (token !== speechSequence || !await speakPrompt(text, token)) break;
+      }
+    }finally{if(button.isConnected){button.dataset.playing='false';button.textContent='Play 狗 · 子 · 假 · 满';}}
   };
 }
 if (window.speechSynthesis) speechSynthesis.addEventListener('voiceschanged', refreshVoiceSettings);
@@ -296,5 +330,9 @@ if (window.addEventListener) {
   window.addEventListener('pageshow',refreshVoiceCatalog);
 }
 if (document.addEventListener) document.addEventListener('visibilitychange',()=>{
-  if (!document.hidden) refreshVoiceCatalog();
+  if(document.hidden&&nativeSpeechService()){nativeSpeechService().setActive?.(false);stopSpeech();}
+  else if (!document.hidden) refreshVoiceCatalog();
 });
+
+if(document.addEventListener){document.addEventListener('grove-native-voices-changed',refreshVoiceSettings);document.addEventListener('grove-native-audio-interruption',()=>{if(nativeSpeechService())stopSpeech();});}
+if(window.addEventListener)window.addEventListener('pagehide',()=>{if(nativeSpeechService())stopSpeech();});

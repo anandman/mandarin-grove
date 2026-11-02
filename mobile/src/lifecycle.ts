@@ -25,3 +25,16 @@ export function createAndroidBackController(app:BackApp,reportError:(error:unkno
  }
  return Object.freeze({install});
 }
+
+interface AudioApp {
+ addListener(name:'pause',listener:()=>void):Promise<{remove():Promise<void>}>;
+ addListener(name:'resume',listener:()=>void):Promise<{remove():Promise<void>}>;
+ addListener(name:'appStateChange',listener:(state:{isActive:boolean})=>void):Promise<{remove():Promise<void>}>;
+ getState():Promise<{isActive:boolean}>;
+}
+export async function installAudioLifecycle(app:AudioApp,onActive:(active:boolean)=>void){
+ let generation=0;
+ const apply=(active:boolean)=>{generation++;onActive(active);};
+ await Promise.all([app.addListener('pause',()=>apply(false)),app.addListener('resume',()=>apply(true)),app.addListener('appStateChange',state=>apply(state.isActive))]);
+ const stamp=generation,state=await app.getState();if(stamp===generation)onActive(state.isActive);
+}

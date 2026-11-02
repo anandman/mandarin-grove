@@ -14,6 +14,6 @@
     "audio:verification:test": "python3 tests/audio-verification.test.py && python3 tests/audio-component-head.test.py && python3 tests/score-audio-features.test.py && node --test tests/audio-acceptance.test.cjs tests/audio-annotation.test.cjs",
     "content:audit": "node scripts/audit-vocabulary.cjs",
     "content:probe": "node scripts/probe-online-content.cjs --live",
-    "test:native": "node --test tests/native-storage.test.cjs tests/native-runtime.test.cjs tests/native-back.test.cjs tests/native-wallet.test.cjs tests/mobile-export.test.cjs"
+    "test:native": "node --test tests/native-storage.test.cjs tests/native-runtime.test.cjs tests/native-back.test.cjs tests/native-speech.test.cjs tests/native-speech-ui.test.cjs tests/native-wallet.test.cjs tests/mobile-export.test.cjs"
   }
 }

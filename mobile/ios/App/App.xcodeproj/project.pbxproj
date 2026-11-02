@@ -21,6 +21,7 @@
 		A33D10000000000000000002 /* grove-v1.json in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000002; };
 		A33D10000000000000000003 /* native-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000003; };
 		A33D30000000000000000001 /* GroveFilesPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000001; };
+		A33D30000000000000000002 /* GroveSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000002; };
 		BB850D716B076ED4728E7C60 = {isa = PBXBuildFile; fileRef = C8740D43CC27D58654F7528D; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 		A33D00000000000000000002 /* grove-v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "grove-v1.json"; path = "../../../tests/fixtures/backups/grove-v1.json"; sourceTree = SOURCE_ROOT; };
 		A33D00000000000000000003 /* native-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-scenarios.js"; path = "../../../tests/fixtures/native-scenarios.js"; sourceTree = SOURCE_ROOT; };
 		A33D20000000000000000001 /* GroveFilesPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroveFilesPlugin.swift; sourceTree = "<group>"; };
+		A33D20000000000000000002 /* GroveSpeechPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroveSpeechPlugin.swift; sourceTree = "<group>"; };
 		C8740D43CC27D58654F7528D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackupUITests.swift; sourceTree = "<group>"; };
 		DB8C01332310637EA679F028 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -88,6 +90,7 @@
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				A33D20000000000000000001 /* GroveFilesPlugin.swift */,
+				A33D20000000000000000002 /* GroveSpeechPlugin.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -197,6 +200,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				A33D30000000000000000001 /* GroveFilesPlugin.swift in Sources */,
+				A33D30000000000000000002 /* GroveSpeechPlugin.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

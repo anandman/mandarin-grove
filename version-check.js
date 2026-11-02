@@ -1,4 +1,4 @@
-const VER='20261102-native-back-86';
+const VER='20261102-native-audio-87';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

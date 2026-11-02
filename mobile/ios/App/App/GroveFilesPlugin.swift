@@ -57,6 +57,7 @@ struct GrovePickerRequests {
 final class GroveBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(GroveFilesPlugin())
+        bridge?.registerPluginInstance(GroveSpeechPlugin())
     }
 }
 

@@ -2,9 +2,122 @@ import XCTest
 import UIKit
 import WebKit
 import Capacitor
+import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testSpeechFailedStopRetainsOwnerAndBlocksReplacement() async throws {
+        let plugin = GroveSpeechPlugin(), engine = SyntheticStopSpeechSynthesizer(), utterance = AVSpeechUtterance(string: "Synthetic owned speech")
+        plugin.synthesizer = engine
+        var oldACK = 0, stopACK = 0, stopError = 0, replacementACK = 0
+        var replacementReason: String?
+        let old = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-failed-stop-old", methodName: "speak", options: [:], success: { _, _ in oldACK += 1 }, error: { _ in XCTFail("Unexpected old request error") }))
+        let stop = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-failed-stop", methodName: "stop", options: [:], success: { _, _ in stopACK += 1 }, error: { _ in stopError += 1 }))
+        let replacement = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-failed-stop-new", methodName: "speak", options: ["id": UUID().uuidString.lowercased(), "text": "Replacement", "lang": "en-US", "voiceURI": "synthetic-voice"], success: { result, _ in replacementACK += 1; replacementReason = result?.data?["reason"] as? String }, error: { _ in XCTFail("Expected structured replacement refusal") }))
+        let id = UUID().uuidString.lowercased()
+        plugin.pending = GroveSpeechRequest(id: id, utterance: utterance, call: old)
+        plugin.stop(stop); plugin.speak(replacement)
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(stopACK, 0); XCTAssertEqual(stopError, 1); XCTAssertEqual(oldACK, 0); XCTAssertEqual(replacementACK, 1); XCTAssertEqual(plugin.pending?.id, id); XCTAssertEqual(replacementReason, "error")
+        engine.stopSucceeds = true
+        plugin.stop(stop)
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(stopACK, 1); XCTAssertEqual(stopError, 1); XCTAssertEqual(oldACK, 1); XCTAssertNil(plugin.pending)
+    }
+
+    @MainActor func testLateSpeechCallbacksCannotCompleteReplacement() async throws {
+        let plugin = GroveSpeechPlugin(), firstUtterance = AVSpeechUtterance(string: "First"), secondUtterance = AVSpeechUtterance(string: "Second")
+        let engine = SyntheticStopSpeechSynthesizer(); engine.stopSucceeds = true; plugin.synthesizer = engine
+        var firstACK = 0, secondACK = 0
+        let first = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-speech-first", methodName: "speak", options: [:], success: { _, _ in firstACK += 1 }, error: { _ in XCTFail("Unexpected first error") }))
+        let second = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-speech-second", methodName: "speak", options: [:], success: { _, _ in secondACK += 1 }, error: { _ in XCTFail("Unexpected second error") }))
+        plugin.pending = GroveSpeechRequest(id: UUID().uuidString.lowercased(), utterance: firstUtterance, call: first)
+        plugin.cancelCurrent()
+        XCTAssertEqual(firstACK, 1)
+        plugin.pending = GroveSpeechRequest(id: UUID().uuidString.lowercased(), utterance: secondUtterance, call: second)
+        plugin.speechSynthesizer(plugin.synthesizer, didFinish: firstUtterance)
+        plugin.speechSynthesizer(plugin.synthesizer, didCancel: firstUtterance)
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(secondACK, 0); XCTAssertTrue(plugin.pending?.utterance === secondUtterance)
+        plugin.speechSynthesizer(plugin.synthesizer, didFinish: secondUtterance)
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(secondACK, 1); XCTAssertNil(plugin.pending)
+    }
+
+    @MainActor func testNativeSpeechCompletionAndCancellation() async throws {
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        let prior = try await asyncJavaScript("return await backup();", in: web) as? String
+        let english = try await asyncJavaScript("return await GrovePlatform.speech.speak({text:'Mandarin Grove offline voice test.',lang:'en-US'});", in: web) as? [String: Any]
+        XCTAssertEqual(english?["spoken"] as? Bool, true, "Actual system speech must deliver a completion callback")
+        let mandarin = try await asyncJavaScript("return await GrovePlatform.speech.speak({text:'你好',lang:'zh-CN'});", in: web) as? [String: Any]
+        XCTAssertEqual(mandarin?["spoken"] as? Bool, true, "Installed Mandarin voice must complete; this is no pronunciation adjudication")
+        let missing = try await asyncJavaScript("return await GrovePlatform.speech.speak({text:'No fallback.',lang:'en-US',voiceURI:'grove-synthetic-missing-voice'});", in: web) as? [String: Any]
+        XCTAssertEqual(missing?["spoken"] as? Bool, false); XCTAssertEqual(missing?["reason"] as? String, "unavailable")
+        let cancelled = try await asyncJavaScript("const p=GrovePlatform.speech.speak({text:'This is the deliberately long synthetic cancellation sample. '.repeat(25),lang:'en-US'}); await new Promise(r=>setTimeout(r,500)); const wasPending=GrovePlatform.speech.speaking; await GrovePlatform.speech.cancel(); return {wasPending,result:await p,replacement:await GrovePlatform.speech.speak({text:'Next sample.',lang:'en-US'})};", in: web) as? [String: Any]
+        XCTAssertEqual(cancelled?["wasPending"] as? Bool, true)
+        let result = cancelled?["result"] as? [String: Any], replacement = cancelled?["replacement"] as? [String: Any]
+        XCTAssertEqual(result?["spoken"] as? Bool, false); XCTAssertEqual(result?["reason"] as? String, "cancelled"); XCTAssertEqual(replacement?["spoken"] as? Bool, true)
+        let after = try await asyncJavaScript("return await backup();", in: web) as? String
+        XCTAssertEqual(after, prior, "Speech never modifies learner progress or unknown fields")
+    }
+
+    @MainActor func testNativeAudioBackgroundAndResume() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let controlURL = documents.appendingPathComponent("GroveSyntheticAudioControl.json")
+        guard FileManager.default.fileExists(atPath: controlURL.path) else { throw XCTSkip("Requires explicit Home/resume host orchestrator") }
+        let control = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: controlURL)) as? [String: String])
+        let run = try XCTUnwrap(control["run"]); XCTAssertNotNil(UUID(uuidString: run))
+        let output = documents.appendingPathComponent("GroveSyntheticAudio-" + run)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        let priorValue = try await asyncJavaScript("return await backup();", in: web) as? String
+        let prior = try XCTUnwrap(priorValue)
+        try prior.write(to: output.appendingPathComponent("prior-backup.txt"), atomically: true, encoding: .utf8)
+        _ = try await web.evaluateJavaScript("window.syntheticPriorVoiceCache=savedVoicePreference; savedVoicePreference='mainland'; true;")
+        for stage in ["recording", "speech"] {
+            var backgroundSeen = false, resumed = false
+            let center = NotificationCenter.default
+            let bg = center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in backgroundSeen = true }
+            let fg = center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in if backgroundSeen { resumed = true } }
+            if stage == "recording" {
+                _ = try await asyncJavaScript("document.getElementById('gov')?.remove(); await grown('device'); document.getElementById('voice-preview').click(); return true;", in: web)
+                var playing = false
+                for _ in 0..<150 { playing = (try await web.evaluateJavaScript("!!activeAudio&&!activeAudio.paused") as? Bool) == true; if playing { break }; try await Task.sleep(nanoseconds: 20_000_000) }
+                XCTAssertTrue(playing)
+                _ = try await web.evaluateJavaScript("activeAudio.loop=true; window.syntheticSequenceBefore=speechSequence; true;")
+            } else {
+                _ = try await web.evaluateJavaScript("window.syntheticSpeechBackgroundResult=null; window.syntheticSpeechBackground=GrovePlatform.speech.speak({text:'This is the synthetic background cancellation sample. '.repeat(25),lang:'en-US'}).then(result=>window.syntheticSpeechBackgroundResult=result); true;")
+                var speaking = false
+                for _ in 0..<150 { speaking = (try await web.evaluateJavaScript("GrovePlatform.speech.speaking") as? Bool) == true; if speaking { break }; try await Task.sleep(nanoseconds: 20_000_000) }
+                XCTAssertTrue(speaking)
+            }
+            try "ready".write(to: output.appendingPathComponent(stage + "-ready.txt"), atomically: true, encoding: .utf8)
+            // Actual OS app switch. The simulator hardware-Home helper reported
+            // success without changing this iPad's foreground app.
+            let opened = await withCheckedContinuation { continuation in
+                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!, options: [:]) { continuation.resume(returning: $0) }
+            }
+            XCTAssertTrue(opened, "System Settings must actually open")
+            for _ in 0..<600 { if resumed { break }; try await Task.sleep(nanoseconds: 100_000_000) }
+            center.removeObserver(bg); center.removeObserver(fg)
+            XCTAssertTrue(backgroundSeen, "Actual OS background required"); XCTAssertTrue(resumed, "Actual OS resume required")
+            let stateValue = try await web.evaluateJavaScript("JSON.stringify({stage:'\(stage)',sequenceAdvanced:speechSequence>window.syntheticSequenceBefore,activeAudioCleared:activeAudio===null,completionCleared:speechFinish===null,speechPending:GrovePlatform.speech.speaking,speechResult:window.syntheticSpeechBackgroundResult||null})") as? String
+            let value = try XCTUnwrap(stateValue)
+            try value.write(to: output.appendingPathComponent(stage + "-after-resume.json"), atomically: true, encoding: .utf8)
+            let state = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(value.utf8)) as? [String: Any])
+            XCTAssertEqual(state["activeAudioCleared"] as? Bool, true); XCTAssertEqual(state["completionCleared"] as? Bool, true); XCTAssertEqual(state["speechPending"] as? Bool, false)
+            if stage == "recording" { XCTAssertEqual(state["sequenceAdvanced"] as? Bool, true) }
+            else { let result = state["speechResult"] as? [String: Any]; XCTAssertEqual(result?["spoken"] as? Bool, false); XCTAssertEqual(result?["reason"] as? String, "cancelled") }
+        }
+        _ = try await web.evaluateJavaScript("stopSpeech(); savedVoicePreference=window.syntheticPriorVoiceCache; document.getElementById('gov')?.remove(); true;")
+        let after = try await asyncJavaScript("return await backup();", in: web) as? String; XCTAssertEqual(after, prior)
+        try XCTUnwrap(after).write(to: output.appendingPathComponent("after-backup.txt"), atomically: true, encoding: .utf8)
+    }
+
     @MainActor func testLatePickerCallbacksCannotConsumeNewExport() throws {
         let plugin = GroveFilesPlugin(), files = GroveExportFiles()
         let oldPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.plainText], asCopy: true)
@@ -326,4 +439,10 @@ final class PackagedShellTests: XCTestCase {
             try XCTUnwrap(recovered).write(to: documents.appendingPathComponent("GroveSyntheticRecovered-\(stage).json"), atomically: true, encoding: .utf8)
         }
     }
+}
+
+// Native SDK failure seam: no app/runtime test API is exposed.
+private final class SyntheticStopSpeechSynthesizer: AVSpeechSynthesizer {
+    var stopSucceeds = false
+    override func stopSpeaking(at boundary: AVSpeechBoundary) -> Bool { stopSucceeds }
 }

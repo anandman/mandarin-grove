@@ -1,6 +1,7 @@
-import {Capacitor} from '@capacitor/core';
+import {Capacitor,registerPlugin,type PluginListenerHandle} from '@capacitor/core';
 import {App} from '@capacitor/app';
-import {createAndroidBackController} from './lifecycle';
+import {createAndroidBackController,installAudioLifecycle} from './lifecycle';
+import {createNativeSpeech,type NativeSpeech,type SpeechPlugin} from './speech';
 import {createRestoredFileMailbox,type RestoredFileResult} from './restored-files';
 import {CapacitorSQLite,SQLiteConnection,type SQLiteDBConnection} from '@capacitor-community/sqlite';
 import {createDatabase,inspectSchema,type SQLiteDriver,type NativeDatabase} from './database';
@@ -11,13 +12,21 @@ declare const __GROVE_INTERNAL_TESTS__:boolean;
 type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase};
 declare global {
  interface Window {
-  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
+  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;speech:NativeSpeech;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
   GroveNativeTest?:TestControl;
   prepareWebProgress?(value:any,now:number,profile:any):any;
   showStorageFailure?(error:Error):void;
+  stopSpeech?():void|Promise<void>;
  }
 }
 const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
+interface NativeSpeechPlugin extends SpeechPlugin {addListener(name:'interrupted',listener:()=>void):Promise<PluginListenerHandle>}
+const speechPlugin=registerPlugin<NativeSpeechPlugin>('GroveSpeech');
+const speech=createNativeSpeech(speechPlugin,{notify:()=>document.dispatchEvent(new Event('grove-native-voices-changed'))});
+speech.setActive(false);
+const audioReady=Promise.all([speechPlugin.stop({}),installAudioLifecycle(App,active=>{speech.setActive(active);if(!active)void window.stopSpeech?.();}),speechPlugin.addListener('interrupted',()=>document.dispatchEvent(new Event('grove-native-audio-interruption')))]);
+void audioReady.catch(()=>{});
+void speech.refresh();
 const restoredFiles=createRestoredFileMailbox({notify:()=>document.dispatchEvent(new Event('grove-native-file-result'))});
 const restoredReady=App.addListener('appRestoredResult',result=>{restoredFiles.accept(result);});
 const backController=createAndroidBackController(App,error=>window.showStorageFailure?.(error instanceof Error?error:Error('Could not go back. Your saved progress was kept.')));
@@ -37,7 +46,7 @@ function driver(connection:SQLiteDBConnection):SQLiteDriver{
 const ready=(async()=>{
  try{
   if(!['ios','android'].includes(platform))throw Error('Open this package in the installed native app. Browser storage will not be used.');
-  await restoredReady;
+  await restoredReady;await audioReady;
   installationId=(await files.installationIdentity()).id;
   await sqlite.checkConnectionsConsistency();
   if((await sqlite.isDatabase('mandarin_grove')).result){
@@ -52,7 +61,7 @@ const ready=(async()=>{
    decodeUtf8:(code:string)=>new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(code),char=>char.charCodeAt(0))),
    encodeUtf8:(text:string)=>{let bytes='';for(const byte of new TextEncoder().encode(text))bytes+=String.fromCharCode(byte);return btoa(bytes);}
   };
-  repository=createRepository({database,codec,beforeErase:async()=>{restoredFiles.invalidate();await files.clearTemporaryFiles();},migrate:(value,now,profile)=>{
+  repository=createRepository({database,codec,beforeErase:async()=>{restoredFiles.invalidate();if(window.stopSpeech)await window.stopSpeech();else await speech.cancel();await files.clearTemporaryFiles();},migrate:(value,now,profile)=>{
    if(!window.prepareWebProgress)throw Error('The learner initialization is not ready. Existing data has been kept.');
    return window.prepareWebProgress(value,now,profile);
   }});
@@ -60,7 +69,7 @@ const ready=(async()=>{
 })();
 // Startup observes ready; also handle a failure before the next script loads.
 void ready.catch(()=>{});
-window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,setBackHandler:handler=>platform==='android'?backController.install(handler):Promise.resolve(false),get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
+window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,speech,setBackHandler:handler=>platform==='android'?backController.install(handler):Promise.resolve(false),get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
  await ready.catch(()=>{});
  if(repository){try{return await repository.exportRecovery();}catch{/* Preserve raw files when semantic recovery cannot read this schema. */}}
  // Close the owned connection before reading fixed DB/WAL/SHM paths. Never
