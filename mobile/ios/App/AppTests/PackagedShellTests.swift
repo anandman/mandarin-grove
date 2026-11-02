@@ -6,6 +6,42 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testNativeBundledNoticesAndExternalRouting() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0], controlURL = documents.appendingPathComponent("GroveSyntheticNoticesControl.json")
+        guard FileManager.default.fileExists(atPath: controlURL.path) else { throw XCTSkip("Requires explicit host resume orchestrator") }
+        let control = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: controlURL)) as? [String: String]), run = try XCTUnwrap(control["run"])
+        XCTAssertNotNil(UUID(uuidString: run)); let output = documents.appendingPathComponent("GroveSyntheticNotices-" + run)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; const r=await GROVE_REPOSITORY.peekRegistry(); if(!r.list.every(p=>p.id.startsWith('synthetic-')))throw Error('Synthetic only'); document.getElementById('gov')?.remove(); await grown('device'); return true;", in: web)
+        let priorValue = try await asyncJavaScript("return await backup();", in: web) as? String, prior = try XCTUnwrap(priorValue)
+        try prior.write(to: output.appendingPathComponent("prior-backup.txt"), atomically: true, encoding: .utf8)
+        let appURL = try await web.evaluateJavaScript("location.href") as? String
+        let files = ["audio-sources/LICENSE-MSU.txt", "audio-sources/MSU-VERIFICATION.json", "vendor/SOURCE-NOTICES.md", "vendor/cc-cedict/LICENSE", "content/online-reading-notices.txt", "vendor/writing-spark/LICENSE"]
+        for file in files {
+            let literal = String(decoding: try JSONSerialization.data(withJSONObject: file, options: [.fragmentsAllowed]), as: UTF8.self)
+            let contents = try await asyncJavaScript("const a=document.createElement('a'); a.id='synthetic-notice-link'; a.href=\(literal); a.target='_blank'; a.textContent='Synthetic notice'; document.getElementById('gov').append(a); a.click(); const end=Date.now()+10000; while(Date.now()<end){const p=document.querySelector('#grove-native-notice pre'); if(p&&!p.hidden)return p.textContent; await new Promise(r=>setTimeout(r,20));} throw Error('Native notice did not open');", in: web) as? String
+            let original = try String(contentsOf: Bundle.main.bundleURL.appendingPathComponent("public/" + file), encoding: .utf8)
+            XCTAssertEqual(contents, original)
+            let currentURL = try await web.evaluateJavaScript("location.href") as? String; XCTAssertEqual(currentURL, appURL)
+            _ = try await asyncJavaScript("document.getElementById('grove-native-notice').close(); await new Promise(r=>setTimeout(r,0)); if(!document.getElementById('gov')||document.activeElement?.id!=='synthetic-notice-link')throw Error('Parent/focus lost'); document.getElementById('synthetic-notice-link').remove(); return true;", in: web)
+        }
+        var backgroundSeen = false, resumed = false; let center = NotificationCenter.default
+        let bg = center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in backgroundSeen = true; try? "background".write(to: output.appendingPathComponent("external-background.txt"), atomically: true, encoding: .utf8) }
+        let fg = center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in if backgroundSeen { resumed = true } }
+        defer { center.removeObserver(bg); center.removeObserver(fg) }
+        try "ready".write(to: output.appendingPathComponent("external-ready.txt"), atomically: true, encoding: .utf8)
+        _ = try await web.evaluateJavaScript("const a=document.createElement('a');a.id='synthetic-external-link';a.href='https://example.invalid/grove-native-external-proof';a.target='_blank';a.textContent='Synthetic external link';document.getElementById('gov').append(a);a.click();true;")
+        for _ in 0..<600 { if resumed { break }; try await Task.sleep(nanoseconds: 100_000_000) }
+        XCTAssertTrue(backgroundSeen, "External site must leave the privileged app"); XCTAssertTrue(resumed, "Host must resume the same app")
+        let finalURL = try await web.evaluateJavaScript("location.href") as? String; XCTAssertEqual(finalURL, appURL)
+        _ = try await web.evaluateJavaScript("document.getElementById('synthetic-external-link')?.remove();true;")
+        let afterValue = try await asyncJavaScript("return await backup();", in: web) as? String, after = try XCTUnwrap(afterValue); XCTAssertEqual(after, prior)
+        try after.write(to: output.appendingPathComponent("after-backup.txt"), atomically: true, encoding: .utf8)
+    }
+
     @MainActor func testSpeechFailedStopRetainsOwnerAndBlocksReplacement() async throws {
         let plugin = GroveSpeechPlugin(), engine = SyntheticStopSpeechSynthesizer(), utterance = AVSpeechUtterance(string: "Synthetic owned speech")
         plugin.synthesizer = engine

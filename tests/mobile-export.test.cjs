@@ -34,3 +34,8 @@ test('export refuses an existing arbitrary output and cannot overwrite source',(
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'grove-mobile-preserve-')),sentinel=path.join(dir,'keep.txt');fs.writeFileSync(sentinel,'preserve');
  assert.throws(()=>exporter()(root,dir),/existing|replace|overwrite/i);assert.equal(fs.readFileSync(sentinel,'utf8'),'preserve');assert.throws(()=>exporter()(root,root),/source|workspace|output/i);
 });
+
+test('native extensionless-license aliases preserve exact source bytes and originals',()=>{
+ const out=exporter()(root,destination());
+ for(const [source,alias]of [['vendor/cc-cedict/LICENSE','native/notices/cc-cedict.txt'],['vendor/writing-spark/LICENSE','native/notices/writing-spark.txt']]){assert.equal(hash(path.join(out,alias)),hash(path.join(root,source)));assert.equal(hash(path.join(out,source)),hash(path.join(root,source)));}
+});

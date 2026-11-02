@@ -15,6 +15,10 @@ function exportMobile(root,output,{internalTests=false}={}){
  html=html.replace(/<link\b[^>]*rel="manifest"[^>]*>/g,'').replace('<html lang="en"',`<html data-grove-native="true" data-native-persistence="sqlite" data-native-internal-tests="${internalTests}" lang="en"`);
  html=html.replace(/(<script\b[^>]*src=)/,`<script src="native/bridge.js"></script>\n<script>const VER=${version};</script>\n$1`);
  fs.mkdirSync(path.join(out,'native'));fs.copyFileSync(bridge,path.join(out,'native/bridge.js'));fs.writeFileSync(index,html);
+ // Capacitor's local SPA handler serves index.html for extensionless paths.
+ // Keep the original notices and copy byte-identical text aliases for its reader.
+ fs.mkdirSync(path.join(out,'native/notices'));
+ for(const [source,name]of [['vendor/cc-cedict/LICENSE','cc-cedict.txt'],['vendor/writing-spark/LICENSE','writing-spark.txt']])fs.copyFileSync(path.join(out,source),path.join(out,'native/notices',name));
  return out;
 }
 if(require.main===module){

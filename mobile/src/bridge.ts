@@ -1,5 +1,6 @@
 import {Capacitor,registerPlugin,type PluginListenerHandle} from '@capacitor/core';
 import {App} from '@capacitor/app';
+import {installBundledNotices} from './navigation';
 import {createAndroidBackController,installAudioLifecycle} from './lifecycle';
 import {createNativeSpeech,type NativeSpeech,type SpeechPlugin} from './speech';
 import {createRestoredFileMailbox,type RestoredFileResult} from './restored-files';
@@ -17,9 +18,11 @@ declare global {
   prepareWebProgress?(value:any,now:number,profile:any):any;
   showStorageFailure?(error:Error):void;
   stopSpeech?():void|Promise<void>;
+  profileDialog(id:string,title:string):HTMLDialogElement;
  }
 }
 const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
+installBundledNotices({createDialog:(id,title)=>window.profileDialog(id,title),stopSpeech:()=>window.stopSpeech?.()});
 interface NativeSpeechPlugin extends SpeechPlugin {addListener(name:'interrupted',listener:()=>void):Promise<PluginListenerHandle>}
 const speechPlugin=registerPlugin<NativeSpeechPlugin>('GroveSpeech');
 const speech=createNativeSpeech(speechPlugin,{notify:()=>document.dispatchEvent(new Event('grove-native-voices-changed'))});
