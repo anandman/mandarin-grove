@@ -26,6 +26,19 @@ test('saved-file cleanup errors stay truthful; malformed and oversized results b
  const m=mailbox();m.accept({pluginId:'GroveFiles',methodName:'saveText',success:false,error:{message:'Private temporary copy could not be removed.',code:'GROVE_EXPORT_SAVED'}});assert.deepEqual(m.take(),{method:'save',error:'Private temporary copy could not be removed.',saved:true});
  for(const event of [opened('合成'),{pluginId:'GroveFiles',methodName:'saveText',success:true,data:{saved:'yes'}},{pluginId:'GroveFiles',methodName:'openText',success:false,error:{message:'x'.repeat(4096)}}]){const m=mailbox({limit:4});m.accept(event);const result=m.take();assert.equal(typeof result.error,'string');assert.ok(result.error.length<=512);assert.equal(result.text,undefined);}
 });
+test('restored feedback file and share actions retain their purpose without becoming a learner backup',()=>{
+ for(const [method,data,expected]of [
+  ['saveFeedback',{saved:true},{method:'feedbackSave',saved:true}],
+  ['saveFeedback',{saved:false},{method:'feedbackSave',saved:false}],
+  ['shareFeedback',{closed:true},{method:'feedbackShare',closed:true}]
+ ]){const m=mailbox();assert.equal(m.accept({pluginId:'GroveFiles',methodName:method,success:true,data}),true);assert.deepEqual(m.take(),expected);assert.equal(m.hasPending,false);assert.equal(m.accept(opened('late unrelated backup')),false);}
+});
+test('restored feedback errors and malformed results never masquerade as confirmed delivery or backup imports',()=>{
+ for(const methodName of ['saveFeedback','shareFeedback']){
+  const m=mailbox();assert.equal(m.accept({pluginId:'GroveFiles',methodName,success:false,error:{message:'Synthetic interrupted action',code:'GROVE_EXPORT_SAVED'}}),true);const result=m.take();assert.equal(result.method,methodName==='saveFeedback'?'feedbackSave':'feedbackShare');assert.equal(result.error,'Synthetic interrupted action');assert.equal(result.saved,methodName==='saveFeedback'?true:undefined);assert.equal(result.text,undefined);assert.equal(result.sent,undefined);
+  const malformed=mailbox();assert.equal(malformed.accept({pluginId:'GroveFiles',methodName,success:true,data:{saved:'yes',closed:false,text:'PRIVATE'}}),true);assert.equal(typeof malformed.take().error,'string');
+ }
+});
 
 let installAudioLifecycle;({installAudioLifecycle}=require('../mobile/src/lifecycle.ts'));
 function audioApp(){const callbacks={};return {callbacks,async addListener(name,fn){callbacks[name]=fn;return {async remove(){}};},async getState(){return {isActive:true};}};}

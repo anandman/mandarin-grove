@@ -1,6 +1,55 @@
 import XCTest
 
 final class NativeBackupUITests: XCTestCase {
+    @MainActor func testFeedbackSystemFileAndShareCancellation() throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        app.launch()
+        let report = app.webViews.buttons["Report a problem"].firstMatch
+        XCTAssertTrue(report.waitForExistence(timeout: 20), app.debugDescription); report.tap()
+        let category = app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Something did not work")).firstMatch
+        XCTAssertTrue(category.waitForExistence(timeout: 10), app.debugDescription); category.tap()
+        let note = app.webViews.textViews.firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 10)); note.tap(); note.typeText("Synthetic native feedback manual proof")
+        let hideKeyboard = app.buttons["Hide keyboard"]
+        if hideKeyboard.waitForExistence(timeout: 2), hideKeyboard.isHittable, hideKeyboard.frame.minY < app.frame.maxY { hideKeyboard.tap() }
+        let manual = app.webViews.buttons.matching(NSPredicate(format: "label == %@ AND value != nil", "Grown-ups: saved reports & manual sharing")).firstMatch
+        XCTAssertTrue(manual.waitForExistence(timeout: 10), app.debugDescription); manual.tap()
+        let details = app.webViews.buttons.matching(NSPredicate(format: "label == %@ AND value != nil", "Report details")).firstMatch
+        XCTAssertTrue(details.waitForExistence(timeout: 10), app.debugDescription); details.tap()
+        let output = app.webViews.textViews["Feedback report"]
+        XCTAssertTrue(output.waitForExistence(timeout: 10), app.debugDescription)
+        let expected = try XCTUnwrap(output.value as? String)
+        XCTAssertTrue(expected.contains("Synthetic native feedback manual proof"))
+        let raw = XCTAttachment(string: expected); raw.name = "Expected exact feedback file"; raw.lifetime = .keepAlways; add(raw)
+        let download = app.webViews.buttons["Save report file"]
+        download.tap()
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription); cancel.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Report file save cancelled. Your local reports were kept."].waitForExistence(timeout: 10), app.debugDescription)
+        download.tap()
+        let save = app.buttons["DOCPicker.actionButton"], filename = app.textFields["DOCPicker.filenameTextField"]
+        XCTAssertTrue(save.waitForExistence(timeout: 15), app.debugDescription); XCTAssertEqual(save.label, "Save"); XCTAssertTrue(filename.exists)
+        let local = app.cells["DOC.sidebar.item.On My iPad"]
+        if local.exists { local.tap() }
+        let oldName = filename.value as? String ?? "", unique = "grove-feedback-ios-" + UUID().uuidString.lowercased()
+        filename.tap(); filename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: oldName.count + 10)); filename.typeText(unique)
+        XCTAssertTrue((filename.value as? String)?.contains(unique) == true, "Use a new unique filename; never overwrite an earlier file")
+        print("GROVE_FEEDBACK_EXPORT_STEM:" + unique)
+        save.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Report file saved. Keep its local details private."].waitForExistence(timeout: 15), app.debugDescription)
+        app.webViews.buttons["Share report"].tap()
+        let openShare = app.webViews.buttons["Open share sheet"]
+        XCTAssertTrue(openShare.waitForExistence(timeout: 10), app.debugDescription); openShare.tap()
+        let close = app.otherElements["PopoverDismissRegion"]
+        XCTAssertTrue(close.waitForExistence(timeout: 15), app.debugDescription)
+        let shared = XCTAttachment(screenshot: app.screenshot()); shared.name = "Actual iPad share sheet, no recipient selected"; shared.lifetime = .keepAlways; add(shared)
+        close.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap()
+        XCTAssertTrue(app.webViews.staticTexts["Share sheet closed. Grove does not confirm delivery. Your local reports were kept."].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(output.value as? String, expected, "File and share actions preserve the full raw local report")
+    }
     @MainActor func testSystemBackupTransferAndCancel() throws {
         let syntheticDevices = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard let simulator = ProcessInfo.processInfo.environment["SIMULATOR_UDID"], syntheticDevices.contains(simulator) else {

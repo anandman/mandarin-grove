@@ -137,6 +137,8 @@ async function consumeRestoredNativeFileResult(){
  const dialog=document.getElementById('gov');if(!dialog?.open)return;
  const result=GrovePlatform.takeRestoredFileResult?.();if(!result)return;
  showRestoredNativeFileNotice();const status=dialog.querySelector('#backup-status');
+ if(result.method==='feedbackShare'){status.textContent=result.error?'The share action was interrupted or failed. Delivery was not confirmed. Your local reports were kept.':'Share sheet closed. Grove does not confirm delivery. Your local reports were kept.';return;}
+ if(result.method==='feedbackSave'){status.textContent=result.error?(result.saved?'Feedback report file saved. Its private temporary copy could not be removed. Your local reports were kept.':'Could not finish saving the feedback report file. '+result.error):result.saved?'Feedback report file saved. It contains private local report details.':'Feedback report file save cancelled. Your local reports were kept.';return;}
  if(result.error){status.textContent=result.saved?'File saved. Its private temporary copy could not be removed. Your progress is unchanged.':'Could not finish the file operation. '+result.error;return;}
  if(result.method==='save'){status.textContent=result.saved?'File saved. Keep it safe; it may include every child’s progress and names.':'File save cancelled. Your progress is unchanged.';return;}
  if(result.cancelled){status.textContent='File selection cancelled. Your progress is unchanged.';return;}

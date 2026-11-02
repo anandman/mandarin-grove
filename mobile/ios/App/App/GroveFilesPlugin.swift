@@ -42,13 +42,13 @@ struct GrovePickerRequest {
     let exportFile: URL?
 }
 struct GrovePickerRequests {
-    private var active: (UIDocumentPickerViewController, GrovePickerRequest)?
+    private var active: (UIViewController, GrovePickerRequest)?
     var isPending: Bool { active != nil }
-    mutating func begin(_ picker: UIDocumentPickerViewController, request: GrovePickerRequest) throws {
+    mutating func begin(_ picker: UIViewController, request: GrovePickerRequest) throws {
         guard active == nil else { throw NSError(domain: "GroveFiles", code: 3, userInfo: [NSLocalizedDescriptionKey: "Finish the current file picker first."]) }
         active = (picker, request)
     }
-    mutating func finish(_ picker: UIDocumentPickerViewController) -> GrovePickerRequest? {
+    mutating func finish(_ picker: UIViewController) -> GrovePickerRequest? {
         guard let (owner, request) = active, owner === picker else { return nil }
         active = nil; return request
     }
@@ -67,6 +67,8 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
     public let jsName = "GroveFiles"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "saveText", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "saveFeedback", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "shareFeedback", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "openText", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "installationIdentity", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "rawRecovery", returnType: CAPPluginReturnPromise),
@@ -90,6 +92,13 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
         // Validate strictly above, then decode the already-valid bytes with
         // Swift's UTF-8 codec so the exact selected-file text is retained.
         return String(decoding: data, as: UTF8.self)
+    }
+    static func validateFeedbackText(_ text: String?, sharing: Bool) throws -> String {
+        let limit = sharing ? 64 * 1024 : 64 * 1024 * 1024
+        guard let text, text.utf8.count <= limit else {
+            throw NSError(domain: "GroveFeedbackText", code: 1, userInfo: [NSLocalizedDescriptionKey: sharing ? "This report is too large to share as text. Save the report file instead." : "This report exceeds the safe 64 MiB file limit. Your local report was kept."])
+        }
+        return text
     }
     @objc public func installationIdentity(_ call: CAPPluginCall) {
         do {
@@ -120,6 +129,13 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
     @objc public func saveText(_ call: CAPPluginCall) {
         guard let name = call.getString("name"), name.range(of: "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$", options: .regularExpression) != nil,
               let text = call.getString("text") else { call.reject("Invalid backup file request."); return }
+        save(call, name: name, text: text)
+    }
+    @objc public func saveFeedback(_ call: CAPPluginCall) {
+        do { save(call, name: "mandarin-grove-feedback.txt", text: try Self.validateFeedbackText(call.getString("text"), sharing: false)) }
+        catch { call.reject(error.localizedDescription) }
+    }
+    private func save(_ call: CAPPluginCall, name: String, text: String) {
         DispatchQueue.main.async {
             guard !self.requests.isPending, let presenter = self.bridge?.viewController, presenter.presentedViewController == nil else { call.reject("Finish the current file picker first."); return }
             var prepared: URL?
@@ -131,8 +147,29 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
                 presenter.present(picker, animated: true)
             } catch {
                 if let file = prepared { try? self.exports.discard(file) }
-                call.reject("Could not prepare the backup file. Progress was kept.", nil, error)
+                call.reject("Could not prepare the file. Progress was kept.", nil, error)
             }
+        }
+    }
+    @objc public func shareFeedback(_ call: CAPPluginCall) {
+        let text: String
+        do { text = try Self.validateFeedbackText(call.getString("text"), sharing: true) }
+        catch { call.reject(error.localizedDescription); return }
+        DispatchQueue.main.async {
+            guard !self.requests.isPending, let presenter = self.bridge?.viewController, presenter.presentedViewController == nil else { call.reject("Finish the current file or share action first."); return }
+            let activity = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+            do { try self.requests.begin(activity, request: GrovePickerRequest(call: call, exportFile: nil)) }
+            catch { call.reject("Finish the current file or share action first."); return }
+            if let popover = activity.popoverPresentationController {
+                popover.sourceView = presenter.view
+                popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 1, height: 1)
+            }
+            activity.completionWithItemsHandler = { [weak self, weak activity] _, _, _, error in
+                guard let self, let activity, let request = self.requests.finish(activity) else { return }
+                if error != nil { request.call.reject("The share action could not finish. Delivery was not confirmed. Your local reports were kept.") }
+                else { request.call.resolve(["closed": true]) }
+            }
+            presenter.present(activity, animated: true)
         }
     }
     @objc public func openText(_ call: CAPPluginCall) {
@@ -149,7 +186,7 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
         do {
             if let file = request.exportFile { try exports.discard(file) }
             request.call.resolve(request.exportFile != nil ? ["saved": false] : ["cancelled": true])
-        } catch { request.call.reject("Could not remove the private temporary backup after cancellation. Progress was kept.", nil, error) }
+        } catch { request.call.reject("Could not remove the private temporary file after cancellation. Progress was kept.", nil, error) }
     }
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let request = requests.finish(controller) else { return }
@@ -157,9 +194,9 @@ public final class GroveFilesPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPick
         if let file = request.exportFile {
             do {
                 try exports.discard(file)
-                if urls.isEmpty { call.reject("No backup destination was confirmed. Progress was kept.") }
+                if urls.isEmpty { call.reject("No file destination was confirmed. Progress was kept.") }
                 else { call.resolve(["saved": true]) }
-            } catch { call.reject(urls.isEmpty ? "Could not remove the private temporary backup. Progress was kept." : "The backup file was saved, but its private temporary copy could not be removed. Your progress is unchanged.", urls.isEmpty ? "GROVE_EXPORT_STAGING" : "GROVE_EXPORT_SAVED", error) }
+            } catch { call.reject(urls.isEmpty ? "Could not remove the private temporary file. Progress was kept." : "The file was saved, but its private temporary copy could not be removed. Your progress is unchanged.", urls.isEmpty ? "GROVE_EXPORT_STAGING" : "GROVE_EXPORT_SAVED", error) }
             return
         }
         guard let url = urls.first else { call.reject("No document was selected."); return }

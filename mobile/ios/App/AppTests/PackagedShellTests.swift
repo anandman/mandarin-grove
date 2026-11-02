@@ -6,6 +6,28 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    func testFeedbackTextBoundsPreserveEveryUtf8Byte() throws {
+        let exact = String(repeating: "保", count: 21845) + "a"
+        XCTAssertEqual(try GroveFilesPlugin.validateFeedbackText(exact, sharing: true), exact)
+        XCTAssertThrowsError(try GroveFilesPlugin.validateFeedbackText(exact + "a", sharing: true))
+        XCTAssertThrowsError(try GroveFilesPlugin.validateFeedbackText(nil, sharing: true))
+        let raw = "\u{feff}\n合成\r\n" + String(repeating: "保", count: 30000)
+        XCTAssertEqual(try GroveFilesPlugin.validateFeedbackText(raw, sharing: false), raw)
+        XCTAssertThrowsError(try GroveFilesPlugin.validateFeedbackText(String(repeating: "x", count: 64 * 1024 * 1024 + 1), sharing: false))
+    }
+    @MainActor func testShareAndFilePickersHaveOneCallbackOwner() throws {
+        var requests = GrovePickerRequests()
+        let first = UIActivityViewController(activityItems: ["Synthetic text"], applicationActivities: nil)
+        let second = UIActivityViewController(activityItems: ["Synthetic replacement"], applicationActivities: nil)
+        let file = UIDocumentPickerViewController(forOpeningContentTypes: [.plainText])
+        let call = try XCTUnwrap(CAPPluginCall(callbackId: "synthetic-share-owner", methodName: "shareFeedback", options: [:], success: { _, _ in }, error: { _ in }))
+        try requests.begin(first, request: GrovePickerRequest(call: call, exportFile: nil))
+        XCTAssertThrowsError(try requests.begin(file, request: GrovePickerRequest(call: call, exportFile: nil)))
+        XCTAssertNotNil(requests.finish(first)); XCTAssertNil(requests.finish(first))
+        try requests.begin(second, request: GrovePickerRequest(call: call, exportFile: nil))
+        XCTAssertNil(requests.finish(first)); XCTAssertNil(requests.finish(file)); XCTAssertTrue(requests.isPending)
+        XCTAssertNotNil(requests.finish(second)); XCTAssertFalse(requests.isPending)
+    }
     @MainActor func testNativeFeedbackDurabilityWithMockedDelivery() async throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }

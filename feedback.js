@@ -67,7 +67,7 @@ async function feedbackSendReport(report,consent){
  }
 }
 function feedbackPreview(report,owner){
- const native=feedbackNativeService();if(!native)return Promise.resolve(undefined);
+ const native=feedbackNativeService();if(!native)return Promise.resolve(undefined);if(!owner.isConnected||!owner.open)return Promise.resolve(null);
  const epoch=native.feedbackEpoch,payload=native.prepareFeedback(report),dialog=profileDialog('feedback-preview','Grown-ups: review report');
  const intro=profileElement('p','Only this message and the listed app/content details will be sent privately to the app maker. Stored learner history, grades, writing drafts and device/account identifiers are not attached. Check the message and leave out names or other personal information.',{class:'reading-note'});
  const category=profileElement('p',FEEDBACK_CATEGORIES[payload.category]||'App report'),heading=profileElement('h3','Message'),message=profileElement('p',payload.note||'No extra message.');message.style.whiteSpace='pre-wrap';message.style.overflowWrap='anywhere';
@@ -79,9 +79,16 @@ function feedbackPreview(report,owner){
   let settled=false;const finish=value=>{if(settled)return;settled=true;resolve(value);};
   dialog.addEventListener('close',()=>finish(null),{once:true});
   const cancel=profileButton(dialog,'Cancel','feedback-preview-cancel',()=>profileClose(dialog),true);
-  profileButton(dialog,'Send privately','feedback-preview-send',()=>{if(!owner.isConnected||feedbackNativeService()!==native||native.feedbackEpoch!==epoch){finish(null);profileClose(dialog);return;}finish({payload,epoch});profileClose(dialog);});
+  profileButton(dialog,'Send privately','feedback-preview-send',()=>{if(!owner.isConnected||!owner.open||feedbackNativeService()!==native||native.feedbackEpoch!==epoch){finish(null);profileClose(dialog);return;}finish({payload,epoch});profileClose(dialog);});
   document.body.append(dialog);dialog.showModal();cancel.focus();
  });
+}
+function feedbackSharePreview(text,owner){
+ const native=feedbackNativeService();if(!native||!owner.isConnected||!owner.open)return Promise.resolve(false);
+ const epoch=native.feedbackEpoch,dialog=profileDialog('feedback-share-preview','Grown-ups: review sharing');
+ dialog.append(profileElement('p','Only the report text below will be passed to the system share sheet. Stored learner history, grades, writing drafts and device/account identifiers are not attached. Check the message for personal information before choosing a destination.',{class:'reading-note'}));
+ const details=profileElement('pre',text,{tabindex:'0',role:'document','aria-label':'Exact shared report'});details.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.5;';dialog.append(details);
+ return new Promise(resolve=>{let settled=false;const finish=value=>{if(settled)return;settled=true;resolve(value);};dialog.addEventListener('close',()=>finish(false),{once:true});const cancel=profileButton(dialog,'Cancel','feedback-share-cancel',()=>profileClose(dialog),true);profileButton(dialog,'Open share sheet','feedback-share-confirm',()=>{finish(owner.isConnected&&owner.open&&feedbackNativeService()===native&&native.feedbackEpoch===epoch);profileClose(dialog);});document.body.append(dialog);dialog.showModal();cancel.focus();});
 }
 function feedbackButtonKeydown(event){
  if(event.repeat&&(event.key==='Enter'||event.key===' ')&&event.target.closest('button'))event.preventDefault();
@@ -100,7 +107,7 @@ function contentFeedbackOffer(container,offer=null,fallback=null){
  container.append(note,button);if(focused)button.focus({preventScroll:true});
 }
 async function showFeedback({category:initialCategory=null,note:initialNote='',context=feedbackQuestion}={}){
- const canSend=feedbackCanSend(),nativeOwner=feedbackNativeService(),formEpoch=nativeOwner?.feedbackEpoch,ownerValid=()=>!nativeOwner||(feedbackNativeService()===nativeOwner&&nativeOwner.feedbackEpoch===formEpoch);
+ const canSend=feedbackCanSend(),nativeOwner=feedbackNativeService(),formEpoch=nativeOwner?.feedbackEpoch,ownerValid=()=>dialog.isConnected&&dialog.open&&(!nativeOwner||(feedbackNativeService()===nativeOwner&&nativeOwner.feedbackEpoch===formEpoch));
  const existing=document.getElementById('feedback-dialog');
  if(existing?.open)return;existing?.remove();
  const snapshot=feedbackSnapshot(context),previous=document.activeElement;
@@ -136,12 +143,12 @@ async function showFeedback({category:initialCategory=null,note:initialNote='',c
  const current=()=>({...snapshot,id,category,note:note.value.trim()});
  const pending=()=>reports.filter(r=>r.id&&FEEDBACK_CATEGORIES[r.category]&&['pending','failed'].includes(r.delivery?.state));
  const refresh=async()=>{
-  const request=++refreshSequence;try{const rows=await feedbackReports();if(request!==refreshSequence||!dialog.isConnected)return;reports=rows;}catch{if(dialog.isConnected)status.textContent='Saved reports could not be read. They have been kept unchanged; you can copy or download this report.';}
-  if(request!==refreshSequence||!dialog.isConnected)return;
+  const request=++refreshSequence;try{const rows=await feedbackReports();if(request!==refreshSequence||!dialog.isConnected||!dialog.open)return;reports=rows;}catch{if(dialog.isConnected&&dialog.open)status.textContent='Saved reports could not be read. They have been kept unchanged; you can copy or download this report.';}
+  if(request!==refreshSequence||!dialog.isConnected||!dialog.open)return;
   output.value=feedbackText(all?reports:[locked?reports.find(r=>r.id===id)||current():current()]);
   const unsent=pending(),count=unsent.length;dialog.querySelector('#feedback-pending').hidden=!count;retry.hidden=!canSend||(locked&&count===1&&unsent[0].id===id);dialog.querySelector('#feedback-pending-count').textContent=`${count} ${count===1?'report':'reports'} not sent or confirmed on this device.`;
  };await refresh();
- const setBusy=value=>{busy=value;send.disabled=value||!category||delivered;retry.disabled=value;note.disabled=locked||value;dialog.querySelector('#feedback-save').disabled=locked||value||saved;categories.forEach(button=>button.disabled=locked||value);};
+ const setBusy=value=>{busy=value;send.disabled=value||!category||delivered;retry.disabled=value;note.disabled=locked||value;dialog.querySelector('#feedback-save').disabled=locked||value||saved;categories.forEach(button=>button.disabled=locked||value);for(const id of ['feedback-copy','feedback-share','feedback-download','feedback-all'])dialog.querySelector('#'+id).disabled=value;};
  categories.forEach(button=>button.onclick=()=>{if(locked)return;category=button.dataset.category;categories.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));send.disabled=false;saved=false;dialog.querySelector('#feedback-save').disabled=false;all=false;refresh();});
  note.oninput=()=>{saved=false;all=false;dialog.querySelector('#feedback-save').disabled=false;refresh()};
  send.onclick=async()=>{
@@ -174,9 +181,34 @@ async function showFeedback({category:initialCategory=null,note:initialNote='',c
   await refresh();try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(output.value);status.textContent='Copied. Paste the report into a message or this chat.';}
   catch{dialog.querySelector('#feedback-details').open=true;output.focus();output.select();status.textContent='Automatic copying is unavailable here. Press and hold the selected report to copy, or use Download report.';}
  };
- const share=dialog.querySelector('#feedback-share');share.hidden=!navigator.share;
- share.onclick=async()=>{await refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
- dialog.querySelector('#feedback-download').onclick=async()=>{await refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
+ const nativeFiles=window.GrovePlatform?.files,share=dialog.querySelector('#feedback-share'),download=dialog.querySelector('#feedback-download'),nativeShare=!!nativeOwner&&typeof nativeFiles?.shareFeedback==='function';share.hidden=nativeOwner?!nativeShare:!navigator.share;
+ if(typeof nativeFiles?.saveFeedback==='function'){download.textContent='Save report file';const notice=profileElement('p','Saved report files contain the full local details shown above, which may include activity, writing drafts and device information. Keep the file private. Share report reviews a smaller report before opening the share sheet.',{class:'reading-note'});dialog.querySelector('.feedback-actions').before(notice);}
+ share.onclick=async()=>{
+  if(busy)return;
+  if(!nativeShare){await refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}return;}
+  if(!ownerValid()){status.textContent='This device data changed. Close this report and open a new one.';return;}
+  setBusy(true);
+  try{
+   await refresh();if(!dialog.isConnected||!ownerValid())return;
+   const selection=all?reports:[locked?reports.find(r=>r.id===id)||current():current()];
+   let text;try{text='Mandarin Grove feedback\n\n'+selection.map(r=>JSON.stringify(nativeOwner.prepareFeedback(r),null,2)).join('\n\n---\n\n');}catch{status.textContent='Some report details cannot be shared by this version. Choose a problem first, or save a private report file instead.';return;}
+   if(new TextEncoder().encode(text).length>65536){status.textContent='This report is too large to share as text. Save the report file instead.';return;}
+   if(!await feedbackSharePreview(text,dialog)){if(dialog.isConnected)status.textContent='This review did not open the share sheet.';return;}
+   if(!dialog.isConnected||!ownerValid())return;
+   const result=await nativeFiles.shareFeedback({text});if(result?.closed!==true)throw Error();
+   if(dialog.isConnected&&ownerValid())status.textContent='Share sheet closed. Grove does not confirm delivery. Your local reports were kept.';
+  }catch{if(dialog.isConnected&&ownerValid())status.textContent='Could not open or finish the share action. Delivery was not confirmed. Your local reports were kept.';}
+  finally{setBusy(false);if(dialog.isConnected&&ownerValid())share.focus({preventScroll:true});}
+ };
+ download.onclick=async()=>{
+  if(busy)return;
+  if(typeof nativeFiles?.saveFeedback!=='function'){await refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);return;}
+  if(!ownerValid()){status.textContent='This device data changed. Close this report and open a new one.';return;}
+  setBusy(true);
+  try{await refresh();if(!dialog.isConnected||!ownerValid())return;const text=output.value,result=await nativeFiles.saveFeedback({text});if(typeof result?.saved!=='boolean')throw Error();if(dialog.isConnected&&ownerValid())status.textContent=result.saved?'Report file saved. Keep its local details private.':'Report file save cancelled. Your local reports were kept.';}
+  catch(error){if(dialog.isConnected&&ownerValid())status.textContent=error.code==='GROVE_EXPORT_SAVED'?'Report file saved. Its private temporary copy could not be removed. Your local reports were kept.':'Could not save the report file. Your local reports were kept; you can retry.';}
+  finally{setBusy(false);if(dialog.isConnected&&ownerValid())download.focus({preventScroll:true});}
+ };
  dialog.onclose=()=>{dialog.remove();if(previous?.isConnected)previous.focus();else focusMain();};
  (categories.find(button=>button.dataset.category===category)||categories[0]).focus();
 }

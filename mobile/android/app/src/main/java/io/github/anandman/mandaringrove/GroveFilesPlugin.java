@@ -87,8 +87,32 @@ public class GroveFilesPlugin extends Plugin {
             call.reject("Could not open the system file picker. Progress was kept.", error);
         }
     }
+    @PluginMethod public synchronized void saveFeedback(PluginCall call) {
+        try { GroveFeedbackText.validate(call.getString("text"), false); }
+        catch (IllegalArgumentException error) { call.reject(error.getMessage()); return; }
+        call.getData().put("name", "mandarin-grove-feedback.txt"); call.getData().put("mimeType", "text/plain");
+        saveText(call);
+    }
+    @PluginMethod public synchronized void shareFeedback(PluginCall call) {
+        String text;
+        try { text = GroveFeedbackText.validate(call.getString("text"), true); }
+        catch (IllegalArgumentException error) { call.reject(error.getMessage()); return; }
+        if (operations.isPending()) { call.reject("Finish the current file or share action first."); return; }
+        String operation = operations.begin(); call.getData().put(OPERATION, operation);
+        // Saved callback options contain only ownership metadata, never the report.
+        call.getData().remove("text");
+        Intent send = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text).putExtra(Intent.EXTRA_TITLE, "Mandarin Grove feedback");
+        try { startActivityForResult(call, Intent.createChooser(send, null), "sharedFeedback"); operations.launched(operation); }
+        catch (Exception error) { operations.end(operation); call.reject("Could not open the system share sheet. Your local reports were kept."); }
+    }
+    @ActivityCallback private synchronized void sharedFeedback(PluginCall call, ActivityResult result) {
+        if (!claim(call, "shareFeedback")) return;
+        operations.end(call.getString(OPERATION));
+        // Android result codes do not establish delivery to the chosen recipient.
+        call.resolve(new JSObject().put("closed", true));
+    }
     @ActivityCallback private synchronized void savedDocument(PluginCall call, ActivityResult result) {
-        if (!claim(call, "saveText")) return;
+        if (call == null || !("saveText".equals(call.getMethodName()) || "saveFeedback".equals(call.getMethodName())) || !claim(call, call.getMethodName())) return;
         String operation = call.getString(OPERATION);
         getBridge().execute(() -> {
             String token = call.getString("groveExportToken"); boolean saved = false;
@@ -97,7 +121,7 @@ public class GroveFilesPlugin extends Plugin {
                 File staged = exports().file(token);
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Uri uri = result.getData() == null ? null : result.getData().getData();
-                    if (uri == null) throw new IOException("No backup destination was selected.");
+                    if (uri == null) throw new IOException("No file destination was selected.");
                     try (InputStream input = new FileInputStream(staged); OutputStream out = getContext().getContentResolver().openOutputStream(uri, "wt")) {
                         if (out == null) throw new IOException("The selected destination is unavailable.");
                         byte[] buffer = new byte[16384]; int count;
@@ -109,8 +133,8 @@ public class GroveFilesPlugin extends Plugin {
             } catch (Exception error) { writeError = error; }
             try { exports().discard(token); } catch (Exception error) { cleanupError = error; }
             operations.end(operation);
-            if (cleanupError != null) call.reject(saved ? "The backup file was saved, but its private temporary copy could not be removed. Your progress is unchanged." : "Could not remove the private temporary backup. Progress was kept.", saved ? "GROVE_EXPORT_SAVED" : "GROVE_EXPORT_STAGING", cleanupError);
-            else if (writeError != null) call.reject("Could not finish writing the backup file. Progress was kept.", writeError);
+            if (cleanupError != null) call.reject(saved ? "The file was saved, but its private temporary copy could not be removed. Your progress is unchanged." : "Could not remove the private temporary file. Progress was kept.", saved ? "GROVE_EXPORT_SAVED" : "GROVE_EXPORT_STAGING", cleanupError);
+            else if (writeError != null) call.reject("Could not finish writing the file. Progress was kept.", writeError);
             else call.resolve(new JSObject().put("saved", saved));
         });
     }
