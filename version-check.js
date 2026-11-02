@@ -1,4 +1,4 @@
-const VER='20261102-native-feedback-files-89';
+const VER='20261102-native-text-90';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

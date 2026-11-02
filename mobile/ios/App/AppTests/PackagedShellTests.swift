@@ -6,6 +6,107 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testInstalledHotTextChangePreservesDraft() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let controlURL = documents.appendingPathComponent("GroveSyntheticHotTextControl.json")
+        guard let data = try? Data(contentsOf: controlURL), let control = try JSONSerialization.jsonObject(with: data) as? [String: Any], control["active"] as? Bool == true, let runID = control["runID"] as? String, UUID(uuidString: runID) != nil else { throw XCTSkip("Requires the explicit host text-change orchestrator") }
+        XCTAssertEqual(UIApplication.shared.preferredContentSizeCategory, .large)
+        let output = documents.appendingPathComponent("GroveSyntheticHotText-" + runID)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-interaction-scenarios", extension: "js"))
+        _ = try await asyncJavaScript("await GroveNativeInteraction.begin(); await GroveNativeInteraction.runCase('writing','light'); const input=document.getElementById('writing-input'); input.value='Synthetic unsaved 草稿'; input.focus(); input.setSelectionRange(4,9); window.GroveHotDraft={input,document,token:Math.random()}; GroveHotDraft.base=parseFloat(getComputedStyle(input).fontSize); GroveHotDraft.snapshot=()=>({font:parseFloat(getComputedStyle(input).fontSize),value:input.value,selection:[input.selectionStart,input.selectionEnd],focus:document.activeElement===input,sameNode:document.getElementById('writing-input')===input,sameDocument:window.document===GroveHotDraft.document,token:GroveHotDraft.token}); return true;", in: web)
+        func capture() async throws -> String { let value = try await asyncJavaScript("return JSON.stringify(GroveHotDraft.snapshot());", in: web) as? String; return try XCTUnwrap(value) }
+        let before = try await capture()
+        try before.write(to: output.appendingPathComponent("before.json"), atomically: true, encoding: .utf8)
+        try "ready".write(to: output.appendingPathComponent("ready.txt"), atomically: true, encoding: .utf8)
+        do {
+            let large = try await asyncJavaScript("const until=Date.now()+20000; while(parseFloat(getComputedStyle(GroveHotDraft.input).fontSize)<GroveHotDraft.base*2.5){if(Date.now()>until)throw Error('Hot native text preference did not enlarge the current draft');await new Promise(r=>setTimeout(r,50));}return JSON.stringify(GroveHotDraft.snapshot());", in: web) as? String
+            try XCTUnwrap(large).write(to: output.appendingPathComponent("large.json"), atomically: true, encoding: .utf8)
+            let normal = try await asyncJavaScript("const until=Date.now()+20000; while(Math.abs(parseFloat(getComputedStyle(GroveHotDraft.input).fontSize)-GroveHotDraft.base)>0.1){if(Date.now()>until)throw Error('Hot native text preference did not return to standard size');await new Promise(r=>setTimeout(r,50));}return JSON.stringify(GroveHotDraft.snapshot());", in: web) as? String
+            let after = try XCTUnwrap(normal)
+            try after.write(to: output.appendingPathComponent("after.json"), atomically: true, encoding: .utf8)
+            let original = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(before.utf8)) as? [String: Any])
+            for value in [try XCTUnwrap(large), after] {
+                let observed = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(value.utf8)) as? [String: Any])
+                for key in ["value", "selection", "focus", "sameNode", "sameDocument", "token"] { let currentValue = try XCTUnwrap(observed[key]), originalValue = try XCTUnwrap(original[key]); XCTAssertEqual(try JSONSerialization.data(withJSONObject: currentValue, options: [.fragmentsAllowed, .sortedKeys]), try JSONSerialization.data(withJSONObject: originalValue, options: [.fragmentsAllowed, .sortedKeys]), key + " survives the system text change") }
+            }
+            let preserved = try await asyncJavaScript("return JSON.stringify(await GroveNativeInteraction.finish());", in: web) as? String
+            try XCTUnwrap(preserved).write(to: output.appendingPathComponent("preservation.json"), atomically: true, encoding: .utf8)
+        } catch {
+            _ = try? await asyncJavaScript("await GroveNativeInteraction.finish(); return true;", in: web)
+            throw error
+        }
+    }
+    @MainActor func testInstalledLargerTextActuallyScales() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        guard UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory else { throw XCTSkip("Requires explicit host larger-text phase") }
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-interaction-scenarios", extension: "js"))
+        _ = try await asyncJavaScript("await GroveNativeInteraction.begin(); return true;", in: web)
+        do {
+            let resultValue = try await asyncJavaScript("try{return await GroveNativeInteraction.runCase('home','light');}catch(error){return {...GroveNativeInteraction.lastMetrics,layoutError:String(error)};}", in: web)
+            let result = try XCTUnwrap(resultValue as? [String: Any]), probe = try XCTUnwrap(result["textProbe"] as? [String: Any]), viewport = try XCTUnwrap(result["viewport"] as? [String: Any])
+            let glyph = try XCTUnwrap(probe["glyphHeight"] as? Double), visibleWidth = try XCTUnwrap(viewport["visualWidth"] as? Double)
+            let body = UIFont.preferredFont(forTextStyle: .body).pointSize
+            let standard = UIFont.preferredFont(forTextStyle: .body, compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)).pointSize
+            let expectedScale = body / standard, visibleGlyph = glyph * web.bounds.width / visibleWidth
+            let realText = try XCTUnwrap(result["realText"] as? [[String: Any]])
+            let actionText = try XCTUnwrap(realText.first(where: { ($0["tag"] as? String) == "B" }))
+            let actionFont = try XCTUnwrap(actionText["font"] as? String)
+            let actionSize = try XCTUnwrap(Double(actionFont.replacingOccurrences(of: "px", with: "")))
+            XCTAssertGreaterThanOrEqual(actionSize, 29 * expectedScale * 0.9, "The real Practice/Review label must grow, not just a test probe")
+            XCTAssertGreaterThan(expectedScale, 1.5, "Host must actually select an accessibility text category")
+            XCTAssertNil(result["layoutError"], "The larger text layout must also fit its visible viewport")
+            XCTAssertGreaterThanOrEqual(visibleGlyph, 16 * expectedScale * 0.9, "Visible web text must grow with the system preference")
+            let output = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("GroveSyntheticTextScale-" + UUID().uuidString + ".json")
+            try JSONSerialization.data(withJSONObject: ["preferredBodySize": body, "expectedScale": expectedScale, "visibleGlyphHeight": visibleGlyph, "pageZoom": web.pageZoom, "metrics": result], options: [.prettyPrinted, .sortedKeys]).write(to: output, options: .atomic)
+            _ = try await asyncJavaScript("await GroveNativeInteraction.finish(); return true;", in: web)
+        } catch {
+            _ = try? await asyncJavaScript("await GroveNativeInteraction.finish(); return true;", in: web)
+            throw error
+        }
+    }
+    @MainActor func testInstalledInteractionLayoutMatrix() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let output = documents.appendingPathComponent("GroveSyntheticInteraction-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        let backupValue = try await asyncJavaScript("return await backup();", in: web) as? String
+        try XCTUnwrap(backupValue).write(to: output.appendingPathComponent("prior-backup.txt"), atomically: true, encoding: .utf8)
+        _ = try await web.evaluateJavaScript(resource("native-interaction-scenarios", extension: "js"))
+        let category = UIApplication.shared.preferredContentSizeCategory.rawValue
+        try category.write(to: output.appendingPathComponent("preferred-text-category.txt"), atomically: true, encoding: .utf8)
+        try JSONSerialization.data(withJSONObject: ["width": web.bounds.width, "height": web.bounds.height, "interfaceOrientation": web.window?.windowScene?.interfaceOrientation.rawValue ?? 0], options: [.prettyPrinted, .sortedKeys]).write(to: output.appendingPathComponent("native-geometry.json"), options: .atomic)
+        var results: [Any] = []
+        do {
+            _ = try await asyncJavaScript("await GroveNativeInteraction.begin(); return true;", in: web)
+            let namesValue = try await web.evaluateJavaScript("GroveNativeInteraction.names"), names = try XCTUnwrap(namesValue as? [String])
+            for theme in ["light", "dark"] {
+                for name in names {
+                    let script = "return JSON.stringify(await GroveNativeInteraction.runCase('\(name)','\(theme)'));"
+                    let value = try await asyncJavaScript(script, in: web) as? String, text = try XCTUnwrap(value)
+                    results.append(try JSONSerialization.jsonObject(with: Data(text.utf8)))
+                    try JSONSerialization.data(withJSONObject: results, options: [.prettyPrinted, .sortedKeys]).write(to: output.appendingPathComponent("cases.json"), options: .atomic)
+                }
+            }
+            let preserved = try await asyncJavaScript("return JSON.stringify(await GroveNativeInteraction.finish());", in: web) as? String
+            try XCTUnwrap(preserved).write(to: output.appendingPathComponent("preservation.json"), atomically: true, encoding: .utf8)
+        } catch {
+            if let metrics = try? await asyncJavaScript("return JSON.stringify(GroveNativeInteraction.lastMetrics);", in: web) as? String { try metrics.write(to: output.appendingPathComponent("failed-metrics.json"), atomically: true, encoding: .utf8) }
+            let teardown = try? await asyncJavaScript("return JSON.stringify(await GroveNativeInteraction.finish());", in: web)
+            if let value = teardown as? String { try value.write(to: output.appendingPathComponent("teardown.json"), atomically: true, encoding: .utf8) }
+            throw error
+        }
+    }
     func testFeedbackTextBoundsPreserveEveryUtf8Byte() throws {
         let exact = String(repeating: "保", count: 21845) + "a"
         XCTAssertEqual(try GroveFilesPlugin.validateFeedbackText(exact, sharing: true), exact)

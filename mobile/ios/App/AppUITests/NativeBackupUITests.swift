@@ -1,6 +1,31 @@
 import XCTest
 
 final class NativeBackupUITests: XCTestCase {
+    @MainActor func testInstalledDeviceRotationPreservesVisibleApp() throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        continueAfterFailure = false
+        let device = XCUIDevice.shared, original = XCUIDevice.shared.orientation
+        defer { device.orientation = original == .unknown ? .portrait : original }
+        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        device.orientation = .portrait
+        app.launch()
+        let web = app.webViews.firstMatch
+        XCTAssertTrue(web.waitForExistence(timeout: 20), app.debugDescription)
+        let portrait = web.frame
+        XCTAssertLessThan(portrait.width, portrait.height)
+        device.orientation = .landscapeLeft
+        let wide = expectation(for: NSPredicate { _, _ in web.frame.width > web.frame.height }, evaluatedWith: web)
+        wait(for: [wide], timeout: 10)
+        XCTAssertTrue(app.webViews.buttons["Report a problem"].exists, "The packaged app remains accessible after device rotation")
+        let landscape = XCTAttachment(screenshot: app.screenshot()); landscape.name = "Actual iPad device rotation at system text size"; landscape.lifetime = .keepAlways; add(landscape)
+        let frames = XCTAttachment(string: "Portrait: \(portrait); landscape: \(web.frame)"); frames.name = "Actual installed viewport frames"; frames.lifetime = .keepAlways; add(frames)
+        device.orientation = .portrait
+        let tall = expectation(for: NSPredicate { _, _ in web.frame.width < web.frame.height }, evaluatedWith: web)
+        wait(for: [tall], timeout: 10)
+        XCTAssertEqual(web.frame.width, portrait.width, accuracy: 2)
+        XCTAssertEqual(web.frame.height, portrait.height, accuracy: 2)
+    }
     @MainActor func testFeedbackSystemFileAndShareCancellation() throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }

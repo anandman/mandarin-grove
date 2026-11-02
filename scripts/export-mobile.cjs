@@ -1,6 +1,7 @@
 // Build only from the public web allowlist. Never serve or bundle the workspace.
 const fs=require('node:fs'),path=require('node:path');
 const {exportStatic}=require('./export-static.cjs');
+const {scaleNativeTextStyles}=require('./native-text-style.cjs');
 function exportMobile(root,output,{internalTests=false}={}){
  const base=fs.realpathSync(root),out=path.resolve(output);
  if(out===base||base.startsWith(out+path.sep))throw Error('Output cannot contain the source workspace');
@@ -8,6 +9,10 @@ function exportMobile(root,output,{internalTests=false}={}){
  const bridge=path.join(base,'mobile/dist',internalTests?'bridge-testing.js':'bridge.js');
  if(!fs.existsSync(bridge)||fs.lstatSync(bridge).isSymbolicLink()||!fs.realpathSync(bridge).startsWith(base+path.sep))throw Error('Build the native bridge first');
  exportStatic(base,out,{feedback:'local'});
+ // Only authored app declarations; vendor/content payloads are never rewritten.
+ for(const file of require('./static-files.json').filter(file=>!file.includes('/')&&/\.(css|js|html)$/.test(file))){
+  const target=path.join(out,file);fs.writeFileSync(target,scaleNativeTextStyles(fs.readFileSync(target,'utf8')));
+ }
  // Install native readiness before theme/preferences or the learner bootstrap.
  const index=path.join(out,'index.html');let html=fs.readFileSync(index,'utf8');
  html=html.replace(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/g,(tag,src)=>['offline.js','version-check.js'].includes(src.split('?')[0])?'':tag);

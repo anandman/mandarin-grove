@@ -1,6 +1,7 @@
 import {Capacitor,CapacitorHttp,registerPlugin,type PluginListenerHandle} from '@capacitor/core';
 import {createNativeFeedback,type FeedbackHttp,type FeedbackReceipt} from './feedback';
 import {App} from '@capacitor/app';
+import {installNativeTextSize,type TextSizePlugin} from './text-size';
 import {installBundledNotices} from './navigation';
 import {createAndroidBackController,installAudioLifecycle} from './lifecycle';
 import {createNativeSpeech,type NativeSpeech,type SpeechPlugin} from './speech';
@@ -25,6 +26,8 @@ declare global {
  }
 }
 const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
+// A missing text preference must never block durable offline practice.
+if(platform==='ios')void installNativeTextSize(registerPlugin<TextSizePlugin>('GroveTextSize')).catch(()=>{});
 const feedback=createNativeFeedback({request:options=>{
  // Synthetic test packages must never forward a live report, even if a fixture
  // forgot its mock. Ordinary packages omit this entire compile-time branch.
