@@ -1,4 +1,4 @@
-const VER='20261101-dialog-82';
+const VER='20261102-durable-83';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

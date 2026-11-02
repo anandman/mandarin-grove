@@ -2,14 +2,14 @@
 const assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true,args:['--no-sandbox']});try{
- const page=await browser.newPage({viewport:{width:390,height:740}}),errors=[],requests=[];
+ const page=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:740}}),errors=[],requests=[];
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>requests.push({url:request.url(),method:request.method()}));
  let examplesReady=false,dictionaryReady=false;
  await page.route('**/content/elementary-vocabulary.json',route=>examplesReady?route.continue():route.abort());
- await page.route('**/vendor/cc-cedict/words.json*',route=>dictionaryReady?route.continue():route.abort());
+ await page.route('**/vendor/cc-cedict/dictionary.json*',route=>dictionaryReady?route.continue():route.abort());
  await page.goto(process.env.APP_URL||'http://127.0.0.1:4190');
  assert.equal(await page.evaluate(()=>typeof GroveVocabulary),'object','The vocabulary adapter is served by the real app shell');
- await page.evaluate(()=>{PR={cur:'help-vocab',list:[{id:'help-vocab',name:'Fixture',gr:'2',av:'🐼'},{id:'help-other',name:'Other fixture',gr:'3',av:'🐳'}]};savePR();loadS();S.stars=7;S.pts={改:4};S.privateDraft='PRIVATE FIXTURE TEXT';save();loadS();window.say=()=>{};showHomeworkHelp();});
+ await page.evaluate(async ()=>{PR={cur:'help-vocab',list:[{id:'help-vocab',name:'Fixture',gr:'2',av:'🐼'},{id:'help-other',name:'Other fixture',gr:'3',av:'🐳'}]};(await savePR());(await loadS());S.stars=7;S.pts={改:4};S.privateDraft='PRIVATE FIXTURE TEXT';(await save());(await loadS());window.say=()=>{};showHomeworkHelp();});
  const baseline=await page.evaluate(()=>JSON.stringify(S));
  assert.equal(requests.filter(row=>row.url.includes('elementary-vocabulary.json')).length,0);
  await page.getByRole('button',{name:/^Find a character or word(?:\s|$)/}).click();
@@ -26,15 +26,15 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  await search('謝謝');await page.locator('[data-lookup-text="谢谢"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/xiè xie/);
  await search('nǚ');assert.ok(await page.locator('[data-lookup-text="女"]').isVisible());
  await search('绿');await page.locator('[data-lookup-text="绿"]').click();assert.match(await page.locator('#lookup-detail').innerText(),/green/);assert.ok(!/cheat|spouse/i.test(await page.locator('#lookup-detail').innerText()));
- await search('lu4');assert.equal(await page.locator('[data-lookup-text="绿"]').count(),0);
+ await search('nu3');assert.equal(await page.locator('[data-lookup-text="女"]').count(),0,'Ordinary u must not match the ü in nǚ');
  await search('改甲乙丙');assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/);
  await page.locator('#lookup-input').fill('改');await page.locator('#lookup-input').dispatchEvent('compositionstart');await page.locator('#lookup-input').press('Enter');assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/);await page.locator('#lookup-input').dispatchEvent('compositionend');await page.locator('#lookup-search').click();assert.ok(await page.locator('[data-lookup-text="改"]').isVisible());
  await page.evaluate(()=>{ALL.find(card=>card.c==='改').w='改甲乙';HELP_DICTIONARY_CACHE=null;showHomeworkLookup();});await search('改');await page.locator('[data-lookup-text="改"]').click();await page.getByRole('button',{name:'改甲乙',exact:true}).click();assert.match(await page.locator('#lookup-results-status').innerText(),/No matches/,'A legacy unknown example must stay a neutral search');
  await search('改');await page.locator('[data-lookup-text="改"]').click();await page.locator('[data-lookup-char="改"]').check();
  for(const width of [320,820]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
- await page.evaluate(()=>{PR.cur='help-other';savePR();loadS();showHomeworkLookup();});assert.equal(await page.locator('#lookup-input').inputValue(),'');assert.ok(await page.locator('#lookup-practice').isDisabled());
+ await page.evaluate(async ()=>{PR.cur='help-other';(await savePR());(await loadS());showHomeworkLookup();});assert.equal(await page.locator('#lookup-input').inputValue(),'');assert.ok(await page.locator('#lookup-practice').isDisabled());
  assert.deepEqual(errors,[]);assert.ok(requests.every(row=>row.method==='GET'),'Nothing is sent by opening Help or report details');assert.ok(requests.every(row=>!row.url.includes(encodeURIComponent('改甲乙丙'))&&!row.url.includes('PRIVATE')));
- const late=await browser.newPage({viewport:{width:390,height:740}});late.on('pageerror',error=>errors.push(error.message));let latePackReady=false;
+ const late=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:740}});late.on('pageerror',error=>errors.push(error.message));let latePackReady=false;
  await late.route('**/content/elementary-vocabulary.json',route=>latePackReady?route.continue():route.abort());
  await late.goto(process.env.APP_URL||'http://127.0.0.1:4190');await late.evaluate(()=>{window.say=()=>{};showHomeworkLookup();});
  await late.waitForFunction(()=>document.getElementById('lookup-bank-status')?.dataset.ready==='true');await late.locator('#lookup-examples-retry').waitFor({state:'visible'});

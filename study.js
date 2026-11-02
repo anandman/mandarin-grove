@@ -91,11 +91,11 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  dialog.querySelectorAll('[data-study-mode]').forEach(input=>input.onchange=()=>{STUDY_DRAFT.config.modes=[...dialog.querySelectorAll('[data-study-mode]:checked')].map(e=>e.dataset.studyMode);updateStudyCount();});
  $('study-limit').onchange=()=>{STUDY_DRAFT.config.limit=Number($('study-limit').value);updateStudyCount();};
  $('study-all-chars').onclick=()=>{STUDY_DRAFT.config.chars=studyDraftCharacters().filter(c=>!STUDY_DRAFT.excluded.has(c));renderStudyCharacters();};
- $('study-reading').onclick=startStudyReading;
- $('study-start').onclick=()=>{if(currentStudyRound(kind)){$('study-replace').hidden=false;$('study-keep').focus();}else startStudyDraft();};
- $('study-confirm-replace').onclick=startStudyDraft;
+ $('study-reading').onclick=()=>runAction(startStudyReading);
+ $('study-start').onclick=()=>{if(currentStudyRound(kind)){$('study-replace').hidden=false;$('study-keep').focus();}else runAction(startStudyDraft);};
+ $('study-confirm-replace').onclick=()=>runAction(startStudyDraft);
  $('study-keep').onclick=()=>{$('study-replace').hidden=true;($('study-continue')||$('study-start')).focus();};
- if(saved)$('study-continue').onclick=()=>{closeStudySetup();resumeStudy(kind);};
+ if(saved)$('study-continue').onclick=()=>runAction(async()=>{closeStudySetup();await resumeStudy(kind);});
  renderStudyCharacters();
 }
 function closeStudySetup(){const dialog=$('study-setup');if(dialog){dialog.close();dialog.remove();}STUDY_DRAFT=null;}
@@ -123,91 +123,91 @@ function updateStudyCount(){
  const recent=$('study-recent-mistakes');if(recent)recent.textContent='Things to practice · '+recentMistakeCount();
  $('study-reading').disabled=!STUDY_DRAFT.config.chars.some(c=>!STUDY_DRAFT.excluded.has(c));
 }
-function startStudyReading(){
+async function startStudyReading(){
  const d=STUDY_DRAFT;if(!d||d.owner!==PR.cur)return;
  const config=JSON.parse(JSON.stringify(d.config));config.chars=config.chars.filter(c=>!d.excluded.has(c));if(!config.chars.length)return;
  const before=JSON.parse(JSON.stringify(S.cfg));
- try{S.cfg.notLearned=[...d.excluded];((S.cfg.studyChoices||={})[GR()]||={})[d.kind]=config;save();}
+ try{S.cfg.notLearned=[...d.excluded];((S.cfg.studyChoices||={})[GR()]||={})[d.kind]=config;await save();}
  catch(error){S.cfg=before;$('study-count').textContent='Could not save your choices. Try again.';return;}
  const kind=d.kind;closeStudySetup();showOnlineLibrary({kind,selection:config});
 }
-function startStudyDraft(){
+async function startStudyDraft(){
  const d=STUDY_DRAFT;if(!d||d.owner!==PR.cur){closeStudySetup();return;}const pool=studyDraftPool();if(!pool.length||!d.config.modes.length)return;
  const kind=d.kind,config=JSON.parse(JSON.stringify(d.config));S.cfg.notLearned=[...d.excluded];
- ((S.cfg.studyChoices||={})[GR()]||={})[kind]=JSON.parse(JSON.stringify(config));save();closeStudySetup();startStudyRound(kind,config,pool);
+ ((S.cfg.studyChoices||={})[GR()]||={})[kind]=JSON.parse(JSON.stringify(config));await save();closeStudySetup();await startStudyRound(kind,config,pool);
 }
-function startStudyRound(kind,config,pool,queue){
+async function startStudyRound(kind,config,pool,queue){
  stopSpeech();NAV++;lq=[];mq=[];TH=[];TF=[];
  const q=queue||studyQueue(S,pool,config.modes,config.limit,kind,shuffle);
  if(!q.length){showStudySetup(kind,pool);return;}
  const round={id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),kind,config:JSON.parse(JSON.stringify(config)),q:q.map(([m,c])=>[m,c.c]),cursor:0,results:{}};
- runStudyRound(round,pool);
+ await runStudyRound(round,pool);
 }
-function runStudyRound(round,pool){
+async function runStudyRound(round,pool){
  const by=new Map(ALL.map(c=>[c.c,c]));round=pruneStudyRound(round,S.cfg.notLearned||[]);
  const q=round.q.filter(([m,c])=>studyActivities().some(([mode])=>m===mode)&&by.has(c)).map(([m,c])=>[m,by.get(c)]);
  if(q.length!==round.q.length){showStudySetup(round.kind);return;}
  CRAM={mode:'study',pool:pool||round.config.chars.map(c=>by.get(c)).filter(Boolean)};
- SESS={study:true,cram:round.kind==='review',kind:round.kind,round,q,i:round.cursor,pool:CRAM.pool};nextItem();
+ SESS={study:true,cram:round.kind==='review',kind:round.kind,round,q,i:round.cursor,pool:CRAM.pool};await nextItem();
 }
-function resumeStudy(kind){const r=currentStudyRound(kind);if(r)runStudyRound(JSON.parse(JSON.stringify(r)));else showStudySetup(kind);}
-function saveStudyRound({persist=true}={}){
+async function resumeStudy(kind){const r=currentStudyRound(kind);if(r)await runStudyRound(JSON.parse(JSON.stringify(r)));else showStudySetup(kind);}
+async function saveStudyRound({persist=true}={}){
  const r=SESS.round;r.q=SESS.q.map(([m,c])=>[m,c.c]);
- ((S.cfg.studyRounds||={})[GR()]||={})[SESS.kind]=JSON.parse(JSON.stringify(r));if(persist)save();
+ ((S.cfg.studyRounds||={})[GR()]||={})[SESS.kind]=JSON.parse(JSON.stringify(r));if(persist)await save();
 }
-function recordStudyAnswer(review,outcome,{persist=true}={}){
+async function recordStudyAnswer(review,outcome,{persist=true}={}){
  if(!SESS?.study)return;
- const [mode,c]=SESS.q[SESS.currentIndex],r=SESS.round;
+ const session=SESS,[mode,c]=SESS.q[SESS.currentIndex],r=SESS.round;
  const before=persist?JSON.parse(JSON.stringify(r)):null,deferred=A.querySelector('.study-not-learned'),wasDisabled=deferred?.disabled;
  const itemId=mode+':'+c.c;
  const result=GroveResults.createResult({character:c.c,mode,sessionId:r.id,itemId,correct:outcome==='correct',outcome,...(outcome==='unverified'?{ungraded:true}:{}),selfRated:mode==='flip'||mode==='dictation',...(review?.evidence?{evidence:review.evidence}:{})},{makeId:()=>r.id+':'+itemId});
  try{addStudyResult(r,itemId,result);
- r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);deferred?.setAttribute('disabled','');saveStudyRound({persist});}
- catch(error){if(before)SESS.round=before;if(deferred)deferred.disabled=wasDisabled;throw error;}
+ r.cursor=SESS.i;if(r.cursor>=r.q.length)completeStudyRound(S,r);deferred?.setAttribute('disabled','');await saveStudyRound({persist});}
+ catch(error){if(before&&SESS===session)SESS.round=before;if(deferred?.isConnected)deferred.disabled=wasDisabled;throw error;}
 }
-function studyNextItem(){
- if(SESS.i>=SESS.q.length){finishStudyRound();return;}
- const index=SESS.i,previous={i:SESS.i,currentIndex:SESS.currentIndex,cursor:SESS.round.cursor};SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;
- try{saveStudyRound();}catch(error){SESS.i=previous.i;SESS.currentIndex=previous.currentIndex;SESS.round.cursor=previous.cursor;throw error;}
- const [mode,c]=SESS.q[index];({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
+async function studyNextItem(){
+ if(SESS.i>=SESS.q.length){await finishStudyRound();return;}
+ const session=SESS,index=SESS.i,previous={i:SESS.i,currentIndex:SESS.currentIndex,cursor:SESS.round.cursor};SESS.currentIndex=index;SESS.round.cursor=index;SESS.i++;
+ try{await saveStudyRound();}catch(error){if(SESS===session){SESS.i=previous.i;SESS.currentIndex=previous.currentIndex;SESS.round.cursor=previous.cursor;}throw error;}
+ const [mode,c]=SESS.q[index];await ({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
  document.body.dataset.study=SESS.kind;
  if(mode==='dictation')A.querySelector('.grove-activity-heading').insertAdjacentHTML('afterend',studySessionBar());
 }
 function studySessionBar(){
  if(!SESS?.study)return '';
  const characterCount=SESS.pool.filter(c=>!(S.cfg.notLearned||[]).includes(c.c)).length;
- return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${characterCount} character${characterCount===1?'':'s'} · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="pauseStudy()">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
+ return `<div class="study-sessionbar"><span><b>${SESS.kind==='review'?'Review':'Practice'} · ${SESS.i}/${SESS.q.length}</b><small>${characterCount} character${characterCount===1?'':'s'} · ${SESS.round.config.modes.length} activit${SESS.round.config.modes.length===1?'y':'ies'} · ${studyGoalText(SESS.q.length)}</small></span><button onclick="showStudySetup('${SESS.kind}')">Change</button><button onclick="runAction(()=>pauseStudy())">Pause</button></div><button class="study-not-learned" onclick="studyNotLearned()">I haven’t learned this yet</button>`;
 }
-function pauseStudy(){if(SESS?.study){if(SESS.round.cursor>=SESS.q.length){finishStudyRound();return;}saveStudyRound();}home();}
-function studyNotLearned(){return ActivityUI.run(()=>{
- if(!SESS?.study)return;const item=SESS.q[SESS.currentIndex],c=item?.[1];if(!c||Object.hasOwn(SESS.round.results,item[0]+':'+c.c))return;
+async function pauseStudy(){if(SESS?.study){if(SESS.round.cursor>=SESS.q.length){await finishStudyRound();return;}await saveStudyRound();}await home();}
+function studyNotLearned(){return ActivityUI.run(async()=>{
+ if(!SESS?.study)return;const session=SESS,item=SESS.q[SESS.currentIndex],c=item?.[1];if(!c||Object.hasOwn(SESS.round.results,item[0]+':'+c.c))return;
  const previous={q:SESS.q.slice(),i:SESS.i,round:JSON.parse(JSON.stringify(SESS.round)),review:ACTIVE_REVIEW};
  S.cfg.notLearned=[...new Set([...(S.cfg.notLearned||[]),c.c])];
  const before=SESS.q.slice(0,SESS.currentIndex),after=SESS.q.slice(SESS.currentIndex+1).filter(([,x])=>x.c!==c.c);
  SESS.q=before.concat(after);SESS.i=before.length;SESS.round.cursor=SESS.i;
- try{saveStudyRound();}catch(error){SESS.q=previous.q;SESS.i=previous.i;SESS.round=previous.round;ACTIVE_REVIEW=previous.review;throw error;}
- ACTIVE_REVIEW=null;NAV++;stopSpeech();nextItem();
+ try{await saveStudyRound();}catch(error){if(SESS===session){SESS.q=previous.q;SESS.i=previous.i;SESS.round=previous.round;ACTIVE_REVIEW=previous.review;}throw error;}
+ ACTIVE_REVIEW=null;NAV++;stopSpeech();await nextItem();
 });}
-function finishStudyRound(){
- const round=SESS.round;round.cursor=round.q.length;completeStudyRound(S,round);saveStudyRound();STUDY_LAST=JSON.parse(JSON.stringify(round));
+async function finishStudyRound(){
+ const round=SESS.round;round.cursor=round.q.length;completeStudyRound(S,round);await saveStudyRound();STUDY_LAST=JSON.parse(JSON.stringify(round));
  const score=studyScore(round),misses=Object.entries(round.results).filter(([,r])=>!r.correct&&!r.ungraded);
  SESS=null;CRAM=null;delete document.body.dataset.study;screen();
- A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="reading-note">${round.q.length} question${round.q.length===1?'':'s'} finished. Your work is saved.</p><p class="study-score">${score.correct} / ${score.total}</p><p>${score.total?score.percent+'% round score · '+studyGoalText(score.total):'No scored answers this round'}</p>${score.ungraded?`<p>${score.ungraded} answer${score.ungraded===1?'':'s'} not checked by the app · left out of the score and Things to practice.</p>`:''}<p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' question'+(score.selfRated===1?'':'s')+' from self-check activities (including skips)':''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b lang="zh-Hans">${r.character}</b> · ${studyActivities().find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="retryStudyMisses()">Practice these again</button>`:''}<button class="btn gray" onclick="home()">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
+ A.innerHTML=`<section class="study-finish"><h1>${score.reached?'Goal reached!':'Round finished!'}</h1><p class="reading-note">${round.q.length} question${round.q.length===1?'':'s'} finished. Your work is saved.</p><p class="study-score">${score.correct} / ${score.total}</p><p>${score.total?score.percent+'% round score · '+studyGoalText(score.total):'No scored answers this round'}</p>${score.ungraded?`<p>${score.ungraded} answer${score.ungraded===1?'':'s'} not checked by the app · left out of the score and Things to practice.</p>`:''}<p class="reading-note">First attempts${score.selfRated?' · includes '+score.selfRated+' question'+(score.selfRated===1?'':'s')+' from self-check activities (including skips)':''}. Your practice and rewards are saved.</p>${misses.length?`<details class="study-mistakes"><summary>Things to practice · ${misses.length}</summary><ul>${misses.map(([,r])=>`<li><b lang="zh-Hans">${r.character}</b> · ${studyActivities().find(([m])=>m===r.mode)?.[1]||r.mode}</li>`).join('')}</ul></details><button class="btn" onclick="runAction(()=>retryStudyMisses())">Practice these again</button>`:''}<button class="btn gray" onclick="runAction(()=>home())">Finish</button><button class="progress-link" onclick="showStudySetup('${round.kind}')">Choose another round</button></section>`;
 }
-function retryStudyMisses(){
+async function retryStudyMisses(){
  if(!STUDY_LAST)return;const r=STUDY_LAST,by=new Map(ALL.map(c=>[c.c,c])),q=Object.values(r.results).filter(x=>!x.correct&&!x.ungraded&&!(S.cfg.notLearned||[]).includes(x.character)).map(x=>[x.mode,by.get(x.character)]).filter(([,c])=>c);
- if(q.length)startStudyRound('practice',r.config,[...new Map(q.map(([,c])=>[c.c,c])).values()],q);
+ if(q.length)await startStudyRound('practice',r.config,[...new Map(q.map(([,c])=>[c.c,c])).values()],q);
 }
 
 // Keep the first attempt across Pause/reload, including hints and stroke tolerance.
 function studyAttemptInfo(){if(!SESS?.study)return null;const [mode,c]=SESS.q[SESS.currentIndex];return SESS.round.attempts?.[mode+':'+c.c]||null;}
-function studyAttempt(kind){
- if(!SESS?.study)return;const before=JSON.parse(JSON.stringify(SESS.round)),[mode,c]=SESS.q[SESS.currentIndex],all=SESS.round.attempts||={},r=all[mode+':'+c.c]||={};
- if(kind==='stroke')r.strokes=(r.strokes||0)+1;else r[kind]=true;try{saveStudyRound();}catch(error){SESS.round=before;throw error;}
+async function studyAttempt(kind){
+ if(!SESS?.study)return;const session=SESS,before=JSON.parse(JSON.stringify(SESS.round)),[mode,c]=SESS.q[SESS.currentIndex],all=SESS.round.attempts||={},r=all[mode+':'+c.c]||={};
+ if(kind==='stroke')r.strokes=(r.strokes||0)+1;else r[kind]=true;try{await saveStudyRound();}catch(error){if(SESS===session)SESS.round=before;throw error;}
 }
 function studyOutcome(outcome){const a=studyAttemptInfo();if(!a||outcome==='skip')return outcome;if(a.miss||a.pinyinMiss)return 'miss';if(a.help||a.strokes>2)return 'assisted';return outcome;}
-function resumeLegacyRound(kind){
+async function resumeLegacyRound(kind){
  const r=S.cfg[kind];if(!r)return false;const excluded=new Set(S.cfg.notLearned||[]);if(!excluded.size)return true;
- const prefix=r.q.slice(0,r.i),after=r.q.slice(r.i).filter(([,c])=>!excluded.has(c));r.q=prefix.concat(after);save();return r.i<r.q.length;
+ const prefix=r.q.slice(0,r.i),after=r.q.slice(r.i).filter(([,c])=>!excluded.has(c));r.q=prefix.concat(after);await save();return r.i<r.q.length;
 }
 function studyQuiz(chars){showStudySetup('review',[...new Set(chars)].map(c=>ALL.find(x=>x.c===c)).filter(Boolean));}

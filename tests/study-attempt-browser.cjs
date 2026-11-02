@@ -14,22 +14,22 @@ const assert = require('node:assert/strict');
     await page.goto(process.env.APP_URL || 'http://127.0.0.1:4181');
 
     async function startRound(mode) {
-      return page.evaluate(mode => {
+      return page.evaluate(async mode => {
         PR = { cur: 'study-attempt', list: [{ id: 'study-attempt', name: 'Learner', gr: '2', av: '🐼' }] };
-        savePR();
-        loadS();
+        (await savePR());
+        (await loadS());
         S = blank();
         S.stars = 11;
         S.pts = { 狗: 2 };
         S.cfg.set = ['狗'];
-        save();
+        (await save());
         setCards();
         window.say = () => {};
-        home();
+        (await home());
         const card = ALL.find(card => card.c === '狗');
-        startStudyRound('review', {
+        (await startStudyRound('review', {
           units: [], chars: ['狗'], modes: [mode], limit: 5
-        }, [card], [[mode, card]]);
+        }, [card], [[mode, card]]));
         return { stars: S.stars, pts: { ...S.pts } };
       }, mode);
     }
@@ -39,7 +39,7 @@ const assert = require('node:assert/strict');
     assert.match(await page.locator('#app').innerText(), /❌/);
     assert.equal(await page.evaluate(() => S.cfg.studyRounds['2'].review.attempts['dictation:狗'].pinyinMiss), true);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
-    await page.evaluate(() => resumeStudy('review'));
+    await page.evaluate(async () => (await resumeStudy('review')));
 
     for (const letter of 'gou') await page.locator(`[data-t="${letter}"]`).first().click();
     await page.locator('[data-tn="3"]').click();
@@ -102,7 +102,7 @@ const assert = require('node:assert/strict');
     await page.locator('#pk').click();
     assert.equal(await page.evaluate(() => S.cfg.studyRounds['2'].review.attempts['memory:狗'].help), true);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
-    await page.evaluate(() => resumeStudy('review'));
+    await page.evaluate(async () => (await resumeStudy('review')));
     await page.evaluate(() => window.attemptMemoryQuiz.onComplete({ totalMistakes: 0 }));
 
     const memory = await page.evaluate(() => ({

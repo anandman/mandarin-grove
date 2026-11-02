@@ -7,10 +7,10 @@ const assert=require('node:assert/strict');
   page.on('pageerror',e=>errors.push(e.message));await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
   await page.evaluate(()=>{localStorage.setItem('zh_p_clues',JSON.stringify(blank()));localStorage.setItem('zh_profiles',JSON.stringify({cur:'clues',list:[{id:'clues',name:'Test',gr:'4',av:'🐻'}]}));});await page.reload();
   for(const mode of ['standalone','daily','cram'])for(const char of ['祖','组']){
-   await page.evaluate(({mode,char})=>{
-    home();const c=ALL.find(x=>x.c===char);
-    if(mode==='standalone')dictStart(char);
-    else{SESS={q:[['dictation',c]],i:1,cram:mode==='cram'};dictQuestion(c)}
+   await page.evaluate(async ({mode,char})=>{
+    (await home());const c=ALL.find(x=>x.c===char);
+    if(mode==='standalone')(await dictStart(char));
+    else{SESS={q:[['dictation',c]],i:1,cram:mode==='cram'};(await dictQuestion(c))}
    },{mode,char});
    assert.equal(await page.locator('#dictation-clue').count(),1,'dictation must distinguish homophones before grading');
    assert.equal(await page.locator('#dictation-clue').innerText(),'Meaning: '+require('../content/curriculum.js').cards.find(c=>c.c===char).m);

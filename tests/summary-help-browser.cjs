@@ -11,11 +11,11 @@ const assert=require('node:assert/strict');
   page.on('request',request=>requests.push({url:request.url(),method:request.method()}));
   page.on('dialog',async dialog=>{dialogs.push(dialog.message());await(acceptClear?dialog.accept():dialog.dismiss());});
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');
-  await page.evaluate(()=>{
-   PR={cur:'summary-a',list:[{id:'summary-a',name:'Learner A',gr:'4',av:'🐳'},{id:'summary-b',name:'Learner B',gr:'2',av:'🐼'}]};savePR();
+  await page.evaluate(async ()=>{
+   PR={cur:'summary-a',list:[{id:'summary-a',name:'Learner A',gr:'4',av:'🐳'},{id:'summary-b',name:'Learner B',gr:'2',av:'🐼'}]};(await savePR());
    const state=blank();state.stars=149;state.pts={祖:6};state.cfg.set=['祖','狗'];state.cfg.cramUnits={'4':[1,3]};
    state.homeworkHelp={other:{keep:'existing homework data'}};
-   localStorage.setItem('zh_p_summary-a',JSON.stringify(state));loadS();home();
+   localStorage.setItem('zh_p_summary-a',JSON.stringify(state));(await loadS());(await home());
   });
   const state=()=>page.evaluate(()=>JSON.stringify(S));
   const learning=()=>page.evaluate(()=>{const {homeworkHelp,...progress}=S;return JSON.stringify(progress);});
@@ -72,12 +72,12 @@ const assert=require('node:assert/strict');
   const report=await page.locator('#feedback-output').inputValue();
   for(const text of Object.values(draft))assert.ok(!report.includes(text),'Feedback must not automatically include a typed reading or draft');
   await page.getByRole('button',{name:'Close feedback',exact:true}).click();
-  await page.reload();await page.evaluate(()=>home());await open();
+  await page.reload();await page.evaluate(async ()=>(await home()));await open();
   for(const [id,value]of Object.entries({'summary-reading':draft.reading,'summary-main-idea':draft.mainIdea,'summary-details':draft.details,'summary-draft':draft.summary}))assert.equal(await page.locator('#'+id).inputValue(),value,'Draft survives a reload');
   assert.equal(await state(),saved,'Reload and reopening preserve the full saved draft');
 
   // A stale screen must not write the current child's state, even before navigation.
-  await page.evaluate(()=>{window.oldSummaryInput=document.getElementById('summary-main-idea');window.oldSummaryClear=document.getElementById('summary-clear');PR.cur='summary-b';savePR();loadS();});
+  await page.evaluate(async ()=>{window.oldSummaryInput=document.getElementById('summary-main-idea');window.oldSummaryClear=document.getElementById('summary-clear');PR.cur='summary-b';(await savePR());(await loadS());});
   const otherBefore=await state();
   await page.evaluate(()=>{oldSummaryInput.value='Stale child A event';oldSummaryInput.dispatchEvent(new Event('input',{bubbles:true}));oldSummaryClear.click();});
   assert.equal(await state(),otherBefore,'Owner guard blocks stale events while the old screen is still connected');
@@ -90,24 +90,24 @@ const assert=require('node:assert/strict');
   assert.equal(dialogs.length,0);
   await page.locator('#summary-draft').fill('第二个孩子自己的摘要。');
   const otherDraft=await state();
-  await page.evaluate(()=>{PR.cur='summary-a';savePR();loadS();home();});await open();
+  await page.evaluate(async ()=>{PR.cur='summary-a';(await savePR());(await loadS());(await home());});await open();
   assert.deepEqual(await page.evaluate(()=>S.homeworkHelp.summary),draft);
 
   // The existing backup/restore path includes both children without special handling.
-  const code=await page.evaluate(()=>backup()),decoded=JSON.parse(Buffer.from(code,'base64').toString('utf8'));
+  const code=await page.evaluate(async ()=>(await backup())),decoded=JSON.parse(Buffer.from(code,'base64').toString('utf8'));
   assert.deepEqual(JSON.parse(decoded.data['summary-a']).homeworkHelp.summary,draft);
   assert.equal(JSON.parse(decoded.data['summary-b']).homeworkHelp.summary.summary,'第二个孩子自己的摘要。');
-  await page.evaluate(()=>{S.homeworkHelp.summary.summary='Changed after backup';save();grown();});
+  await page.evaluate(async ()=>{S.homeworkHelp.summary.summary='Changed after backup';(await save());(await grown());});
   await page.locator('#grest').click();await page.locator('#grt').fill(code);await page.locator('#grr').click();
   await page.locator('.pop').waitFor({state:'detached'});
   await open();assert.deepEqual(await page.evaluate(()=>S.homeworkHelp.summary),draft,'Normal backup restore retains the summary draft');
 
   // Cancel is exactly non-destructive; confirmed clear removes only this child's draft.
-  const beforeCancel=await state(),beforeCancelBackup=await page.evaluate(()=>backup());
+  const beforeCancel=await state(),beforeCancelBackup=await page.evaluate(async ()=>(await backup()));
   await page.getByRole('button',{name:'Clear draft',exact:true}).click();
   assert.equal(dialogs.length,1);assert.match(dialogs[0],/clear.*summary.*draft/i);
   assert.equal(await state(),beforeCancel,'Cancelling clear preserves the exact draft');
-  assert.equal(await page.evaluate(()=>backup()),beforeCancelBackup);
+  assert.equal(await page.evaluate(async ()=>(await backup())),beforeCancelBackup);
   acceptClear=true;await page.getByRole('button',{name:'Clear draft',exact:true}).click();
   assert.equal(dialogs.length,2);
   assert.equal(await page.evaluate(()=>S.homeworkHelp.summary),undefined);
@@ -122,7 +122,7 @@ const assert=require('node:assert/strict');
   await page.locator('#summary-details').fill(draft.details);
   await page.locator('#summary-draft').fill(draft.summary);
   for(const [device,width,height]of [['small-phone',320,700],['phone',390,844],['ipad',820,1060]])for(const theme of ['light','dark']){
-   await page.setViewportSize({width,height});await page.evaluate(value=>setAppearance(value),theme);
+   await page.setViewportSize({width,height});await page.evaluate(async value=>(await setAppearance(value)),theme);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Summary fits '+device+' '+theme);
    for(const id of ['summary-main-idea','summary-details','summary-draft'])assert.ok(await page.locator('#'+id).evaluate(element=>parseFloat(getComputedStyle(element).fontSize)>=16),'Readable text entry on '+device);
    const clear=await page.locator('#summary-clear').boundingBox();assert.ok(clear.height>=44);

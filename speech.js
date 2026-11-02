@@ -35,7 +35,11 @@ function hasMainlandRecordings() {
 function expectsMainlandRecordings() {
   return document.body?.dataset?.mainlandRecordings==='true' || hasMainlandRecordings();
 }
-function voicePreference() { return localStorage.getItem('zh_voice') || (expectsMainlandRecordings()?'mainland':'auto'); }
+let savedVoicePreference=null;
+async function reloadVoicePreference(){savedVoicePreference=await GROVE_REPOSITORY.readPreference('zh_voice');}
+const VOICE_READY=reloadVoicePreference().catch(()=>{});
+window.addEventListener?.('storage',event=>{if(event.key==='zh_voice')reloadVoicePreference().then(refreshVoiceSettings).catch(()=>{});});
+function voicePreference() { return savedVoicePreference || (expectsMainlandRecordings()?'mainland':'auto'); }
 function selectedMandarinVoice() {
   const preference=voicePreference();
   if (['auto','recorded','reference','mainland'].includes(preference)) return null;
@@ -268,11 +272,13 @@ function refreshVoiceCatalog() {
 }
 function bindVoiceSettings() {
   refreshVoiceCatalog();
-  document.getElementById('voice-choice').onchange = e => {
+  document.getElementById('voice-choice').onchange = async e => {
     stopSpeech();let status=document.getElementById('voice-save-status');
     if(!status){status=document.createElement('p');status.id='voice-save-status';status.className='reading-note';status.setAttribute('role','status');e.target.after(status);}
-    try{localStorage.setItem('zh_voice',e.target.value);status.textContent='Saved on this device.';}
+    const choice=e.target.value;e.target.disabled=true;status.textContent='Saving on this device…';
+    try{await GROVE_REPOSITORY.writePreference('zh_voice',choice);savedVoicePreference=choice;status.textContent='Saved on this device.';}
     catch{status.textContent='Could not save the voice preference. Your previous choice is kept. Please try again.';}
+    finally{e.target.disabled=false;}
     refreshVoiceSettings();
   };
   document.getElementById('voice-refresh').onclick = refreshVoiceCatalog;

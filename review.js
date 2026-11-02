@@ -1,7 +1,8 @@
 let ACTIVE_REVIEW=null;
 function beginReview(c,mode){feedbackQuestion={card:c,mode};renderRewards();ACTIVE_REVIEW={c,mode,done:false,help:false};}
-function finishReview(outcome,stars=0){
- const r=ACTIVE_REVIEW;if(!r||r.done)return false;
+async function finishReview(outcome,stars=0){
+ const r=ACTIVE_REVIEW;if(!r||r.done||r.saving)return false;r.saving=true;
+ const session=SESS,owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE;
  const round=SESS?.study?JSON.parse(JSON.stringify(SESS.round)):null;
  const deferred=A.querySelector('.study-not-learned'),wasDisabled=deferred?.disabled;
  let prior;
@@ -10,32 +11,33 @@ function finishReview(outcome,stars=0){
   recordSkill(S,r.c.c,r.mode,outcome);
   if(r.mode==='flip'&&!CRAM&&['correct','miss'].includes(outcome)){const level=outcome==='correct'?Math.min((S.box[r.c.c]||0)+1,4):0;S.box[r.c.c]=level;S.due[r.c.c]=dayNum()+[0,1,2,4,7][level];}
   if(stars)prior=creditWin(r.c,stars);
-  if(SESS?.study)recordStudyAnswer(r,outcome,{persist:false});
+  if(SESS?.study)await recordStudyAnswer(r,outcome,{persist:false});
   else if(SESS){const key=SESS.cram?'cram':'rs';if(S.cfg[key])S.cfg[key].i=SESS.i;}
-  save();
- }catch(error){if(round&&SESS?.study)SESS.round=round;if(deferred)deferred.disabled=wasDisabled;throw error;}
- r.done=true;if(prior)celebrateWin(r.c,prior);return true;
+  requireActiveSave(owner,sequence);await save();
+ }catch(error){if(SESS===session&&round&&SESS?.study)SESS.round=round;if(deferred?.isConnected)deferred.disabled=wasDisabled;throw error;}
+ finally{r.saving=false;}
+ r.done=true;if(prior)await celebrateWin(r.c,prior);return true;
 }
-function skipReview(){finishReview(ACTIVE_REVIEW?.missed?'miss':'skip');}
-function saveRound(){
- if(SESS?.study)return saveStudyRound();
+async function skipReview(){await finishReview(ACTIVE_REVIEW?.missed?'miss':'skip');}
+async function saveRound(){
+ if(SESS?.study)return await saveStudyRound();
  const key=SESS.cram?'cram':'rs';
- S.cfg[key]={q:SESS.q.map(([m,c])=>[m,c.c]),i:SESS.i,t:SESS.t,p:SESS.pool.map(c=>c.c),mode:CRAM?.mode};save();
+ S.cfg[key]={q:SESS.q.map(([m,c])=>[m,c.c]),i:SESS.i,t:SESS.t,p:SESS.pool.map(c=>c.c),mode:CRAM?.mode};await save();
 }
-function resumeCram(){
- if(!resumeLegacyRound('cram'))return showStudySetup('review');
+async function resumeCram(){
+ if(!await resumeLegacyRound('cram'))return showStudySetup('review');
  const r=S.cfg.cram;if(!r||r.i>=r.q.length)return showCram();
  const by=new Map(ALL.map(c=>[c.c,c]));
  if(!r.q.every(([m,c])=>['trace','listen','flip','memory','dictation'].includes(m)&&by.has(c)))return showCram();
  const pool=r.p.map(c=>by.get(c)).filter(Boolean);CRAM={mode:r.mode||'mixed',pool};
- SESS={cram:true,q:r.q.map(([m,c])=>[m,by.get(c)]),i:r.i,t:r.t,pool};nextItem();
+ SESS={cram:true,q:r.q.map(([m,c])=>[m,by.get(c)]),i:r.i,t:r.t,pool};await nextItem();
 }
-function kidProgress(){parentDashboard(PR.cur,GR(),'',true)}
-function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false,view=null){
+function kidProgress(){return runAction(()=>parentDashboard(PR.cur,GR(),'',true));}
+async function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false,view=null){
  if(childView)id=PR.cur;
  $('gov')?.remove();screen({scroll:!view});SESS=null;CRAM=null;delete document.body.dataset.study;
  const p=PR.list.find(p=>p.id===id)||prof();if(!p)return;
- const s=p.id===PR.cur?S:JSON.parse(localStorage.getItem('zh_p_'+p.id)||'null')||blank();
+ const token=NAV,s=p.id===PR.cur?S:await GROVE_REPOSITORY.peekProfile(p.id);if(token!==NAV)return;
  const units=QU(grade),groups=GroveUnits.buildUnitGroups({units:U,cards:ALL,grade,selection:[],points:s.pts}).groups;
  const chars=[...new Set(unit?[...unit]:groups.flatMap(g=>g.c))],excluded=new Set(s.cfg.notLearned||[]);
  const days=Object.entries(s.learning?.days||{}).filter(([date])=>new Date(date).getTime()>=Date.now()-7*REVIEW_DAY).map(([,d])=>d);
@@ -58,7 +60,7 @@ function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false,view=null)
  if(childView)homeSets();
  const refresh=(nextId,nextGrade,nextUnit)=>{
   const context={focus:document.activeElement.id,open:[...A.querySelectorAll('details[id][open]')].map(el=>el.id),query:$('srch')?.value||'',x:scrollX,y:scrollY};
-  parentDashboard(nextId,nextGrade,nextUnit,childView,context);
+  return runAction(()=>parentDashboard(nextId,nextGrade,nextUnit,childView,context));
  };
  if(!childView)$('dash-child').onchange=()=>refresh($('dash-child').value,PR.list.find(x=>x.id===$('dash-child').value).gr||'K','');
  $('dash-grade').onchange=()=>refresh(p.id,$('dash-grade').value,'');$('dash-unit').onchange=()=>refresh(p.id,grade,$('dash-unit').value);
@@ -74,13 +76,13 @@ function parentDashboard(id=PR.cur,grade=GR(),unit='',childView=false,view=null)
  }else $('dash-switch').onclick=who;
 }
 
-function resumeCramDict(){
+async function resumeCramDict(){
  const r=S.cfg.cramDict;if(!r)return showCram();
  const excluded=new Set(S.cfg.notLearned||[]);r.q=r.q.slice(0,r.i).concat(r.q.slice(r.i).filter(c=>!excluded.has(c)));
- if(r.i>=r.q.length){delete S.cfg.cramDict;save();return showStudySetup('review');}
+ if(r.i>=r.q.length){delete S.cfg.cramDict;await save();return showStudySetup('review');}
  const by=new Map(ALL.map(c=>[c.c,c]));
  CRAM={mode:'dictation',pool:r.pool.map(c=>by.get(c)).filter(Boolean)};
- DQL=CRAM.pool.map(c=>c.c).join('');SESS=null;DQ={...r,q:r.q.map(c=>by.get(c)).filter(Boolean)};dictItem();
+ DQL=CRAM.pool.map(c=>c.c).join('');SESS=null;DQ={...r,q:r.q.map(c=>by.get(c)).filter(Boolean)};await dictItem();
 }
 
 const REWARD_NAMES=['','Character badge','Remembered again','Strong memory'];

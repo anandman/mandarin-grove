@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark','System is the default');
   assert.equal(await page.getByRole('button',{name:'Appearance',exact:true}).isVisible(),true,'Appearance is available before creating a child profile');
-  await page.evaluate(()=>{PR={cur:'theme',list:[{id:'theme',name:'Learner',gr:'4',av:'🐳'}]};savePR();S=blank();S.stars=149;S.pts={祖:8,止:5};S.cfg.set=['祖','止','离','子'];S.cfg.cramUnits={'4':[1,3]};localStorage.setItem('zh_p_theme',JSON.stringify(S));loadS();home();});
+  await page.evaluate(async ()=>{PR={cur:'theme',list:[{id:'theme',name:'Learner',gr:'4',av:'🐳'}]};(await savePR());S=blank();S.stars=149;S.pts={祖:8,止:5};S.cfg.set=['祖','止','离','子'];S.cfg.cramUnits={'4':[1,3]};localStorage.setItem('zh_p_theme',JSON.stringify(S));(await loadS());(await home());});
   const progress=await page.evaluate(()=>localStorage.getItem('zh_p_theme'));
   const theme=async mode=>{await page.getByRole('button',{name:'Appearance',exact:true}).click();await page.getByRole('radio',{name:new RegExp('^'+mode)}).check();await page.getByRole('button',{name:'Close appearance',exact:true}).click();};
   await theme('Light');assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
   await page.screenshot({path:'/tmp/mandarin-grove-home-dark.png',fullPage:false});
   await theme('Light');await page.screenshot({path:'/tmp/mandarin-grove-home-light.png',fullPage:false});
   // Theme changes preserve the active question, including drawings and pinyin tiles.
-  await page.evaluate(()=>dictStart('祖'));
+  await page.evaluate(async ()=>(await dictStart('祖')));
   await page.locator('[data-t="z"]').first().click();
   await page.locator('#dc').scrollIntoViewIfNeeded();const box=await page.locator('#dc').boundingBox();
   await page.mouse.move(box.x+30,box.y+30);await page.mouse.down();await page.mouse.move(box.x+100,box.y+100,{steps:5});await page.mouse.up();
@@ -38,12 +38,12 @@ const assert=require('node:assert/strict');
   await page.evaluate(async()=>{await new Promise(resolve=>SL('祖',resolve));detail(0,[ALL.find(c=>c.c==='祖')]);});
   assert.equal(await page.locator('#dhw').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(28, 37, 31)','Writing paper follows dark mode');
   await page.evaluate(()=>dclose());
-  await page.evaluate(()=>home());await page.setViewportSize({width:390,height:844});
+  await page.evaluate(async ()=>(await home()));await page.setViewportSize({width:390,height:844});
   for(const mode of ['Light','Dark']){
    await theme(mode);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.screenshot({path:'/tmp/mandarin-grove-phone-'+mode.toLowerCase()+'.png',fullPage:false});
   }
-  await page.evaluate(()=>grown());assert.equal(await page.locator('[data-appearance-setting]').inputValue(),'dark');
+  await page.evaluate(async ()=>(await grown()));assert.equal(await page.locator('[data-appearance-setting]').inputValue(),'dark');
   await page.locator('[data-appearance-setting]').selectOption('system');await page.emulateMedia({colorScheme:'light'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
   assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
   assert.deepEqual(errors,[]);console.log('PASS: System default, Light/Dark overrides, reload, OS changes, unchanged profile/active answer, settings and phone layouts.');

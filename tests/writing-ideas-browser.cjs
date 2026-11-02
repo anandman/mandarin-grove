@@ -6,11 +6,11 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage({viewport:{width:1180,height:820}}),errors=[],writes=[];
   page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))writes.push(r.url());});
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
-  await page.evaluate(()=>{
-   PR={cur:'writer-a',list:[{id:'writer-a',name:'Learner A',gr:'4',av:'🐳'},{id:'writer-b',name:'Learner B',gr:'2',av:'🐼'}]};savePR();
+  await page.evaluate(async ()=>{
+   PR={cur:'writer-a',list:[{id:'writer-a',name:'Learner A',gr:'4',av:'🐳'},{id:'writer-b',name:'Learner B',gr:'2',av:'🐼'}]};(await savePR());
    S=blank();S.stars=149;S.pts={狗:6};S.cfg.quiz=QU()[0][1];S.cfg.cramUnits={'4':[1,3]};
    recordSkill(S,'祖','listen','correct');recordSkill(S,'祖','pinyin','assisted');
-   localStorage.setItem('zh_p_writer-a',JSON.stringify(S));loadS();home();
+   localStorage.setItem('zh_p_writer-a',JSON.stringify(S));(await loadS());(await home());
   });
   const storage=()=>page.evaluate(()=>JSON.stringify({...localStorage}));
   const before=await storage();
@@ -56,9 +56,9 @@ const assert=require('node:assert/strict');
   await page.locator('#writing-another').click();assert.equal(await page.locator('#writing-finish').isDisabled(),false);
   await page.locator('#writing-finish').click();await page.locator('#writing-confirm').click();assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance+2);
   await page.getByRole('button',{name:/Your grove/}).click();await page.getByRole('tab',{name:'Stamps',exact:true}).click();assert.match(await page.getByRole('tabpanel',{name:'Stamps',exact:true}).innerText(),/2 sentences celebrated/);
-  await page.reload();await page.evaluate(()=>home());
+  await page.reload();await page.evaluate(async ()=>(await home()));
   assert.equal(await page.evaluate(()=>groveWallet(S).writingSentences),2);assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance+2);
-  await page.evaluate(()=>{const data=JSON.parse(decodeURIComponent(escape(atob(backup()))));if(JSON.parse(data.data['writer-a']).groveRewards.writingSentences!==2)throw Error('Sentence rewards missing from backup');});
+  await page.evaluate(async ()=>{const data=JSON.parse(decodeURIComponent(escape(atob((await backup())))));if(JSON.parse(data.data['writer-a']).groveRewards.writingSentences!==2)throw Error('Sentence rewards missing from backup');});
   await page.getByRole('button',{name:'Help',exact:true}).click();await page.getByRole('button',{name:/Writing ideas/}).click();await page.locator('#writing-input').fill('雨');await page.locator('#writing-generate').click();
   await page.screenshot({path:'/tmp/mandarin-grove-writing-ipad.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
@@ -66,7 +66,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('#writing-input').evaluate(e=>e.getBoundingClientRect().width>200),true);
   await page.screenshot({path:'/tmp/mandarin-grove-writing-phone.png',fullPage:true});
   // Switching children cannot reveal the previous child's typed input or rewards.
-  await page.evaluate(()=>{PR.cur='writer-b';savePR();loadS();home();});
+  await page.evaluate(async ()=>{PR.cur='writer-b';(await savePR());(await loadS());(await home());});
   await page.getByRole('button',{name:'Help',exact:true}).click();await page.getByRole('button',{name:/Writing ideas/}).click();
   assert.equal(await page.locator('#writing-input').inputValue(),'');assert.equal(await page.locator('.writing-seed').count(),0);
   assert.equal(await page.evaluate(()=>groveWallet(S).balance),0);

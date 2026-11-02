@@ -16,32 +16,32 @@ function preserves(actual,expected,label){
    page.on('pageerror',e=>errors.push(e.message));
    await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
    await page.waitForFunction(()=>typeof backup==='function'&&typeof renderRewards==='function');
-   await page.evaluate(()=>{
+   await page.evaluate(async ()=>{
     window.say=()=>{};window.PF=()=>{};
-    PR={cur:'placeholder',list:[{id:'placeholder',name:'Synthetic placeholder',gr:'2',av:'🐼'}]};savePR();loadS();home();
-    localStorage.setItem('zh_voice','synthetic-explicit-voice');localStorage.setItem('zh_appearance','dark');
+    PR={cur:'placeholder',list:[{id:'placeholder',name:'Synthetic placeholder',gr:'2',av:'🐼'}]};(await savePR());(await loadS());(await home());
+    (localStorage.setItem('zh_voice','synthetic-explicit-voice'), await reloadVoicePreference());localStorage.setItem('zh_appearance','dark');
    });
    const snapshot=JSON.parse(fs.readFileSync(path.join(directory,name),'utf8'));
    const code=Buffer.from(JSON.stringify(snapshot),'utf8').toString('base64');
    const restore=async value=>{
-    await page.evaluate(()=>grown());await page.locator('#grest').click();
+    await page.evaluate(async ()=>(await grown()));await page.locator('#grest').click();
     await page.locator('#grt').fill(value);await page.locator('#grr').click();
    };
    await restore(code);
    assert.deepEqual(await page.evaluate(()=>JSON.parse(JSON.stringify(PR))),snapshot.PR,'Full registry, initial current profile and unknown fields survive import');
    for(const profile of snapshot.PR.list){
-    await page.evaluate(id=>{PR.cur=id;savePR();loadS();home();},profile.id);
+    await page.evaluate(async id=>{PR.cur=id;(await savePR());(await loadS());(await home());},profile.id);
     const actual=await page.evaluate(()=>JSON.parse(JSON.stringify(S))),expected=JSON.parse(snapshot.data[profile.id]);
     preserves(actual,expected,name+'.'+profile.id);
     if(name==='grove-v1.json')assert.deepEqual(actual,expected,'Current snapshots need no lossy normalization or invented evidence');
     if(name==='original-v1.json')assert.equal(Object.keys(actual.learning?.chars||{}).length,0,'Legacy totals cannot create skill evidence');
    }
-   const exported=await page.evaluate(()=>backup());
+   const exported=await page.evaluate(async ()=>(await backup()));
    const before=JSON.parse(Buffer.from(exported,'base64').toString('utf8'));
    await page.reload();await page.evaluate(()=>{window.say=()=>{};window.PF=()=>{};});
    await restore(exported);
-   for(const profile of snapshot.PR.list)await page.evaluate(id=>{PR.cur=id;savePR();loadS();home();},profile.id);
-   const after=JSON.parse(Buffer.from(await page.evaluate(()=>backup()),'base64').toString('utf8'));
+   for(const profile of snapshot.PR.list)await page.evaluate(async id=>{PR.cur=id;(await savePR());(await loadS());(await home());},profile.id);
+   const after=JSON.parse(Buffer.from(await page.evaluate(async ()=>(await backup())),'base64').toString('utf8'));
    assert.deepEqual(after,before,'A second restore never credits rewards or rewrites history again');
    assert.deepEqual(after.PR.list,snapshot.PR.list,'Unknown profile fields and sibling metadata survive');
    assert.deepEqual(await page.evaluate(()=>[localStorage.getItem('zh_voice'),localStorage.getItem('zh_appearance')]),['synthetic-explicit-voice','dark'],'Legacy restores retain explicit destination device choices');

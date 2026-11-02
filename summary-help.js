@@ -21,29 +21,40 @@ function showSummaryHelp(){
  const saved=homework().summary;
  for(const [key,input]of Object.entries(fields))input.value=typeof saved?.[key]==='string'?saved[key].slice(0,input.maxLength):'';
  const updateClear=()=>{clear.disabled=!Object.values(fields).some(input=>input.value.length);};
+ let pendingDraft=null,saving=false;
+ async function drainDrafts(){
+  if(saving)return;saving=true;
+  try{while(pendingDraft&&active()){
+   const draft=pendingDraft;pendingDraft=null;S.homeworkHelp={...homework(),summary:draft};
+   try{
+    await save();if(!active())return;
+    if(!pendingDraft)status.textContent='Draft saved on this device, for this child. Included in your normal backup.';
+   }catch(error){
+    if(!active())return;
+    // Keep the most recent text (including edits made during the failed
+    // transaction), and retry only when the learner makes another edit.
+    pendingDraft=pendingDraft||draft;S.homeworkHelp={...homework(),summary:pendingDraft};
+    status.textContent='Could not save on this device. Your text is still here. Keep this page open and type again to retry.';return;
+   }
+  }}finally{saving=false;}
+ }
  for(const input of Object.values(fields))input.addEventListener('input',()=>{
-  if(!active())return;
-  const draft={};
+  if(!active())return;const draft={};
   for(const [key,field]of Object.entries(fields))draft[key]=field.value.slice(0,field.maxLength);
-  S.homeworkHelp={...homework(),summary:draft};updateClear();
-  try{
-   save();status.textContent='Draft saved on this device, for this child. Included in your normal backup.';
-  }catch{
-   // Keep the user's draft available to retry; failed destructive changes use save's durable rollback.
-   S.homeworkHelp={...homework(),summary:draft};
-   status.textContent='Could not save on this device. Your text is still here. Keep this page open and type again to retry.';
-  }
+  pendingDraft=draft;updateClear();status.textContent='Saving draft on this device…';drainDrafts();
  });
- clear.onclick=()=>{
+ clear.onclick=async()=>{
   if(!active()||!confirm('Clear this summary draft? The reading, main idea, key details and summary will be removed from this device.'))return;
   if(!active())return;
   const previous=S.homeworkHelp,remaining={...homework()};delete remaining.summary;
   S.homeworkHelp=remaining;
-  try{save();}catch{
-   S.homeworkHelp=previous;
+  Object.values(fields).forEach(input=>input.disabled=true);
+  try{await save();}catch{
+   if(!active())return;S.homeworkHelp=previous;
    status.textContent='Could not clear the saved draft on this device. Your text is still here. Keep this page open and try again.';
    return;
-  }
+  }finally{Object.values(fields).forEach(input=>input.disabled=false);}
+  if(!active())return;pendingDraft=null;
   for(const input of Object.values(fields))input.value='';
   updateClear();status.textContent='Draft cleared on this device.';fields.mainIdea.focus();
  };

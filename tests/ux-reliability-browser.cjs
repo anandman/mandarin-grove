@@ -6,8 +6,8 @@ const contrast=(a,b)=>{const lum=h=>{const c=h.match(/[a-f\d]{2}/gi).map(x=>pars
  try{
  const page=await browser.newPage({viewport:{width:1280,height:900},colorScheme:'dark'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.env.APP_URL||'http://127.0.0.1:4192');
- await page.evaluate(()=>{PR={cur:'ux',list:[{id:'ux',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S=blank();S.cfg.set=['十','一','二','三'];save();setCards();say=()=>{};home();window.guides=[];const create=HanziWriter.create;HanziWriter.create=function(...args){const w=create.apply(this,args);guides.push(w);return w;};});
- const begin=async mode=>page.evaluate(mode=>{home();const c=ALL.find(x=>x.c==='十');startStudyRound('review',{units:[],chars:['十'],modes:[mode],limit:5},[c],[[mode,c]])},mode);
+ await page.evaluate(async ()=>{PR={cur:'ux',list:[{id:'ux',name:'Synthetic',gr:'2',av:'🐼'}]};(await savePR());(await loadS());S=blank();S.cfg.set=['十','一','二','三'];(await save());setCards();say=()=>{};(await home());window.guides=[];const create=HanziWriter.create;HanziWriter.create=function(...args){const w=create.apply(this,args);guides.push(w);return w;};});
+ const begin=async mode=>page.evaluate(async mode=>{(await home());const c=ALL.find(x=>x.c==='十');(await startStudyRound('review',{units:[],chars:['十'],modes:[mode],limit:5},[c],[[mode,c]]))},mode);
  // All recall surfaces: global rewards must not name the target, even after hdr/save.
  for(const mode of ['memory','listen','dictation']){
   await begin(mode);await page.evaluate(()=>hdr());
@@ -27,16 +27,16 @@ const contrast=(a,b)=>{const lum=h=>{const c=h.match(/[a-f\d]{2}/gi).map(x=>pars
  await page.waitForFunction(()=>Math.abs(+document.querySelector('#hw svg').getAttribute('width')-document.getElementById('hw').clientWidth)<1);
  assert.equal(await page.evaluate(()=>writer._quiz._currentStrokeIndex),1,'Resize retains accepted stroke');
  assert.equal(await page.getByRole('button',{name:'Mandarin Grove, Home',exact:true}).isVisible(),true,'Phone retains the clickable logo away from Home');
- await page.evaluate(()=>setAppearance('light'));await page.waitForTimeout(50);colors=await palette();assert.ok(contrast(colors.paper,colors.ink)>=4.5);assert.ok(contrast(colors.paper,colors.outline)>=3);
+ await page.evaluate(async ()=>(await setAppearance('light')));await page.waitForTimeout(50);colors=await palette();assert.ok(contrast(colors.paper,colors.ink)>=4.5);assert.ok(contrast(colors.paper,colors.outline)>=3);
  assert.deepEqual(await page.evaluate(()=>({round:JSON.stringify(SESS.round),stars:S.stars,guide:guides.length})),before,'Appearance and resize do not recreate a question or alter progress');
  await drawStroke(1);await page.waitForFunction(()=>S.studyHistory.length===1);assert.equal(await page.evaluate(()=>S.studyHistory[0].score.correct),1,'Pointer alignment still completes the active quiz');
- await page.evaluate(()=>setAppearance('dark'));await page.setViewportSize({width:820,height:1060});await page.waitForTimeout(80);colors=await palette();assert.ok(contrast(colors.paper,colors.ink)>=4.5);
+ await page.evaluate(async ()=>(await setAppearance('dark')));await page.setViewportSize({width:820,height:1060});await page.waitForTimeout(80);colors=await palette();assert.ok(contrast(colors.paper,colors.ink)>=4.5);
  assert.equal(await page.evaluate(()=>S.studyHistory.length),1,'Completed resize cannot duplicate results');
  // Real freehand pixels survive theme switches and are rendered with a matching checked preview.
  await begin('dictation');const canvas=page.locator('#dc');await canvas.scrollIntoViewIfNeeded();const box=await canvas.boundingBox();await page.mouse.move(box.x+30,box.y+30);await page.mouse.down();await page.mouse.move(box.x+130,box.y+130,{steps:8});await page.mouse.up();
  const bitmap=await canvas.evaluate(c=>c.toDataURL());const ink=await canvas.evaluate(c=>Array.from(c.getContext('2d').getImageData(100,100,1,1).data));assert.ok(ink[3]>0,'Actual ink recorded');
  const filter=await canvas.evaluate(c=>getComputedStyle(c).filter);assert.notEqual(filter,'none','Dark freehand visibly maps canonical ink to light ink');
- await page.evaluate(()=>setAppearance('light'));assert.equal(await canvas.evaluate(c=>c.toDataURL()),bitmap);await page.evaluate(()=>setAppearance('dark'));await page.locator('#dchk').click();
+ await page.evaluate(async ()=>(await setAppearance('light')));assert.equal(await canvas.evaluate(c=>c.toDataURL()),bitmap);await page.evaluate(async ()=>(await setAppearance('dark')));await page.locator('#dchk').click();
  assert.equal(await page.getByAltText('Your handwriting').evaluate(c=>getComputedStyle(c).filter),filter,'Checked preview matches live ink');assert.equal(await page.getByAltText('Your handwriting').getAttribute('src'),bitmap);
  // Keyboard Home saves a resumable round; its visible cue does not add a second control.
  const logo=page.getByRole('button',{name:'Mandarin Grove, Home',exact:true});assert.ok(await page.locator('#home').isVisible());await logo.focus();await page.keyboard.press('Enter');assert.equal(await page.locator('body').getAttribute('data-screen'),'home');assert.equal(await page.locator('#home').isVisible(),false);assert.ok(await page.evaluate(()=>currentStudyRound('review')));

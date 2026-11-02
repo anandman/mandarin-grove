@@ -51,16 +51,16 @@ function showRecentMistakes(){
   if(current.resolved.length){const details=document.createElement('details'),summary=document.createElement('summary'),ul=document.createElement('ul');summary.textContent='Practiced again · '+current.resolved.length;ul.className='recent-mistakes-list';for(const item of current.resolved)ul.append(row(item,true));details.append(summary,ul);results.append(details);}
   byId('start').disabled=false;byId('start').dataset.empty=String(!current.pairs.length);byId('start').textContent=current.pairs.length?'Start review · up to '+current.pairs.length:'Choose a Review round';byId('start').hidden=false;byId('replace').hidden=true;
  };
- const launch=()=>{
+ const launch=async()=>{
   if(!valid())return;const latest=recentMistakeQuery(context,character.value,activity.value),by=new Map(ALL.map(c=>[c.c,c]));
   const queue=latest.pairs.map(([mode,c])=>[mode,by.get(c)]).filter(([,c])=>c);
   if(!queue.length){render();return;}
   const config={...context.config,chars:[...new Set(queue.map(([,c])=>c.c))],modes:[...new Set(queue.map(([mode])=>mode))]};
-  S.cfg.notLearned=context.excluded.slice();returnToSetup=false;close();closeStudySetup();startStudyRound('review',config,config.chars.map(c=>by.get(c)),queue);
+  S.cfg.notLearned=context.excluded.slice();returnToSetup=false;close();closeStudySetup();await startStudyRound('review',config,config.chars.map(c=>by.get(c)),queue);
  };
- byId('start').onclick=()=>{if(!valid())return;if(!current.pairs.length){close();return;}if(currentStudyRound('review')){byId('replace').hidden=false;byId('start').hidden=true;byId('resume').focus();}else launch();};
- byId('confirm').onclick=launch;
- byId('resume').onclick=()=>{if(!valid())return;returnToSetup=false;close();closeStudySetup();resumeStudy('review');};
+ byId('start').onclick=()=>{if(!valid())return;if(!current.pairs.length){close();return;}if(currentStudyRound('review')){byId('replace').hidden=false;byId('start').hidden=true;byId('resume').focus();}else runAction(launch);};
+ byId('confirm').onclick=()=>runAction(launch);
+ byId('resume').onclick=()=>runAction(async()=>{if(!valid())return;returnToSetup=false;close();closeStudySetup();await resumeStudy('review');});
  byId('keep').onclick=()=>{byId('replace').hidden=true;byId('start').hidden=false;byId('start').focus();};
  character.onchange=activity.onchange=()=>{expanded=false;render();};byId('limit').onchange=()=>{context.config.limit=Number(byId('limit').value);render();};
  dialog.querySelector('.study-close').onclick=close;

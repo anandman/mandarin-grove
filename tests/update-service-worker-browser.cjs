@@ -8,8 +8,12 @@ const engines=(process.env.UPDATE_BROWSERS||'chromium').split(',');
 let server;
 async function run(){
  sites.current=exportStatic(root,path.join(temp,'current'));
- for(const name of ['legacy','intermediate','slow','retry']){sites[name]=path.join(temp,name);fs.cpSync(sites.current,sites[name],{recursive:true});}
- for(const file of ['index.html','version.txt','sw.js','offline.js','version-check.js'])fs.writeFileSync(path.join(sites.legacy,file),execFileSync('git',['show','487b737339eadd8464fe8ac3f85c559e184894f5:'+file],{cwd:root}));
+ for(const name of ['intermediate','slow','retry']){sites[name]=path.join(temp,name);fs.cpSync(sites.current,sites[name],{recursive:true});}
+ // A cached release must contain its complete original app, not old HTML
+ // loading today's incompatible storage API. Never reset the working tree.
+ const legacySource=path.join(temp,'legacy-source');fs.mkdirSync(legacySource);
+ execFileSync('tar',['-xf','-','-C',legacySource],{input:execFileSync('git',['archive','487b737339eadd8464fe8ac3f85c559e184894f5'],{cwd:root,maxBuffer:128*1024*1024})});
+ sites.legacy=require(path.join(legacySource,'scripts/export-static.cjs')).exportStatic(fs.realpathSync(legacySource),path.join(temp,'legacy'));
  const intermediateVersion='20261031-update-test-805',nextVersion='20261031-update-test-81',retryVersion='20261031-update-test-82';
  for(const [name,release]of [['intermediate',intermediateVersion],['slow',nextVersion],['retry',retryVersion]])for(const file of ['index.html','version.txt','sw.js','version-check.js']){
   const p=path.join(sites[name],file);fs.writeFileSync(p,fs.readFileSync(p,'utf8').replaceAll(version,release));
@@ -38,7 +42,7 @@ async function run(){
     await page.goto(origin+scope);await page.waitForFunction(()=>OFFLINE_STATUS==='ready'&&navigator.serviceWorker.controller,{},{timeout:60000});
     assert.equal(await page.evaluate(()=>VER),'20261030-feedback-78','Reproduce the actual old release identity bug');
     await page.evaluate(async()=>{
-     PR={cur:'update',list:[{id:'update',name:'Learner',gr:'2',av:'🐼'}]};savePR();S=blank();S.stars=149;S.pts={学:7};S.cfg.set=['学'];S.cfg.rs={q:[['listen','学'],['trace','学']],i:1,p:['学'],t:''};S.future={opaque:'preserved'};localStorage.setItem('zh_p_update',JSON.stringify(S));loadS();home();
+     PR={cur:'update',list:[{id:'update',name:'Learner',gr:'2',av:'🐼'}]};await savePR();S=blank();S.stars=149;S.pts={学:7};S.cfg.set=['学'];S.cfg.rs={q:[['listen','学'],['trace','学']],i:1,p:['学'],t:''};S.future={opaque:'preserved'};localStorage.setItem('zh_p_update',JSON.stringify(S));await loadS();await home();
      const readings=await caches.open('mandarin-grove-public-readings-v1');await readings.put('/synthetic-reading',new Response('saved reading'));
      const sibling=await caches.open('math-tutor-v1');await sibling.put('/synthetic-other-app',new Response('other app'));
     });

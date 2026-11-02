@@ -8,9 +8,9 @@ const assert=require('node:assert/strict');
   page.setDefaultTimeout(4000);page.on('pageerror',e=>errors.push(e.message));
   try{
    await page.goto(process.env.APP_URL||'http://127.0.0.1:4194');
-   await page.evaluate(()=>{PR={cur:'access-test',list:[{id:'access-test',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S=blank();S.stars=42;S.cfg.groveView='trees';S.cfg.set=['狗','努','猫','牛','像'];S.opaque={keep:['original']};save();setCards();say=()=>{};home();kidProgress();});
-   const before=await page.evaluate(()=>backup());await test(page);
-   assert.equal(await page.evaluate(()=>backup()),before,'Navigation and accessibility actions preserve the entire backup');
+   await page.evaluate(async ()=>{PR={cur:'access-test',list:[{id:'access-test',name:'Synthetic',gr:'2',av:'🐼'}]};(await savePR());(await loadS());S=blank();S.stars=42;S.cfg.groveView='trees';S.cfg.set=['狗','努','猫','牛','像'];S.opaque={keep:['original']};(await save());setCards();say=()=>{};(await home());kidProgress();});
+   const before=await page.evaluate(async ()=>(await backup()));await test(page);
+   assert.equal(await page.evaluate(async ()=>(await backup())),before,'Navigation and accessibility actions preserve the entire backup');
    assert.deepEqual(errors,[]);console.log('PASS:',name);
   }catch(error){failures.push(name);console.error('FAIL:',name,error.message);}finally{await page.close();}
  };
@@ -60,7 +60,7 @@ const assert=require('node:assert/strict');
    await page.setViewportSize({width:320,height:844});await page.locator('#progress-characters > summary').click();
    await page.addStyleTag({content:'*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}'});
    for(const theme of ['light','dark']){
-    await page.evaluate(theme=>setAppearance(theme),theme);
+    await page.evaluate(async theme=>(await setAppearance(theme)),theme);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No horizontal scroll at320 '+theme);
     const metadata=await page.locator('#sets > .gh').first().boundingBox(),grid=await page.locator('#sets').boundingBox();
     assert.ok(metadata.width>=grid.width-2,'Group heading spans the catalog grid');
@@ -69,7 +69,7 @@ const assert=require('node:assert/strict');
   });
   await run('search results follow dark appearance and repeat the selected unit scope',async page=>{
    await page.locator('#progress-characters > summary').click();await page.locator('#srch').fill('防');
-   await page.evaluate(()=>setAppearance('dark'));
+   await page.evaluate(async ()=>(await setAppearance('dark')));
    const colors=await page.locator('#sres button').evaluate(el=>({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
    const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
    assert.ok(Math.max(...rgb(colors.bg))<100,'Dark mode search results must not use the old light widget background');
@@ -81,7 +81,7 @@ const assert=require('node:assert/strict');
    const unit=page.locator('#sets .set > button[aria-expanded]').nth(1);
    for(const view of ['list','trees']){await page.locator('#grove-view-'+view).click();
    for(const theme of ['light','dark'])for(const open of [false,true]){
-    await page.evaluate(theme=>setAppearance(theme),theme);
+    await page.evaluate(async theme=>(await setAppearance(theme)),theme);
     if((await unit.getAttribute('aria-expanded')==='true')!==open)await unit.press('Enter');
     await unit.press('ArrowDown');
     const visibleArea=await unit.evaluate(el=>{

@@ -14,7 +14,7 @@ const fs=require('node:fs');const crypto=require('node:crypto');
  });await page.reload();
  const before=await page.evaluate(()=>localStorage.getItem('zh_p_audio-test'));
  assert.equal(await page.evaluate(()=>voicePreference()),await page.evaluate(()=>expectsMainlandRecordings()?'mainland':'auto'));
- await page.evaluate(()=>localStorage.setItem('zh_voice','reference'));
+ await page.evaluate(async ()=>(localStorage.setItem('zh_voice','reference'), await reloadVoicePreference()));
  const assets=new Set();
  for(const [character,pinyin] of [['止','zhǐ'],['离','lí'],['狗','gǒu'],['满','mǎn'],['假','jià'],['假','jiǎ'],['女','nǚ'],['努','nǔ'],['绿','lǜ'],['路','lù'],['的','de']]){
   assert.equal(await page.evaluate(([c,p])=>say(c,p),[character,pinyin]),true,character+' '+pinyin+' playback');
@@ -26,14 +26,14 @@ const fs=require('node:fs');const crypto=require('node:crypto');
  }
  assert.equal(assets.size,11,'distinct intended readings receive distinct files');
  assert.equal(await page.evaluate(()=>localStorage.getItem('zh_p_audio-test')),before,'speech preserves progress');
- await page.evaluate(()=>grown());
+ await page.evaluate(async ()=>(await grown()));
  assert.equal(await page.locator('#voice-choice').inputValue(),'reference');
  assert.match(await page.locator('#voice-note').innerText(),/CNS11643/);
  await page.screenshot({path:'/tmp/grove-reference-voice-phone.png',fullPage:true});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await page.locator('#voice-choice').selectOption('auto');await page.reload();
  assert.equal(await page.evaluate(()=>voicePreference()),'auto','explicit browser preference survives');
- await page.evaluate(()=>{localStorage.setItem('zh_voice','reference');window.browserFallbacks=0;const original=speechSynthesis.speak.bind(speechSynthesis);speechSynthesis.speak=u=>{window.browserFallbacks++;original(u)}});
+ await page.evaluate(async ()=>{(localStorage.setItem('zh_voice','reference'), await reloadVoicePreference());window.browserFallbacks=0;const original=speechSynthesis.speak.bind(speechSynthesis);speechSynthesis.speak=u=>{window.browserFallbacks++;original(u)}});
  const blocked=await page.evaluate(()=>REFERENCE_AUDIO.readings.gou3);
  await page.route('**/'+blocked,route=>route.abort());
  assert.equal(await page.evaluate(()=>say('狗')),false);

@@ -6,9 +6,9 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage({viewport:{width:1180,height:900}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
-  await page.evaluate(()=>{PR={cur:'expanded',list:[{id:'expanded',name:'Learner',gr:'K',av:'🐳'},{id:'other',name:'Other',gr:'4',av:'🐼'}]};savePR();S=blank();S.cfg.set=['一','二'];S.pts={一:5,二:5};S.stars=149;localStorage.setItem('zh_p_expanded',JSON.stringify(S));loadS();home();});
+  await page.evaluate(async ()=>{PR={cur:'expanded',list:[{id:'expanded',name:'Learner',gr:'K',av:'🐳'},{id:'other',name:'Other',gr:'4',av:'🐼'}]};(await savePR());S=blank();S.cfg.set=['一','二'];S.pts={一:5,二:5};S.stars=149;localStorage.setItem('zh_p_expanded',JSON.stringify(S));(await loadS());(await home());});
   assert.equal(await page.getByRole('button',{name:'Practice',exact:true}).count(),1,'Home keeps the shared Practice entry');
-  await page.evaluate(()=>{for(const char of ['一','二'])for(let i=0;i<2;i++)recordSkill(S,char,'listen','correct');save();home()});
+  await page.evaluate(async ()=>{for(const char of ['一','二'])for(let i=0;i<2;i++)recordSkill(S,char,'listen','correct');(await save());(await home())});
   assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二'],'Readiness never silently adds units');
   await page.evaluate(()=>showGroveUnitChooser());
@@ -16,7 +16,7 @@ const assert=require('node:assert/strict');
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   await page.reload();assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   // Even actual spaced mastery must leave the school unit selection alone.
-  await page.evaluate(()=>{const start=Date.now()-4*REVIEW_DAY;for(const char of ['三','十'])for(const skill of ['listen','memory']){let time=start;for(let i=0;i<3;i++){recordSkill(S,char,skill,'correct',time);time=skillState(S,char,skill).due;}}save();home()});
+  await page.evaluate(async ()=>{const start=Date.now()-4*REVIEW_DAY;for(const char of ['三','十'])for(const skill of ['listen','memory']){let time=start;for(let i=0;i<3;i++){recordSkill(S,char,skill,'correct',time);time=skillState(S,char,skill).due;}}(await save());(await home())});
   assert.deepEqual(await page.evaluate(()=>[...SET()]),['一','二','三','十']);
   await page.evaluate(()=>showGroveUnitChooser());
   await page.getByRole('button',{name:/^Add .*Unit 7$/}).click();
@@ -54,17 +54,17 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>groveWallet(S).balance),balance-2);
   assert.equal(await page.evaluate(()=>groveWallet(S).projects['reading-nook'].stage),1);
   assert.equal(await page.evaluate(()=>groveEquipped(S).visitors),'zoo:1');
-  const snapshot=await page.evaluate(()=>{const code=JSON.parse(decodeURIComponent(escape(atob(backup()))));return JSON.parse(code.data.expanded).groveRewards;});
+  const snapshot=await page.evaluate(async ()=>{const code=JSON.parse(decodeURIComponent(escape(atob((await backup())))));return JSON.parse(code.data.expanded).groveRewards;});
   assert.equal(snapshot.equipped.ground,'flowers');assert.equal(snapshot.goal,'project:reading-nook');assert.equal(snapshot.projects['reading-nook'].stage,1);
-  const exported=await page.evaluate(()=>backup());
-  await page.evaluate(()=>{S.groveRewards.balance=0;S.groveRewards.equipped={};save();grown()});
+  const exported=await page.evaluate(async ()=>(await backup()));
+  await page.evaluate(async ()=>{S.groveRewards.balance=0;S.groveRewards.equipped={};(await save());(await grown())});
   await page.locator('#grest').click();await page.locator('#grt').fill(exported);await page.locator('#grr').click();
   assert.deepEqual(await page.evaluate(()=>groveWallet(S)),snapshot,'The actual restore controls retain the new wallet fields and do not re-credit earnings');
   await page.evaluate(()=>showGroveRewards());
   await page.getByRole('tab',{name:'Build',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('.pop')&&(document.querySelector('#grove-action-notice')?.hidden??true));
   for(const mode of ['light','dark']){
-   await page.evaluate(mode=>setAppearance(mode),mode);
+   await page.evaluate(async mode=>(await setAppearance(mode)),mode);
    await page.locator('.grove-reward-workbench').screenshot({path:'/tmp/grove-workbench-'+mode+'.png'});
    await page.locator('.grove-projects').screenshot({path:'/tmp/grove-projects-'+mode+'.png'});
    await page.screenshot({path:'/tmp/grove-expanded-'+mode+'.png',fullPage:true});
@@ -74,14 +74,14 @@ const assert=require('node:assert/strict');
    await page.screenshot({path:'/tmp/grove-expanded-phone-'+mode+'.png',fullPage:true});
    await page.setViewportSize({width:1180,height:900});
   }
-  await page.evaluate(()=>{PR.cur='other';savePR();loadS();showGroveRewards()});
+  await page.evaluate(async ()=>{PR.cur='other';(await savePR());(await loadS());showGroveRewards()});
   assert.equal(await page.evaluate(()=>groveWallet(S).balance),0);assert.equal(await page.evaluate(()=>Object.keys(groveEquipped(S)).length),0);
   assert.equal(await page.locator('.grove-goal').count(),0);
   for(const grade of ['1','2','4','5']){
-   const before=await page.evaluate(grade=>{
-    PR.list.find(p=>p.id===PR.cur).gr=grade;savePR();S=blank();S.cfg.set=[...QU(grade)[0][1]];S.cfg.quiz=QU(grade)[0][1];S.cfg.test='2099-10-20';
+   const before=await page.evaluate(async grade=>{
+    PR.list.find(p=>p.id===PR.cur).gr=grade;(await savePR());S=blank();S.cfg.set=[...QU(grade)[0][1]];S.cfg.quiz=QU(grade)[0][1];S.cfg.test='2099-10-20';
     for(const char of SET())for(let i=0;i<2;i++)for(const skill of ['listen','memory',...(Number(grade)>=2&&characterNeedsPinyin(char)?['pinyin']:[])])recordSkill(S,char,skill,'correct');
-    save();setCards();home();return {set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test};
+    (await save());setCards();(await home());return {set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test};
    },grade);
    assert.equal(await page.evaluate(()=>unitReadiness(S,SET(),GR()).ready),true);
    assert.deepEqual(await page.evaluate(()=>[...SET()]),before.set);
@@ -90,7 +90,7 @@ const assert=require('node:assert/strict');
    const after=await page.evaluate(()=>({set:[...SET()],quiz:S.cfg.quiz,test:S.cfg.test}));
    assert.equal(after.quiz,before.quiz);assert.equal(after.test,before.test);assert.ok(before.set.every(c=>after.set.includes(c)));
   }
-  await page.evaluate(()=>{groveWallet(S).balance=100;save();showGroveRewards()});await page.getByRole('tab',{name:'Build',exact:true}).click();
+  await page.evaluate(async ()=>{groveWallet(S).balance=100;(await save());showGroveRewards()});await page.getByRole('tab',{name:'Build',exact:true}).click();
   for(const [piece,cost]of [['Ladder',3],['Platform',3],['Window walls',4],['Treehouse roof',4]]){
    await page.locator('[data-project="treehouse"]').getByRole('button',{name:`Build ${piece} · 🍊 ${cost}`,exact:true}).click();
   }

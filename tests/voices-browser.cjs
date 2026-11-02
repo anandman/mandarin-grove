@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>window.testVoices,cancel(){},speak:u=>window.testSpoken.push(u),addEventListener:(event,f)=>window.voiceEvents[event]=f}});
   window.SpeechSynthesisUtterance=class {constructor(text){this.text=text}};
  });
- await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');await page.evaluate(()=>grown());
+ await page.goto(process.env.APP_URL||'http://127.0.0.1:4181');await page.evaluate(async ()=>(await grown()));
  const select=page.locator('#voice-choice'),extra=await page.evaluate(()=>expectsMainlandRecordings()?1:0);assert.equal(await select.locator('option').count(),6+extra);
  assert.ok(await select.locator('option').allTextContents().then(v=>v.includes('Google Cloud TTS recordings')));
  assert.equal(await select.inputValue(),extra?'mainland':'auto');assert.ok(await select.locator('option').allTextContents().then(v=>v.includes('Taiwan Mandarin recordings · optional')));await select.selectOption('auto');

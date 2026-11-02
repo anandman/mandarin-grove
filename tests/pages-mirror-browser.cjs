@@ -14,23 +14,23 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  try{
   const context=await browser.newContext(),page=await context.newPage(),errors=[],posts=[];page.on('pageerror',e=>errors.push(e.message));
   await context.route('**/api/feedback',r=>{posts.push(r.request().method());return r.abort();});
-  await page.goto(base);await page.evaluate(()=>{PR={cur:'pages-synthetic',list:[{id:'pages-synthetic',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S.stars=77;S.opaque={preserve:'yes'};save();say=()=>{};home();});
-  const before=await page.evaluate(()=>backup());
+  await page.goto(base);await page.evaluate(async ()=>{PR={cur:'pages-synthetic',list:[{id:'pages-synthetic',name:'Synthetic',gr:'2',av:'🐼'}]};(await savePR());(await loadS());S.stars=77;S.opaque={preserve:'yes'};(await save());say=()=>{};(await home());});
+  const before=await page.evaluate(async ()=>(await backup()));
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.feedback),'local','verify the deployed artifact exposes local feedback');
-  await page.evaluate(()=>showFeedback({category:'broken',note:'Synthetic saved report'}));
+  await page.evaluate(async ()=>(await showFeedback({category:'broken',note:'Synthetic saved report'})));
   assert.equal(await page.locator('#feedback-send').isVisible(),false,'static mirror must not offer an unavailable server send');
   assert.equal(await page.locator('#feedback-save').isVisible(),true);await page.locator('#feedback-save').click();
-  assert.equal((await page.evaluate(()=>feedbackReports()))[0].delivery.state,'local');assert.match(await page.locator('#feedback-status').innerText(),/Nothing has been sent/);
+  assert.equal((await page.evaluate(async ()=>(await feedbackReports())))[0].delivery.state,'local');assert.match(await page.locator('#feedback-status').innerText(),/Nothing has been sent/);
   await page.locator('#feedback-manual').click();const download=page.waitForEvent('download');await page.locator('#feedback-download').click();assert.equal((await download).suggestedFilename(),'mandarin-grove-feedback.txt');
-  const result=await page.evaluate(()=>feedbackSendReport(feedbackReports()[0]));assert.equal(result.ok,false);assert.equal(posts.length,0,'even direct legacy retries never post on the static mirror');
-  assert.equal(await page.evaluate(()=>backup()),before);await page.getByRole('button',{name:'Close feedback',exact:true}).click();
+  const result=await page.evaluate(async ()=>(await feedbackSendReport((await feedbackReports())[0])));assert.equal(result.ok,false);assert.equal(posts.length,0,'even direct legacy retries never post on the static mirror');
+  assert.equal(await page.evaluate(async ()=>(await backup())),before);await page.getByRole('button',{name:'Close feedback',exact:true}).click();
   console.log('PASS: Pages feedback saves/downloads locally and never posts or changes progress');
   await page.waitForFunction(()=>OFFLINE_STATUS==='ready',{},{timeout:45000});await page.evaluate(()=>navigator.serviceWorker.ready);
-  await page.evaluate(()=>{S.cfg.notLearned=[];S.cfg.studyChoices={2:{practice:{units:['2:1'],chars:['猫','狗'],modes:['trace'],limit:5}}};save();});
+  await page.evaluate(async ()=>{S.cfg.notLearned=[];S.cfg.studyChoices={2:{practice:{units:['2:1'],chars:['猫','狗'],modes:['trace'],limit:5}}};(await save());});
   const saved=await page.evaluate(()=>{const copy=JSON.parse(JSON.stringify(S));delete copy.readingStudy;return copy;});await context.setOffline(true);await page.reload();await page.evaluate(()=>{say=()=>{};showHomeworkLookup();});
   await page.locator('#lookup-bank-status[data-ready="true"]').waitFor();await page.locator('#lookup-input').fill('鑫');await page.locator('#lookup-search').click();await page.locator('[data-lookup-text="鑫"]').waitFor();
   await page.evaluate(()=>showStudySetup('practice'));await page.locator('#study-reading').click();await page.locator('[data-reading="grove-pets"]').click();await page.locator('#online-passages').waitFor();assert.match(await page.locator('#online-passages').innerText(),/小猫/);
-  assert.deepEqual(await page.evaluate(()=>{const copy=JSON.parse(JSON.stringify(S));delete copy.readingStudy;return copy;}),saved);assert.ok(await page.evaluate(()=>GroveBackup.decodeBackup(backup(),GROVE_CODEC).rawProfiles[PR.cur].includes('readingStudy')));assert.deepEqual(errors,[]);await context.close();
+  assert.deepEqual(await page.evaluate(()=>{const copy=JSON.parse(JSON.stringify(S));delete copy.readingStudy;return copy;}),saved);assert.ok(await page.evaluate(async ()=>GroveBackup.decodeBackup((await backup()),GROVE_CODEC).rawProfiles[PR.cur].includes('readingStudy')));assert.deepEqual(errors,[]);await context.close();
   console.log('PASS: project-path cold reload, complete dictionary and selected reading work offline with backup unchanged');
  }finally{await browser.close();if(server)await new Promise(r=>server.close(r));if(temp)fs.rmSync(temp,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exit(1);});

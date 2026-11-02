@@ -8,10 +8,10 @@ const assert=require('node:assert/strict');
   page.setDefaultTimeout(4000);page.on('pageerror',e=>errors.push(e.message));
   try{
    await page.goto(process.env.APP_URL||'http://127.0.0.1:4194');
-   await page.evaluate(()=>{PR={cur:'scope-test',list:[{id:'scope-test',name:'Synthetic',gr:'2',av:'🐼'},{id:'sibling',name:'Sibling',gr:'4',av:'🐳'}]};savePR();loadS();S=blank();S.stars=42;S.pts['努']=3;S.opaque={keep:['original']};S.cfg.set=['狗','努','猫','牛','像'];save();setCards();say=()=>{};const c=ALL.find(c=>c.c==='十');startStudyRound('practice',{units:[],chars:['十'],modes:['trace'],limit:3},[c],[['trace',c]]);home();kidProgress();});
-   const before=await page.evaluate(()=>backup());
+   await page.evaluate(async ()=>{PR={cur:'scope-test',list:[{id:'scope-test',name:'Synthetic',gr:'2',av:'🐼'},{id:'sibling',name:'Sibling',gr:'4',av:'🐳'}]};(await savePR());(await loadS());S=blank();S.stars=42;S.pts['努']=3;S.opaque={keep:['original']};S.cfg.set=['狗','努','猫','牛','像'];(await save());setCards();say=()=>{};const c=ALL.find(c=>c.c==='十');(await startStudyRound('practice',{units:[],chars:['十'],modes:['trace'],limit:3},[c],[['trace',c]]));(await home());kidProgress();});
+   const before=await page.evaluate(async ()=>(await backup()));
    await test(page);
-   assert.equal(await page.evaluate(()=>backup()),before,'Read-only progress, filters and browsing preserve the entire backup');
+   assert.equal(await page.evaluate(async ()=>(await backup())),before,'Read-only progress, filters and browsing preserve the entire backup');
    assert.deepEqual(errors,[]);console.log('PASS:',name);
   }catch(error){failures.push(name);console.error('FAIL:',name,error.message);}finally{await page.close();}
  };
@@ -86,7 +86,7 @@ const assert=require('node:assert/strict');
    await page.locator('#sres button').filter({hasText:'鱼'}).click();await page.locator('#dov').waitFor();
    assert.equal(await page.locator('#dov').getAttribute('aria-label'),'鱼 character details');
    await page.keyboard.press('Escape');
-   await page.evaluate(()=>parentDashboard('sibling','4'));
+   await page.evaluate(async ()=>(await parentDashboard('sibling','4')));
    assert.equal(await page.locator('#progress-characters').count(),0);
    assert.equal(await page.evaluate(()=>PR.cur),'scope-test');
   });

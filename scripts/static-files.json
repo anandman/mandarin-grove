@@ -1,5 +1,6 @@
 [
   "activities.js",
+  "adapters/persistence.js",
   "adapters/web-storage.js",
   "app.js",
   "audio-sources/LICENSE-MSU.txt",
@@ -41,6 +42,7 @@
   "offline.js",
   "online-content.js",
   "online-library.js",
+  "platform/runtime.js",
   "practice.js",
   "profiles.js",
   "pronunciations.js",

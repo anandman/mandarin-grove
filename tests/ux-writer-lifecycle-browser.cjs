@@ -39,12 +39,12 @@ const pendingAnimation=await page.evaluate(async()=>{
 assert.equal(pendingAnimation.native,false,'Native Watch strokes cancels a pending quiz');
 assert.equal(pendingAnimation.shared,false,'Shared cleanup preserves Watch strokes ordering while data is pending');
 const palettes=await page.evaluate(async()=>{
- const data=await fetch('strokes/林.json').then(r=>r.json());const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);setAppearance('light');
+ const data=await fetch('strokes/林.json').then(r=>r.json());const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);(await setAppearance('light'));
  const guide=WritingSurface.create(box,'林',{charDataLoader:(_,done)=>done(data)});await guide.getCharacterData();
  const paths=()=>[...box.querySelectorAll('path[stroke]')].slice(data.strokes.length,data.strokes.length*2).map(p=>p.getAttribute('stroke'));
- const results=[];for(const mode of ['dark','light']){setAppearance(mode);await new Promise(r=>setTimeout(r,30));results.push(paths());}box.remove();return results;
+ const results=[];for(const mode of ['dark','light']){(await setAppearance(mode));await new Promise(r=>setTimeout(r,30));results.push(paths());}box.remove();return results;
 });
 for(const paths of palettes){assert.equal(paths.length,8);assert.equal(new Set(paths).size,1,'Every main radical stroke follows the same current ink');}
-await page.evaluate(async()=>{const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);const w=WritingSurface.create(box,'十',{charDataLoader:(_,done,fail)=>fail(Error('Synthetic guide failure')),onLoadCharDataError:()=>{}});await w.getCharacterData();setAppearance('dark');await new Promise(r=>setTimeout(r,30));box.remove();});assert.deepEqual(errors,[],'Failed guides cannot break later theme updates');
+await page.evaluate(async()=>{const box=document.createElement('div');box.style.cssText='width:300px;height:300px';document.body.append(box);const w=WritingSurface.create(box,'十',{charDataLoader:(_,done,fail)=>fail(Error('Synthetic guide failure')),onLoadCharDataError:()=>{}});await w.getCharacterData();(await setAppearance('dark'));await new Promise(r=>setTimeout(r,30));box.remove();});assert.deepEqual(errors,[],'Failed guides cannot break later theme updates');
 console.log('PASS: detached/replaced/same-turn delayed quizzes are cleaned up, connected quiz works, radical paths follow themes and failed guides stay isolated.');
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

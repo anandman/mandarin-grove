@@ -8,21 +8,21 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  const allItems=[...GROVE_READING_PRACTICE.items,...library.list()];
  const items=allItems.filter(item=>GroveReadings.readingMatch(item,scope).eligible&&(kind!=='review'||item.questions?.length)).sort((a,b)=>GroveReadings.readingMatch(b,scope).rank-GroveReadings.readingMatch(a,scope).rank);
  const rawScopeLabel=studyScopeText(selected),scopeLabel=rawScopeLabel.startsWith(GN[grade]+' ·')?rawScopeLabel:GN[grade]+' · '+rawScopeLabel;
- const returnToChoices=()=>{home();showStudySetup(kind);};
+ const returnToChoices=async()=>{await home();showStudySetup(kind);};
  A.innerHTML=`<section class="online-library" id="online-library" aria-labelledby="online-title"><div class="writing-heading"><span class="writing-tree" aria-hidden="true">${writingBook()}</span><div><h1 id="online-title">Read Chinese</h1><p>Choose a reading for your practice choices.</p></div></div><div class="online-scope-controls"><p class="reading-note online-grade">${esc(scopeLabel)}</p><button class="btn gray" id="reading-choices">Change choices</button></div><p id="online-offline" class="reading-note" role="status" hidden></p><div id="online-panel"></div><details class="compact-help"><summary>About these samples</summary><p>Readings practise your selected characters. Earlier-grade characters may support the story. Through Grade 3, other characters must be in your selection; from Grade 4, new characters may appear. This checks character fit, not whether every word or idea has been taught.</p><p>Text pinyin and translations are reading aids; teaching review is pending. Pinyin uses lexical tones, not an acoustic transcription. Comprehension questions record their own answers and help use; they do not award stars or change character mastery. No new recordings are included.</p><p>Opening an unsaved sample requests its public source text. The provider receives normal connection details, including your IP address. Names, drafts and progress are not sent. Optional saved readings are shared public text on this browser, separate from progress backups. Your browser may clear them. The starter readings and dictionary are installed with the offline app; other readings can be saved separately.</p><a href="content/online-reading-notices.txt" target="_blank" rel="noopener noreferrer">Source credits &amp; licenses</a></details></section>`;
- $('reading-choices').onclick=()=>{if(active()){stop();returnToChoices();}};
+ $('reading-choices').onclick=()=>runAction(async()=>{if(active()){await stop();await returnToChoices();}});
  const root=$('online-library'),panel=$('online-panel'),offline=$('online-offline');let current=null,revision=0,flushReading=null;
  root.addEventListener('keydown',feedbackButtonKeydown);
  const active=()=>root.isConnected&&$('online-library')===root&&PR.cur===owner&&GR()===grade;
- const stop=()=>{if(flushReading){flushReading();flushReading=null;}revision++;current?.abort();current=null;};
+ const stop=async()=>{const flush=flushReading;flushReading=null;if(flush)await flush();revision++;current?.abort();current=null;};
  const connection=()=>{if(!active())return;offline.hidden=navigator.onLine!==false;offline.textContent=offline.hidden?'':'You’re offline. Starter readings and saved readings are available.';};
  addEventListener('online',connection);addEventListener('offline',connection);connection();
- const observer=new MutationObserver(()=>{if(!active()){stop();observer.disconnect();removeEventListener('online',connection);removeEventListener('offline',connection);}});observer.observe(A,{childList:true});
+ const observer=new MutationObserver(()=>{if(!active()){stop().catch(()=>{});observer.disconnect();removeEventListener('online',connection);removeEventListener('offline',connection);}});observer.observe(A,{childList:true});
  function node(tag,value,parent,cls){const el=document.createElement(tag);if(value)el.textContent=value;if(cls)el.className=cls;if(parent)parent.append(el);return el;}
- function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=()=>{if(active()&&b.isConnected)action();};return b;}
+ function button(label,parent,action,cls='btn gray'){const b=node('button',label,parent,cls);b.type='button';b.onclick=()=>runAction(()=>active()&&b.isConnected?action():undefined);return b;}
  function link(label,url,parent){const a=node('a',label,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
- function list(focusId){
-  stop();setPageBack(()=>{stop();returnToChoices();},'Back to '+(kind==='review'?'Review':'Practice'));feedbackQuestion=null;panel.replaceChildren();
+ async function list(focusId){
+  await stop();if(!active())return;setPageBack(async()=>{await stop();await returnToChoices();},'Back to '+(kind==='review'?'Review':'Practice'));feedbackQuestion=null;panel.replaceChildren();
   for(const [kind,label]of [['story','Short readings'],['sentence','Sentences']]){
    const group=items.filter(i=>i.kind===kind);if(!group.length)continue;
    const section=node('section',null,panel);node('h2',label,section);const grid=node('div',null,section,'online-grid');
@@ -39,7 +39,7 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
  }
  async function read(item,usePrevious=false){
   if(!items.some(i=>i.id===item.id))return;
-  stop();const token=revision;current=new AbortController();const signal=current.signal;
+  await stop();const token=revision;current=new AbortController();const signal=current.signal;
   panel.replaceChildren();const detail=node('section',null,panel);detail.id='online-detail';
   const heading=node('h2',item.kind==='story'?item.titleZh:'Sentence',detail,item.kind==='sentence'?'sr-only':null);heading.tabIndex=-1;if(item.kind==='story')heading.lang='zh-Hans';heading.focus();
   setPageBack(()=>list(item.id),'Back to readings');
@@ -57,22 +57,22 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
    const raw=S.readingStudy?.sessions?.[key],restored=item.local?GroveReadings.restoreReadingSession(raw,{id:item.id,version,kind,count:sentences.length},questions):null;
    const view=previous||{...(restored||GroveReadings.newReadingSession(item.id,version,kind,sentences.length,Date.now())),owner,grade,result};ONLINE_READING_LAST=view;
    const saveNote=node('p',null,detail,'reading-note');saveNote.id='reading-save-status';saveNote.setAttribute('role','status');saveNote.hidden=true;
-   const retrySave=button('Try saving again',detail,()=>{if(persist())renderQuestions();});retrySave.id='reading-save-retry';retrySave.hidden=true;
+   const retrySave=button('Try saving again',detail,async()=>{if(await persist())renderQuestions();});retrySave.id='reading-save-retry';retrySave.hidden=true;
    let preservePrevious=!!raw&&!restored;
    function snapshot(){return Object.fromEntries(['id','version','kind','attempt','created','phase','cursor','responses','pinyin','english','helpUsed','position'].map(k=>[k,view[k]]));}
-   function persist(throwFailure=false){
+   async function persist(throwFailure=false){
     if(!item.local||!active()||token!==revision)return true;
     const old=S.readingStudy;S.readingStudy=GroveReadings.storeReadingSession(old,key,snapshot(),preservePrevious);
-    try{save();preservePrevious=false;view.unsaved=false;saveNote.hidden=true;retrySave.hidden=true;return true;}
-    catch(error){if(old===undefined)delete S.readingStudy;else S.readingStudy=old;view.unsaved=true;saveNote.hidden=false;saveNote.textContent='Could not save reading progress. Try saving again before continuing.';retrySave.hidden=false;if(throwFailure)throw error;return false;}
+    try{await save();if(!active()||token!==revision)return false;preservePrevious=false;view.unsaved=false;saveNote.hidden=true;retrySave.hidden=true;return true;}
+    catch(error){if(!active()||token!==revision){if(throwFailure)throw error;return false;}if(old===undefined)delete S.readingStudy;else S.readingStudy=old;view.unsaved=true;saveNote.hidden=false;saveNote.textContent='Could not save reading progress. Try saving again before continuing.';retrySave.hidden=false;if(throwFailure)throw error;return false;}
     finally{detail.querySelectorAll('[data-reading-action]').forEach(b=>b.disabled=!!view.unsaved||b.dataset.ready!=='yes');}
    }
    const passages=node('div',null,detail,'online-passages');passages.id='online-passages';
    const instruction=node('p',questions.length?'Read the story, then answer '+questions.length+' questions. Tap words or reveal help when you need it.':'Tap a word for its meaning. Show help for one sentence at a time.',detail,'reading-note');detail.insertBefore(instruction,passages);
    const lines=[];let dictionary=null;
-   const helped=()=>{view.helpUsed=true;persist();const help=detail.querySelector('#reading-help-status');if(help)help.textContent='Help is on for this reading.';};
-   function lookup(word,prepared,trigger){
-    helped();const dialog=node('dialog',null,detail,'reading-lookup');dialog.setAttribute('aria-labelledby','reading-lookup-title');
+   const helped=async()=>{view.helpUsed=true;await persist();const help=detail.querySelector('#reading-help-status');if(help)help.textContent='Help is on for this reading.';};
+   async function lookup(word,prepared,trigger){
+    await helped();if(!active()||token!==revision)return;const dialog=node('dialog',null,detail,'reading-lookup');dialog.setAttribute('aria-labelledby','reading-lookup-title');
     const title=node('h2',word,dialog);title.id='reading-lookup-title';title.lang='zh-Hans';
     const close=button('Close',dialog,()=>dialog.close());close.id='reading-lookup-close';
     dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus({preventScroll:true});});
@@ -82,7 +82,7 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
     async function load(){
      try{const index=dictionary||await loadHelpDictionary();if(!active()||!dialog.isConnected||token!==revision)return;dictionary=index;status.remove();
       node('h3','Dictionary meanings',body);const rows=[...new Set(index.get(word)||[])];
-      if(!rows.length){node('p','This dictionary has no entry for '+word+'.',body);button('Suggest a missing entry',body,()=>{dialog.close();showFeedback({category:'meaning',note:'Reading lookup missing entry: '+word,context});});}
+      if(!rows.length){node('p','This dictionary has no entry for '+word+'.',body);button('Suggest a missing entry',body,()=>{dialog.close();return showFeedback({category:'meaning',note:'Reading lookup missing entry: '+word,context});});}
       for(const entry of rows.slice(0,12)){const row=node('section',null,body,'reading-dictionary-entry'),py=node('p',pinyinWithMarks(entry[2]),row);py.lang='zh-Latn-pinyin';node('p',entry[3],row);}
       if(rows.length>1)node('p','A word may have several readings or meanings. Choose the one that fits the sentence.',body,'reading-note');
       if([...word].length>1){node('h3','Individual characters',body);const chars=node('div',null,body,'online-words');for(const ch of [...new Set(word)]){const b=button(ch,chars,()=>{dialog.close();lookup(ch,null,trigger);},'btn gray');b.lang='zh-Hans';}}
@@ -98,7 +98,7 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
     const en=node('p',sentence.english,textGroup,'online-english');en.id='reading-english-'+i;en.lang='en';en.hidden=!view.english[i];
     const controls=node('div',null,paragraph,'online-aid-controls');
     for(const [type,row,label]of [['pinyin',py,'pinyin'],['english',en,'English']]){
-     const b=button('',controls,()=>{view[type][i]=!view[type][i];if(view[type][i])helped();else persist();refresh();});b.id='online-show-'+type+(i?'-'+i:'');b.setAttribute('aria-controls',row.id);
+     const b=button('',controls,async()=>{view[type][i]=!view[type][i];if(view[type][i])await helped();else await persist();refresh();});b.id='online-show-'+type+(i?'-'+i:'');b.setAttribute('aria-controls',row.id);
      const refresh=()=>{b.textContent=(view[type][i]?'Hide ':'Show ')+label;b.setAttribute('aria-label',b.textContent+' for sentence '+(i+1));b.setAttribute('aria-expanded',String(!!view[type][i]));row.hidden=!view[type][i];};refresh();
     }
     function render(){line.replaceChildren();for(const part of GroveReadings.readingTokens(sentence.text,dictionary,sentence.words)){
@@ -112,11 +112,11 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
     questionArea.replaceChildren();if(!questions.length)return;
     const title=node('h2',view.phase==='done'?'Reading finished':'Read and answer',questionArea);title.tabIndex=-1;
     if(view.phase==='reading'){
-     const start=button('Answer '+questions.length+' questions',questionArea,()=>{view.phase='questions';if(persist())renderQuestions(true);});start.id='reading-start-questions';start.dataset.readingAction='start';start.dataset.ready='yes';start.disabled=!!view.unsaved;
+     const start=button('Answer '+questions.length+' questions',questionArea,async()=>{view.phase='questions';if(await persist())renderQuestions(true);});start.id='reading-start-questions';start.dataset.readingAction='start';start.dataset.ready='yes';start.disabled=!!view.unsaved;
     }else if(view.phase==='done'){
      const results=Object.values(view.responses),right=results.filter(r=>r.correct).length,help=results.filter(r=>r.assisted).length;
      node('p',right+' of '+questions.length+' correct · '+help+' answered with help',questionArea);node('p','You finished this reading. Try another story or read it again.',questionArea,'reading-note');
-     const again=button('Read again',questionArea,()=>{Object.assign(view,GroveReadings.newReadingSession(item.id,version,kind,sentences.length,Date.now()));if(persist())read(item);});again.id='reading-again';again.dataset.readingAction='again';again.dataset.ready='yes';again.disabled=!!view.unsaved;
+     const again=button('Read again',questionArea,async()=>{Object.assign(view,GroveReadings.newReadingSession(item.id,version,kind,sentences.length,Date.now()));if(await persist())await read(item);});again.id='reading-again';again.dataset.readingAction='again';again.dataset.ready='yes';again.disabled=!!view.unsaved;
      button('Choose another reading',questionArea,()=>list(item.id)).id='reading-finish';
     }else{
      const q=questions[view.cursor],response=view.responses[q.id];if(!q)return;
@@ -126,11 +126,11 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
      let choice=response?.choice||'';
      for(const option of q.options){const label=node('label',null,fieldset,'reading-answer'),input=node('input',null,label);input.type='radio';input.name='reading-answer';input.value=option.id;input.checked=choice===option.id;node('span',option.text,label);input.onchange=()=>{choice=option.id;check.dataset.ready='yes';check.disabled=!!view.unsaved;};}
      const check=node('button','Check answer',form,'btn');check.id='reading-check';check.type='submit';check.dataset.readingAction='check';check.dataset.ready=choice&&!response?'yes':'no';check.disabled=!choice||!!response||!!view.unsaved;
-     form.onsubmit=event=>{event.preventDefault();if(!active()||token!==revision||view.unsaved||view.responses[q.id]||!choice)return;Object.assign(view,GroveReadings.recordReadingAnswer(snapshot(),q,choice));if(persist())renderQuestions(true);};
+     form.onsubmit=event=>{event.preventDefault();runAction(async()=>{if(!active()||token!==revision||view.unsaved||view.responses[q.id]||!choice)return;Object.assign(view,GroveReadings.recordReadingAnswer(snapshot(),q,choice));if(await persist())renderQuestions(true);});};
      if(response){
       const result=node('p',(response.correct?'Correct. ':'Have another look. ')+q.explanation,questionArea);result.id='reading-answer-feedback';result.setAttribute('role','status');
       node('p',response.assisted?'Answered with help.':'Answered without pinyin, English or dictionary help.',questionArea,'reading-note');
-      const next=button(view.cursor+1===questions.length?'Finish reading':'Next question',questionArea,()=>{view.cursor++;if(view.cursor===questions.length)view.phase='done';if(persist())renderQuestions(true);});next.id='reading-next';next.dataset.readingAction='next';next.dataset.ready='yes';next.disabled=!!view.unsaved;
+      const next=button(view.cursor+1===questions.length?'Finish reading':'Next question',questionArea,async()=>{view.cursor++;if(view.cursor===questions.length)view.phase='done';if(await persist())renderQuestions(true);});next.id='reading-next';next.dataset.readingAction='next';next.dataset.ready='yes';next.disabled=!!view.unsaved;
      }
      button('Look back at the story',questionArea,()=>passages.scrollIntoView({block:'start'}));
     }
@@ -138,13 +138,13 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
    }
    renderQuestions();
    if(item.local){
-    persist();
-    flushReading=()=>{if(!active()||token!==revision)return;const visible=lines.findIndex(el=>el.getBoundingClientRect().bottom>100);if(visible>=0)view.position=visible;persist(true);};
+    await persist();
+    flushReading=async()=>{if(!active()||token!==revision)return;const visible=lines.findIndex(el=>el.getBoundingClientRect().bottom>100);if(visible>=0)view.position=visible;await persist(true);};
     if(restored||previous)requestAnimationFrame(()=>{if(!active()||token!==revision)return;if(view.phase==='questions'||view.phase==='done')questionArea.scrollIntoView({block:'start'});else lines[view.position]?.scrollIntoView({block:'center'});});
    }
    const words=node('details',null,detail,'compact-help');words.id='online-word-tools';node('summary','Look up a word',words);const wordButtons=node('div',null,words,'online-words');
    for(const word of item.words){
-    const b=button('Look up '+word,wordButtons,()=>{helped();stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id,kind,selection:selected}),backLabel:'Back to reading'});},'chip');
+    const b=button('Look up '+word,wordButtons,async()=>{await helped();await stop();HELP_LOOKUP_SESSION={owner:PR.cur,query:word,selected:new Set(),limit:24};showHomeworkLookup({back:()=>showOnlineLibrary({resume:item.id,kind,selection:selected}),backLabel:'Back to reading'});},'chip');
     // The interface remains English; only the word itself is Chinese.
     b.replaceChildren(document.createTextNode('Look up '));const glyph=node('span',word,b);glyph.lang='zh-Hans';
    }
@@ -180,6 +180,6 @@ function showOnlineLibrary({resume=null,kind='practice',selection=null}={}){
    button('Try again',detail,()=>read(item)).id='online-retry';button('Report this loading problem',detail,report,'progress-link').id='online-report';
   }
  }
- const onHide=()=>{try{flushReading?.();}catch{}};addEventListener('pagehide',onHide);const cleanup=new MutationObserver(()=>{if(!active()){removeEventListener('pagehide',onHide);cleanup.disconnect();}});cleanup.observe(A,{childList:true});
- list();if(resume){const item=items.find(i=>i.id===resume);if(item)read(item,true);}
+ const onHide=()=>{if(flushReading)flushReading().catch(()=>{});};addEventListener('pagehide',onHide);const cleanup=new MutationObserver(()=>{if(!active()){removeEventListener('pagehide',onHide);cleanup.disconnect();}});cleanup.observe(A,{childList:true});
+ runAction(async()=>{await list();if(resume){const item=items.find(i=>i.id===resume);if(item)await read(item,true);}});
 }

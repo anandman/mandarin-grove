@@ -5,9 +5,9 @@ const code=x=>Buffer.from(JSON.stringify(x),'utf8').toString('base64');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,headless:true});try{
  const context=await browser.newContext(),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(f=>{if(!localStorage.getItem('zh_profiles')){localStorage.setItem('zh_profiles',JSON.stringify(f.PR));for(const [id,raw]of Object.entries(f.data))localStorage.setItem('zh_p_'+id,raw);localStorage.setItem('zh_voice','synthetic-explicit-unavailable');localStorage.setItem('zh_appearance','dark');}},original);
- await page.goto(process.env.APP_URL||'http://127.0.0.1:4174');await page.evaluate(()=>{window.say=()=>{};window.PF=()=>{};home();});
+ await page.goto(process.env.APP_URL||'http://127.0.0.1:4174');await page.evaluate(async ()=>{window.say=()=>{};window.PF=()=>{};(await home());});
  const snap=()=>page.evaluate(()=>JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(k=>[k,localStorage.getItem(k)]))));
- const before=await snap(),memory=await page.evaluate(()=>JSON.stringify({PR,S}));await page.evaluate(()=>grown());await page.locator('#grest').click();
+ const before=await snap(),memory=await page.evaluate(()=>JSON.stringify({PR,S}));await page.evaluate(async ()=>(await grown()));await page.locator('#grest').click();
  const invalid=structuredClone(current);invalid.data['synthetic-b']='{broken';await page.locator('#grt').fill(code(invalid));
  assert.equal(await page.locator('#grr').count(),0,'Malformed inactive child must be rejected before Replace is offered');assert.equal(await snap(),before);
  const partial=structuredClone(current),partialChild=JSON.parse(partial.data['synthetic-b']);partialChild.learning.chars={'狗':{}};partial.data['synthetic-b']=JSON.stringify(partialChild);await page.locator('#grt').fill(code(partial));assert.equal(await page.locator('#grr').count(),0,'Uninitializable inactive evidence must reject before replacement');assert.equal(await snap(),before);

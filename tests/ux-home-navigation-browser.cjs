@@ -7,12 +7,12 @@ const assert=require('node:assert/strict');
   page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(5000);
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4194');
   for(const grade of ['K','1','2']){
-   await page.evaluate(grade=>{
-    PR={cur:'home-test',list:[{id:'home-test',name:'Synthetic',gr:grade,av:'🐼'},{id:'sibling',name:'Sibling',gr:'4',av:'🐳'}]};savePR();loadS();
-    S=blank();S.stars=42;S.opaque={keep:['original']};S.cfg.set=['狗','努','猫','牛','像'];save();setCards();say=()=>{};
-    const c=ALL.find(c=>c.c==='十');startStudyRound('practice',{units:[],chars:['十'],modes:['trace'],limit:3},[c],[['trace',c]]);home();
+   await page.evaluate(async grade=>{
+    PR={cur:'home-test',list:[{id:'home-test',name:'Synthetic',gr:grade,av:'🐼'},{id:'sibling',name:'Sibling',gr:'4',av:'🐳'}]};(await savePR());(await loadS());
+    S=blank();S.stars=42;S.opaque={keep:['original']};S.cfg.set=['狗','努','猫','牛','像'];(await save());setCards();say=()=>{};
+    const c=ALL.find(c=>c.c==='十');(await startStudyRound('practice',{units:[],chars:['十'],modes:['trace'],limit:3},[c],[['trace',c]]));(await home());
    },grade);
-   const baseline=await page.evaluate(()=>backup());
+   const baseline=await page.evaluate(async ()=>(await backup()));
    assert.equal(await page.locator('#sets').count(),0,'Home no longer renders the full unit catalog');
    assert.equal(await page.getByRole('button',{name:/My badges/}).count(),1);
    assert.equal(await page.getByRole('button',{name:/Your grove/}).count(),1);
@@ -21,12 +21,12 @@ const assert=require('node:assert/strict');
    assert.ok(await page.getByRole('heading',{name:'My progress',exact:true}).isVisible(),grade+' can reach progress');
    await page.locator('#progress-characters > summary').click();
    assert.ok(await page.locator('#sets').isVisible());
-   assert.equal(await page.evaluate(()=>backup()),baseline,'Opening progress and the catalog cannot save new evidence');
+   assert.equal(await page.evaluate(async ()=>(await backup())),baseline,'Opening progress and the catalog cannot save new evidence');
    assert.equal(await page.locator('#sets .set').count()>0,true);
    await page.locator('#grove-view-list').click();
    assert.equal(await page.locator('#grove-view-list').getAttribute('aria-pressed'),'true');
    // The deliberate view preference may save, but browsing cannot change learner evidence or the paused round.
-   const afterView=await page.evaluate(()=>backup());
+   const afterView=await page.evaluate(async ()=>(await backup()));
    assert.equal(await page.evaluate(()=>S.stars),42);assert.deepEqual(await page.evaluate(()=>S.opaque),{keep:['original']});
    if(!await page.locator('#sets .character-tile').count())await page.locator('#sets .set > button[aria-expanded]').first().click();
    const tile=page.locator('#sets .character-tile').first();await tile.click();
@@ -36,19 +36,19 @@ const assert=require('node:assert/strict');
    await page.locator('#sets .pset').first().click();
    assert.ok(await page.locator('#study-continue').isVisible(),'Unit practice retains explicit saved-round choices');
    await page.getByRole('button',{name:'Close session choices',exact:true}).click();
-   assert.equal(await page.evaluate(()=>backup()),afterView,'Details and unit setup preserve all synthetic state');
+   assert.equal(await page.evaluate(async ()=>(await backup())),afterView,'Details and unit setup preserve all synthetic state');
    await page.getByRole('button',{name:'Mandarin Grove, Home',exact:true}).click();
    await page.getByRole('button',{name:'Practice',exact:true}).click();
    assert.ok(await page.locator('#study-continue').isVisible());await page.getByRole('button',{name:'Close session choices',exact:true}).click();
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    assert.ok(baseline.length>0);
   }
-  await page.evaluate(()=>{home();S.groveRewards.legacyCredit={version:1,amount:4,stars:S.stars,rate:10,ribbonFruit:0,at:Date.now()};S.groveRewards.balance+=4;save();home();});
-  const legacyBackup=await page.evaluate(()=>backup());
+  await page.evaluate(async ()=>{(await home());S.groveRewards.legacyCredit={version:1,amount:4,stars:S.stars,rate:10,ribbonFruit:0,at:Date.now()};S.groveRewards.balance+=4;(await save());(await home());});
+  const legacyBackup=await page.evaluate(async ()=>(await backup()));
   assert.equal(await page.locator('#app [onclick="showGroveRewards()"], #app [onclick="rewardCollection()"]').count(),0,'Legacy credit cannot add another Home rewards shortcut');
   assert.match(await page.locator('#app').innerText(),/4 oranges from earlier practice/,'Original earned-credit information stays available');
-  assert.equal(await page.evaluate(()=>backup()),legacyBackup);
-  await page.evaluate(()=>parentDashboard('sibling','4'));
+  assert.equal(await page.evaluate(async ()=>(await backup())),legacyBackup);
+  await page.evaluate(async ()=>(await parentDashboard('sibling','4')));
   assert.equal(await page.locator('#progress-characters').count(),0,'Sibling dashboard cannot operate the active learner unit browser');
   assert.equal(await page.evaluate(()=>PR.cur),'home-test');
   assert.deepEqual(errors,[]);

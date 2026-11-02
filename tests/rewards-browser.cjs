@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
   const s={stars:120,streak:0,last:'',pts:{},box:{},due:{},cfg:{}};
   for(let i=0;i<120;i++)recordSkill(s,'狗','trace','assisted');
   localStorage.setItem('zh_p_reward',JSON.stringify(s));
- });await page.reload();await page.evaluate(()=>home());
+ });await page.reload();await page.evaluate(async ()=>(await home()));
  assert.ok(await page.locator('#reward-strip').isVisible());
  assert.equal(await page.evaluate(()=>S.rewards.ribbons),12);
  assert.equal(await page.evaluate(()=>S.stars),120);
@@ -21,22 +21,22 @@ const assert=require('node:assert/strict');
  assert.equal(await page.locator('.reward-card progress').evaluateAll(els=>els.every(el=>el.getBoundingClientRect().right<=el.parentElement.getBoundingClientRect().right)),true);
  await page.screenshot({path:'/tmp/hanzi-rewards.png',fullPage:true});
  for(let i=0;i<2;i++){
-  await page.evaluate(()=>{home();listen(ALL.find(c=>c.c==='狗'))});
+  await page.evaluate(async ()=>{(await home());listen(ALL.find(c=>c.c==='狗'))});
   await page.locator('[data-c="狗"]').click();
  }
  assert.equal(await page.evaluate(()=>S.rewards.characters['狗'].tier),1);
  assert.match(await page.locator('#reward-notice').innerText(),/Character badge earned/);
  assert.notEqual(await page.evaluate(()=>characterStage(S,'狗')),'Mastered');
- await page.evaluate(()=>{recordSkill(S,'狗','listen','miss');save()});
- await page.reload();await page.evaluate(()=>home());
+ await page.evaluate(async ()=>{recordSkill(S,'狗','listen','miss');(await save())});
+ await page.reload();await page.evaluate(async ()=>(await home()));
  assert.equal(await page.evaluate(()=>S.rewards.characters['狗'].tier),1);
  assert.equal(await page.evaluate(()=>refreshRewardState(S,GR()).length),0);
  for(const grade of ['K','1','2','3','4','5']){
-  await page.evaluate(g=>{PR.list[0].gr=g;home()},grade);
+  await page.evaluate(async g=>{PR.list[0].gr=g;(await home())},grade);
   assert.ok(await page.locator('#reward-strip').isVisible());
   assert.equal(await page.getByRole('button',{name:'My progress',exact:true}).count(),1);
  }
- await page.evaluate(()=>{PR.cur='sibling';savePR();loadS();home()});
+ await page.evaluate(async ()=>{PR.cur='sibling';(await savePR());(await loadS());(await home())});
  assert.equal(await page.evaluate(()=>S.rewards.ribbons),0);
  assert.equal(await page.evaluate(()=>Object.keys(S.rewards.characters).length),0);
  assert.deepEqual(errors,[]);await browser.close();

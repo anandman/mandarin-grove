@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage({viewport:{width:1180,height:820}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(process.env.APP_URL||'http://127.0.0.1:4173');
-  const fixture=await page.evaluate(()=>{
+  const fixture=await page.evaluate(async ()=>{
    const time=1700000000000;
    const profiles={cur:'legacy-a',list:[{id:'legacy-a',name:'Old Learner A',gr:'4',av:'🐳'},{id:'legacy-b',name:'Old Learner B',gr:'1',av:'🐼'}]};
    const states={
@@ -15,16 +15,16 @@ const assert=require('node:assert/strict');
     'legacy-b':{stars:48,streak:2,last:today(),pts:{天:5,人:2},box:{天:2},due:{天:20004},bad:{pq:time},cfg:{test:'',quiz:'',set:['天','人']}}
    };
    const code=btoa(unescape(encodeURIComponent(JSON.stringify({PR:profiles,data:Object.fromEntries(Object.entries(states).map(([id,s])=>[id,JSON.stringify(s)]))}))));
-   PR={cur:'placeholder',list:[{id:'placeholder',name:'Temporary profile',gr:'2',av:'🐼'}]};savePR();loadS();home();
+   PR={cur:'placeholder',list:[{id:'placeholder',name:'Temporary profile',gr:'2',av:'🐼'}]};(await savePR());(await loadS());(await home());
    return {profiles,states,code};
   });
   const restore=async code=>{
-   await page.evaluate(()=>grown());await page.locator('#grest').click();await page.locator('#grt').fill(code);
+   await page.evaluate(async ()=>(await grown()));await page.locator('#grest').click();await page.locator('#grt').fill(code);
    await page.locator('#grr').click();
   };
   await restore(fixture.code);
   for(const id of ['legacy-a','legacy-b']){
-   await page.evaluate(id=>{PR.cur=id;savePR();loadS();home();},id);
+   await page.evaluate(async id=>{PR.cur=id;(await savePR());(await loadS());(await home());},id);
    const actual=await page.evaluate(()=>JSON.parse(JSON.stringify(S)));
    for(const [key,value]of Object.entries(fixture.states[id]))assert.deepEqual(actual[key],value,id+' preserved '+key);
    assert.equal(await page.evaluate(()=>mastered()),id==='legacy-a'?2:1,'Original earned zoo friends stay unlocked');
@@ -33,11 +33,11 @@ const assert=require('node:assert/strict');
    assert.equal(Object.keys(actual.learning?.chars||{}).length,0,'Old stars do not prove separate listening/pinyin mastery');
    assert.equal(await page.evaluate(()=>unitGroveGrowth(S.cfg.set).practiced),fixture.states[id].cfg.set.length);
   }
-  await page.evaluate(()=>{redeemGroveReward(S,'violet-leaves',1700000001000);save();});
+  await page.evaluate(async ()=>{redeemGroveReward(S,'violet-leaves',1700000001000);(await save());});
   const balances=await page.evaluate(()=>Object.fromEntries(PR.list.map(p=>[p.id,JSON.parse(localStorage.getItem('zh_p_'+p.id)).groveRewards.balance])));
-  const code=await page.evaluate(()=>backup());await page.reload();await restore(code);
+  const code=await page.evaluate(async ()=>(await backup()));await page.reload();await restore(code);
   for(const id of ['legacy-a','legacy-b']){
-   await page.evaluate(id=>{PR.cur=id;savePR();loadS();home();},id);
+   await page.evaluate(async id=>{PR.cur=id;(await savePR());(await loadS());(await home());},id);
    const actual=await page.evaluate(()=>JSON.parse(JSON.stringify(S)));
    for(const [key,value]of Object.entries(fixture.states[id])){if(key==='cfg'){for(const [setting,old]of Object.entries(value))assert.deepEqual(actual.cfg[setting],old,id+' preserved setting '+setting);}else assert.deepEqual(actual[key],value,id+' round-trip preserved '+key);}
    assert.equal(actual.groveRewards.balance,balances[id]);

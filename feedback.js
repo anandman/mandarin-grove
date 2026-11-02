@@ -2,16 +2,8 @@
 let feedbackQuestion=null;
 const FEEDBACK_KEY='zh_feedback_v1';
 const FEEDBACK_CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};
-function feedbackReports(){try{const rows=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object').slice(-50):[]}catch{return []}}
-function feedbackStore(report){
- const rows=feedbackReports(),index=rows.findIndex(r=>r.id===report.id);
- if(index>=0)rows[index]=report;
- else{
-  if(rows.length>=50){const discard=rows.findIndex(r=>!['pending','failed'].includes(r.delivery?.state));if(discard<0)throw Error('storage-full');rows.splice(discard,1);}
-  rows.push(report);
- }
- localStorage.setItem(FEEDBACK_KEY,JSON.stringify(rows));
-}
+function feedbackReports(){return GROVE_REPOSITORY.readReports();}
+function feedbackStore(report){return GROVE_REPOSITORY.saveReport(report);}
 function feedbackId(){
  if(window.crypto?.randomUUID)return window.crypto.randomUUID();
  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,x=>{const n=window.crypto?.getRandomValues?window.crypto.getRandomValues(new Uint8Array(1))[0]&15:Math.random()*16|0;return (x==='x'?n:(n&3|8)).toString(16)});
@@ -42,7 +34,7 @@ function feedbackCanSend(){return document.documentElement.dataset.feedback!=='l
 async function feedbackSendReport(report){
  if(!feedbackCanSend())return {ok:false,message:'This copy saves reports on this device. Ask a grown-up to copy or download the report.'};
  const pending={...feedbackPayload(report),delivery:{state:'pending'}};
- try{feedbackStore(pending);}catch{return {ok:false,message:'Not sent. This device could not save the report. Ask a grown-up to copy or download it below.'};}
+ try{await feedbackStore(pending);}catch{return {ok:false,message:'Not sent. This device could not save the report. Ask a grown-up to copy or download it below.'};}
  try{
   if(navigator.onLine===false)throw Error('offline');
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
@@ -51,10 +43,10 @@ async function feedbackSendReport(report){
   if(!response.ok||receipt.sent!==true||receipt.id!==pending.id||!Number.isSafeInteger(receipt.receipt)||receipt.receipt<1)throw Error(receipt.error==='feedback-not-configured'?'not-configured':'not-confirmed');
   // A receipt confirms GitHub accepted the report. If saving the receipt fails,
   // keep the server truth and let a later retry find its existing issue by ID.
-  try{feedbackStore({...pending,delivery:{state:'sent',receipt:receipt.receipt,sentAt:new Date().toISOString()}});}catch{}
+  try{await feedbackStore({...pending,delivery:{state:'sent',receipt:receipt.receipt,sentAt:new Date().toISOString()}});}catch{}
   return {ok:true,message:'Sent to the app maker. Thank you!'};
  }catch(error){
-  try{feedbackStore({...pending,delivery:{state:'failed'}});}catch{}
+  try{await feedbackStore({...pending,delivery:{state:'failed'}});}catch{}
   return {ok:false,message:error.message==='not-configured'?'Not sent yet. Sending is not set up. Your report is saved on this device. You can retry later.':'Not sent or confirmed. Your report is saved on this device. Check your connection and retry.'};
  }
 }
@@ -71,10 +63,10 @@ function contentFeedbackOffer(container,offer=null,fallback=null){
  const note=document.createElement('p');note.className='reading-note';note.textContent=offer.message;
  const button=document.createElement('button');button.type='button';button.className='progress-link';button.textContent=offer.label;
  button.onkeydown=feedbackButtonKeydown;
- button.onclick=()=>showFeedback({category:'missing',note:offer.note,context:offer.context||null});
+ button.onclick=()=>runAction(()=>showFeedback({category:'missing',note:offer.note,context:offer.context||null}));
  container.append(note,button);if(focused)button.focus({preventScroll:true});
 }
-function showFeedback({category:initialCategory=null,note:initialNote='',context=feedbackQuestion}={}){
+async function showFeedback({category:initialCategory=null,note:initialNote='',context=feedbackQuestion}={}){
  const canSend=feedbackCanSend();
  const existing=document.getElementById('feedback-dialog');
  if(existing?.open)return;existing?.remove();
@@ -96,6 +88,7 @@ function showFeedback({category:initialCategory=null,note:initialNote='',context
  document.body.append(dialog);dialog.showModal();
  const note=dialog.querySelector('#feedback-note'),output=dialog.querySelector('#feedback-output'),status=dialog.querySelector('#feedback-status');
  const send=dialog.querySelector('#feedback-send'),retry=dialog.querySelector('#feedback-retry'),categories=[...dialog.querySelectorAll('[data-category]')];
+ let reports=[],refreshSequence=0;
  let id=feedbackId(),category=Object.hasOwn(FEEDBACK_CATEGORIES,initialCategory)?initialCategory:null,saved=false,all=false,locked=false,busy=false,delivered=false;
  const suffix='\n[Text shortened for this report.]',raw=String(initialNote);
  note.value=raw.length>note.maxLength?raw.slice(0,note.maxLength-suffix.length)+suffix:raw;
@@ -107,12 +100,14 @@ function showFeedback({category:initialCategory=null,note:initialNote='',context
  }
  categories.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));send.disabled=!category;
  const current=()=>({...snapshot,id,category,note:note.value.trim()});
- const pending=()=>feedbackReports().filter(r=>r.id&&FEEDBACK_CATEGORIES[r.category]&&['pending','failed'].includes(r.delivery?.state));
- const refresh=()=>{
-  output.value=feedbackText(all?feedbackReports():[locked?feedbackReports().find(r=>r.id===id)||current():current()]);
+ const pending=()=>reports.filter(r=>r.id&&FEEDBACK_CATEGORIES[r.category]&&['pending','failed'].includes(r.delivery?.state));
+ const refresh=async()=>{
+  const request=++refreshSequence;try{const rows=await feedbackReports();if(request!==refreshSequence||!dialog.isConnected)return;reports=rows;}catch{if(dialog.isConnected)status.textContent='Saved reports could not be read. They have been kept unchanged; you can copy or download this report.';}
+  if(request!==refreshSequence||!dialog.isConnected)return;
+  output.value=feedbackText(all?reports:[locked?reports.find(r=>r.id===id)||current():current()]);
   const unsent=pending(),count=unsent.length;dialog.querySelector('#feedback-pending').hidden=!count;retry.hidden=!canSend||(locked&&count===1&&unsent[0].id===id);dialog.querySelector('#feedback-pending-count').textContent=`${count} ${count===1?'report':'reports'} not sent or confirmed on this device.`;
- };refresh();
- const setBusy=value=>{busy=value;send.disabled=value||!category||delivered;retry.disabled=value;note.disabled=locked;dialog.querySelector('#feedback-save').disabled=locked||value||saved;categories.forEach(button=>button.disabled=locked);};
+ };await refresh();
+ const setBusy=value=>{busy=value;send.disabled=value||!category||delivered;retry.disabled=value;note.disabled=locked||value;dialog.querySelector('#feedback-save').disabled=locked||value||saved;categories.forEach(button=>button.disabled=locked||value);};
  categories.forEach(button=>button.onclick=()=>{if(locked)return;category=button.dataset.category;categories.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));send.disabled=false;saved=false;dialog.querySelector('#feedback-save').disabled=false;all=false;refresh();});
  note.oninput=()=>{saved=false;all=false;dialog.querySelector('#feedback-save').disabled=false;refresh()};
  send.onclick=async()=>{
@@ -123,20 +118,20 @@ function showFeedback({category:initialCategory=null,note:initialNote='',context
   if(!canSend||busy)return;const report=pending()[0];if(!report)return;setBusy(true);status.textContent='Sending saved report…';
   const result=await feedbackSendReport(report);if(report.id===id&&result.ok){delivered=true;send.textContent='Report sent';}status.textContent=result.message;setBusy(false);refresh();
  };
- dialog.querySelector('#feedback-save').onclick=()=>{
+ dialog.querySelector('#feedback-save').onclick=async()=>{
   if(saved)return;
   if(locked||busy)return;
   if(!category&&!note.value.trim()){status.textContent='Choose a problem or add a note first.';return;}
-  try{feedbackStore({...current(),delivery:{state:'local'}});saved=true;dialog.querySelector('#feedback-save').disabled=true;status.textContent='Saved on this device. Nothing has been sent.';refresh();}catch{status.textContent='Could not save here. Copy or download the report instead.';}
+  setBusy(true);try{await feedbackStore({...current(),delivery:{state:'local'}});saved=true;dialog.querySelector('#feedback-save').disabled=true;status.textContent='Saved on this device. Nothing has been sent.';refresh();}catch{status.textContent='Could not save here. Copy or download the report instead.';}finally{setBusy(false);}
  };
- dialog.querySelector('#feedback-all').onclick=()=>{all=true;refresh();dialog.querySelector('#feedback-details').open=true;status.textContent=`${feedbackReports().length} saved reports on this device (latest 50). Delivery status is included. Copy, download or share them together.`;};
+ dialog.querySelector('#feedback-all').onclick=async()=>{all=true;await refresh();dialog.querySelector('#feedback-details').open=true;status.textContent=`${reports.length} saved reports on this device (latest 50). Delivery status is included. Copy, download or share them together.`;};
  dialog.querySelector('#feedback-copy').onclick=async()=>{
-  refresh();try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(output.value);status.textContent='Copied. Paste the report into a message or this chat.';}
+  await refresh();try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(output.value);status.textContent='Copied. Paste the report into a message or this chat.';}
   catch{dialog.querySelector('#feedback-details').open=true;output.focus();output.select();status.textContent='Automatic copying is unavailable here. Press and hold the selected report to copy, or use Download report.';}
  };
  const share=dialog.querySelector('#feedback-share');share.hidden=!navigator.share;
- share.onclick=async()=>{refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
- dialog.querySelector('#feedback-download').onclick=()=>{refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
+ share.onclick=async()=>{await refresh();try{await navigator.share({title:'Mandarin Grove feedback',text:output.value});status.textContent='Share sheet closed. Nothing was sent automatically by the app.';}catch(e){if(e.name!=='AbortError')status.textContent='Sharing is unavailable. Copy or download the report instead.';}};
+ dialog.querySelector('#feedback-download').onclick=async()=>{await refresh();const url=URL.createObjectURL(new Blob([output.value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='mandarin-grove-feedback.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
  dialog.onclose=()=>{dialog.remove();if(previous?.isConnected)previous.focus();else focusMain();};
  (categories.find(button=>button.dataset.category===category)||categories[0]).focus();
 }

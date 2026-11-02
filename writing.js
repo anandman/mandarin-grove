@@ -114,12 +114,12 @@ function renderWritingIdea(){
  if(claim.confirming&&!claim.done){
   const confirm=$('writing-confirm'),keep=$('writing-keep');confirm.onkeydown=keep.onkeydown=feedbackButtonKeydown;
   keep.onclick=()=>{if(!current(keep)||!claim.confirming)return;claim.confirming=false;$('writing-status').textContent='';renderWritingIdea();$('writing-finish').focus();};
-  confirm.onclick=()=>{
+  confirm.onclick=async()=>{
    if(!current(confirm)||claim.done||!claim.confirming)return;
    const amount=completeWritingSentence(S,claim.id);
-   try{if(amount)save();}
+   try{if(amount)await save();}
    catch(error){if(current(confirm))$('writing-status').textContent='Could not save your sentence reward. Please try again. '+error.message;return;}
-   claim.done=true;claim.confirming=false;$('writing-status').textContent='';
+   if(!current(confirm))return;claim.done=true;claim.confirming=false;$('writing-status').textContent='';
    if(amount)announceRewards([{kind:'fruit',amount}]);
    renderWritingIdea();$('writing-another').focus();
   };

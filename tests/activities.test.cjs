@@ -7,7 +7,7 @@ const file = path.join(__dirname, '..', 'activities.js');
 
 function runtime(extra = {}) {
   assert.ok(fs.existsSync(file), 'The independent activities module is present');
-  const context = vm.createContext({ console, setTimeout, clearTimeout, ...extra });
+  const context = vm.createContext({ console, setTimeout, clearTimeout, GROVE_PENDING_WRITES:0, ...extra });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'practice.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(file, 'utf8'), context);
   return context;
@@ -43,9 +43,9 @@ test('Hanzi Writer loads local stroke data once and ignores a stale load callbac
   await options.charDataLoader('祖',()=>{});
   await options.charDataLoader('祖',()=>{});
   assert.equal(requests,1);
-  options.onLoadCharDataSuccess(data);
+  await options.onLoadCharDataSuccess(data);
   assert.equal(loaded,1);
   ctx.NAV=2;
-  options.onLoadCharDataSuccess(data);
+  await options.onLoadCharDataSuccess(data);
   assert.equal(loaded,1,'Navigating away suppresses the old ready callback');
 });

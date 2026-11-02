@@ -2,7 +2,8 @@
 const APPEARANCE_KEY='zh_appearance';
 const APPEARANCES=['system','light','dark'];
 let appearance='system';
-try{const saved=localStorage.getItem(APPEARANCE_KEY);if(APPEARANCES.includes(saved))appearance=saved;}catch{}
+let appearanceRequest=0;
+const APPEARANCE_READY=GROVE_REPOSITORY.readPreference(APPEARANCE_KEY).then(saved=>{if(!appearanceRequest&&APPEARANCES.includes(saved)){appearance=saved;applyAppearance();}}).catch(()=>{});
 const appearanceMedia=window.matchMedia?.('(prefers-color-scheme: dark)');
 function applyAppearance(){
  const mode=appearance==='system'?(appearanceMedia?.matches?'dark':'light'):appearance;
@@ -13,11 +14,13 @@ function applyAppearance(){
  document.querySelectorAll('[data-appearance-setting]').forEach(el=>{el.value=appearance;});
  document.querySelectorAll('[name="appearance"]').forEach(el=>{el.checked=el.value===appearance;});
 }
-function setAppearance(value){
+async function setAppearance(value){
  if(!APPEARANCES.includes(value))return;
- appearance=value;applyAppearance();
+ const request=++appearanceRequest;appearance=value;applyAppearance();
+ document.querySelectorAll('#appearance-status').forEach(status=>status.textContent='Saving on this device…');
  let message='Saved for this browser.';
- try{localStorage.setItem(APPEARANCE_KEY,value);}catch{message='Applied now. This browser could not save the preference. Please try again.';}
+ try{await GROVE_REPOSITORY.writePreference(APPEARANCE_KEY,value);}catch{message='Applied now. This browser could not save the preference. Please try again.';}
+ if(request!==appearanceRequest)return;
  document.querySelectorAll('#appearance-status').forEach(status=>status.textContent=message);
 }
 function appearanceSettingsMarkup(){

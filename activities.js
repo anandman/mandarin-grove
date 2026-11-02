@@ -11,13 +11,21 @@ const ActivityUI = (() => {
   const button = (label, id, extra = 'gray') => `<button type="button" class="btn ${extra}" id="${id}">${label}</button>`;
   const on = (id, fn) => find(id)?.addEventListener('click', (...args)=>run(()=>fn(...args)));
   const current = (token, node) => NAV === token && node.isConnected;
-  const guard = (token, node, fn) => (...args) => { if (current(token, node)) return run(()=>fn(...args)); };
-  function run(action){
-    try{return action();}catch(error){
-      if(!error.groveSaveRejected)throw error;
+  let eventTail=Promise.resolve();
+  const guard = (token, node, fn) => (...args) => {
+    // Writer events are ordered input, not duplicate button activations.
+    // Preserve mistakes/help/completion received during a durable commit.
+    const result=eventTail.then(()=>current(token,node)?run(()=>fn(...args),true):false);
+    eventTail=result.then(()=>undefined,()=>undefined);return result;
+  };
+  async function run(action,queued=false){
+    if(GROVE_PENDING_WRITES&&!queued)return false;
+    try{return await action();}catch(error){
+      if(error.groveActionObsolete)return false;
+      if(!error.groveSaveRejected){showStorageFailure(error);return false;}
       const status=find('progress-storage-status');if(!status)return false;find('progress-action-retry')?.remove();
       const retry=document.createElement('button');retry.id='progress-action-retry';retry.className='btn gray';retry.textContent=error.groveRetryLabel||'Retry saving this answer';
-      const token=NAV;retry.onclick=()=>{if(token!==NAV)return;run(()=>{if(error.groveRetryAction)return error.groveRetryAction();const item=SESS?.study&&SESS.q[SESS.currentIndex],saved=item&&Object.hasOwn(SESS.round.results,item[0]+':'+item[1].c);if(SESS&&(ACTIVE_REVIEW?.done||saved))nextItem();else action();});};status.append(retry);retry.focus();retry.scrollIntoView({block:'center'});return false;
+      const token=NAV;retry.onclick=()=>{if(token!==NAV)return;run(async()=>{if(error.groveRetryAction)return error.groveRetryAction();const item=SESS?.study&&SESS.q[SESS.currentIndex],saved=item&&Object.hasOwn(SESS.round.results,item[0]+':'+item[1].c);if(SESS&&(ACTIVE_REVIEW?.done||saved))return nextItem();else return action();});};status.append(retry);retry.focus();retry.scrollIntoView({block:'center'});return false;
     }
   }
   function speak(card) { say(card.c); }
@@ -67,9 +75,9 @@ const ActivityUI = (() => {
     writer = instance;
     return instance;
   }
-  function next(fn) { go(fn); }
-  function success(c, outcome, stars = 1) {
-    if (!finishReview(outcome,outcome==='correct'?stars:0)) return false;
+  function next(fn) { return go(fn); }
+  async function success(c, outcome, stars = 1) {
+    if (!await finishReview(outcome,outcome==='correct'?stars:0)) return false;
     return true;
   }
   function message(text, good = false) {
@@ -80,11 +88,11 @@ const ActivityUI = (() => {
     const element = find(id);
     if (element) { element.textContent = 'Next ▶'; element.classList.add('pulse'); }
   }
-  function persistDictation({persist=true}={}) {
+  async function persistDictation({persist=true}={}) {
     if (!DQ || DQ.session || !CRAM) return;
     if (DQ.i >= DQ.q.length) delete S.cfg.cramDict;
     else S.cfg.cramDict = { ...DQ, q: DQ.q.map(c => c.c), pool: CRAM.pool.map(c => c.c) };
-    if(persist)save();
+    if(persist)await save();
   }
   function draw(canvas) {
     const context = canvas.getContext('2d');
@@ -135,14 +143,14 @@ function pyMark(base, tone) {
   return mark ? (text.slice(0, position + 1) + mark + text.slice(position + 1)).normalize('NFC') : text;
 }
 
-function trNav(direction, index) {
+async function trNav(direction, index) {
   if (TLK) return;
-  if (SESS) { if (direction > 0) go(() => trace(index)); return; }
+  if (SESS) { if (direction > 0) await go(() => trace(index)); return; }
   if (direction < 0) {
     if (!TH.length) return;
     TF.push(index); trace(TH.pop());
   } else {
-    skipReview(); TH.push(index);
+    await skipReview(); TH.push(index);
     trace(TF.length ? TF.pop() : practiceCards().indexOf(reviewPick(S, practiceCards(), 'trace')));
   }
 }
@@ -164,19 +172,19 @@ function trace(index = 0) {
   let complete = false, helped = !!(SESS?.study && studyAttemptInfo()?.help);
   const quiz = () => instance.quiz({
     showHintAfterMisses: 1, leniency: 1.2,
-    onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('Follow the highlighted stroke'); }),
+    onMistake: ui.guard(view.token, view.node, async() => { if (SESS?.study) await studyAttempt('stroke'); ui.message('Follow the highlighted stroke'); }),
     onCorrectStroke: ui.guard(view.token, view.node, () => ui.message('')),
-    onComplete: ui.guard(view.token, view.node, summary => {
+    onComplete: ui.guard(view.token, view.node, async summary => {
       if (complete) return;
       const outcome = traceOutcome(summary.totalMistakes, helped);
       const first = SESS?.study ? studyOutcome(outcome) : outcome;
-      if(!finishReview(first,1))return;complete=true;
+      if(!await finishReview(first,1))return;complete=true;
       ui.message('Great tracing! 🌟', true); instance.showCharacter(); ui.nextButton(); ui.speak(c);
     })
   });
   quiz();
-  ui.on('watch', () => {
-    helped = true; if (SESS?.study) studyAttempt('help');
+  ui.on('watch', async() => {
+    helped = true; if (SESS?.study) await studyAttempt('help');
     instance.cancelQuiz(); instance.animateCharacter({onComplete: ui.guard(view.token, view.node, () => { if (!complete) quiz(); })});
   });
   ui.speak(c);
@@ -197,15 +205,15 @@ function listen(preferred) {
   ui.on('rp', () => ui.speak(c));
   ui.on('sk', event => { if (event.detail <= 1 && ui.current(view.token, view.node)) ui.next(listen); });
   ui.find('sk').onkeydown = event => { if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault(); };
-  A.querySelectorAll('[data-c]').forEach(option => option.addEventListener('click', ui.guard(view.token, view.node, () => {
+  A.querySelectorAll('[data-c]').forEach(option => option.addEventListener('click', ui.guard(view.token, view.node, async() => {
     if (done || option.disabled) return;
     if (option.dataset.c !== c.c) {
       missed = true; ACTIVE_REVIEW.missed = true;
-      if (SESS?.study) studyAttempt('miss');
+      if (SESS?.study) await studyAttempt('miss');
       option.classList.add('no'); option.disabled = true; ui.message('Try again');A.querySelector('.choices button:not(:disabled)')?.focus(); return;
     }
     const outcome = SESS?.study ? studyOutcome(missed ? 'miss' : 'correct') : missed ? 'miss' : 'correct';
-    if(!ui.success(c,outcome))return;done=true;option.classList.add('ok');A.querySelectorAll('[data-c]').forEach(choice=>choice.disabled=true); ui.message(missed ? 'Got it! Keep practicing 👍' : 'You got it! 🎉', !missed);
+    if(!await ui.success(c,outcome))return;done=true;option.classList.add('ok');A.querySelectorAll('[data-c]').forEach(choice=>choice.disabled=true); ui.message(missed ? 'Got it! Keep practicing 👍' : 'You got it! 🎉', !missed);
     ui.nextButton(); ui.find('sk').focus();
   })));
   ui.speak(c);
@@ -227,9 +235,9 @@ function flip(preferred) {
     ui.find('flip-rating').hidden = false;ui.find('cd').setAttribute('aria-expanded','true');ui.languages(); ui.speak(c);
   });
   ui.on('sk', () => ui.next(flip));
-  for (const [id, outcome] of [['yes','correct'],['no','miss']]) ui.on(id, ui.guard(view.token, view.node, () => {
-    if (!revealed || !ui.success(c, outcome)) return;
-    ui.next(flip);
+  for (const [id, outcome] of [['yes','correct'],['no','miss']]) ui.on(id, ui.guard(view.token, view.node, async() => {
+    if (!revealed || !await ui.success(c, outcome)) return;
+    await ui.next(flip);
   }));
 }
 
@@ -242,21 +250,21 @@ function memory(preferred) {
   let helped = !!(SESS?.study && studyAttemptInfo()?.help), complete = false;
   const instance = mkWriter(c, false, undefined, () => memory(c));
   ui.on('mrp', () => ui.speak(c));
-  ui.on('pk', () => {
+  ui.on('pk', async() => {
     if (complete) return;
-    helped = true; if (SESS?.study) studyAttempt('help');
+    helped = true; if (SESS?.study) await studyAttempt('help');
     instance.showOutline(); after(1500, () => instance.hideOutline());
   });
   ui.on('sk', () => ui.next(memory));
   instance.quiz({
     showHintAfterMisses: 3, leniency: 1.2,
-    onMistake: ui.guard(view.token, view.node, () => { if (SESS?.study) studyAttempt('stroke'); ui.message('That stroke did not match the guide. Try again.'); }),
+    onMistake: ui.guard(view.token, view.node, async() => { if (SESS?.study) await studyAttempt('stroke'); ui.message('That stroke did not match the guide. Try again.'); }),
     onCorrectStroke: ui.guard(view.token, view.node, () => ui.message('')),
-    onComplete: ui.guard(view.token, view.node, summary => {
+    onComplete: ui.guard(view.token, view.node, async summary => {
       if (complete) return;
       const outcome = helped || summary.totalMistakes > 2 ? 'assisted' : 'correct';
       const first = SESS?.study ? studyOutcome(outcome) : outcome;
-      if(!ui.success(c,first,2))return;complete=true; instance.showCharacter(); ui.find('pk').disabled = true;
+      if(!await ui.success(c,first,2))return;complete=true; instance.showCharacter(); ui.find('pk').disabled = true;
       ui.message(first === 'correct' ? 'You finished the character! 🎉' : 'Got it! Keep practicing 👍', first === 'correct');
       ui.nextButton(); ui.speak(c);
     })
@@ -264,23 +272,23 @@ function memory(preferred) {
   ui.speak(c);
 }
 
-function dictQuestion(c) { DQ = { session: true, bad: 0, q: [c], i: 0, score: 0, n: 0 }; dictItem(); }
-function dictStart(chars) {
+async function dictQuestion(c) { DQ = { session: true, bad: 0, q: [c], i: 0, score: 0, n: 0 }; await dictItem(); }
+async function dictStart(chars) {
   SESS = null;
   if (chars !== undefined) DQL = chars;
   const wanted = new Set(Array.isArray(DQL) ? DQL.map(c => c.c || c) : [...(DQL ?? S.cfg.quiz ?? '')]);
   let queue = shuffle(ALL.filter(c => wanted.has(c.c)));
   if (CRAM) queue = queue.slice(0,30);
   else queue.sort((a,b) => Math.min(reviewPriority(S,a.c,'pinyin'),reviewPriority(S,a.c,'writing')) - Math.min(reviewPriority(S,b.c,'pinyin'),reviewPriority(S,b.c,'writing')));
-  DQ = { bad:0, q:queue, i:0, score:0, n:0 }; dictItem();
+  DQ = { bad:0, q:queue, i:0, score:0, n:0 }; await dictItem();
 }
-function dictItem() {
+async function dictItem() {
   if (!DQ) return;
   const ui = ActivityUI, round = DQ;
-  ui.persistDictation();
+  await ui.persistDictation();
   if (round.i >= round.q.length) {
     ui.render('dictation', `<div class="big">🎉</div><h1>Quiz done!</h1><p class="mean">${round.score} of ${round.n} answers right.</p><p class="reading-note">Pinyin is checked by the app. Handwriting uses your own check.</p>${ui.button('Again', 'dict-again', '')}${ui.button('Home', 'dict-home')}${CRAM ? ui.button('Choose units / mode', 'dict-units') : ''}`, false);
-    if (!round.bad && round.q.length) award('pq');
+    if (!round.bad && round.q.length) await award('pq');
     ui.on('dict-again', () => dictStart()); ui.on('dict-home', home); ui.on('dict-units', showCram); return;
   }
   const c = round.q[round.i];
@@ -307,30 +315,30 @@ function dictItem() {
   ui.on('py-delete', () => { if (!locked) { letters = letters.slice(0,-1); const button = selected.pop(); if (button) button.disabled = false; refresh(); } });
   const canvas = ui.find('dc'), clear = ui.draw(canvas);
   ui.on('dclr', clear); ui.on('drp', () => ui.speak(c));
-  ui.on('dchk', ui.guard(view.token, view.node, () => {
+  ui.on('dchk', ui.guard(view.token, view.node, async() => {
     if (locked) return; locked = true;
     const right = pinyinMatches(c, letters, tone);
-    if (!right && round.session && SESS?.study) studyAttempt('pinyinMiss');
+    if (!right && round.session && SESS?.study) await studyAttempt('pinyinMiss');
     const firstPinyin = right && !(round.session && SESS?.study && studyAttemptInfo()?.pinyinMiss);
     const picture = canvas.toDataURL();
     A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="reading-note" role="status">${right ? 'Pinyin matches.' : 'Pinyin does not match yet.'}</p><p class="mean">Your pinyin: <span lang="zh-Latn-pinyin">${ui.escape(letters ? pyMark(letters,tone) : '—')}</span></p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Compare your writing with the character shown. Does it match?</p><p class="reading-note">The app has not checked your handwriting.</p>${ui.button('My writing matches', 'cy', 'g')}${ui.button('I need more practice', 'cn', 'r')}</div></div>`;
     ui.languages();
     let rated = false;
-    const rate = chOk => {
+    const rate = async chOk => {
       if (rated || NAV !== view.token || DQ !== round) return;
-      const previous={...round},studyBefore=SESS?.study?JSON.parse(JSON.stringify(SESS.round)):null;let prior;
+      const session=SESS,owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE,previous={...round},studyBefore=SESS?.study?JSON.parse(JSON.stringify(SESS.round)):null;let prior;
       try{
       const pyOutcome = firstPinyin ? 'correct' : 'miss', writingOutcome = chOk ? 'correct' : 'miss';
       recordSkill(S,c.c,'pinyin',pyOutcome); recordSkill(S,c.c,'writing',writingOutcome);
       const outcome = firstPinyin && chOk ? 'correct' : 'miss';
-      if (round.session && SESS?.study) recordStudyAnswer({evidence:[{skill:'pinyin',method:'checked',outcome:pyOutcome},{skill:'writing',method:'self-rated',outcome:writingOutcome}]},outcome,{persist:false});
+      if (round.session && SESS?.study) await recordStudyAnswer({evidence:[{skill:'pinyin',method:'checked',outcome:pyOutcome},{skill:'writing',method:'self-rated',outcome:writingOutcome}]},outcome,{persist:false});
       if (outcome === 'correct') prior=creditWin(c,2);
       round.score += Number(right) + Number(chOk); round.n += 2; round.bad += Number(!firstPinyin || !chOk); round.i++;
       if (round.session && SESS && !SESS.study) { const key=SESS.cram?'cram':'rs'; if(S.cfg[key]) S.cfg[key].i=SESS.i; }
-      ui.persistDictation({persist:false}); save();
-      }catch(error){Object.assign(round,previous);if(studyBefore&&SESS?.study)SESS.round=studyBefore;throw error;}
-      rated=true;if(prior)celebrateWin(c,prior);
-      if (round.session) nextItem(); else dictItem();
+      await ui.persistDictation({persist:false});requireActiveSave(owner,sequence);await save();
+      }catch(error){Object.assign(round,previous);if(studyBefore&&SESS===session&&SESS?.study)SESS.round=studyBefore;throw error;}
+      rated=true;if(prior)await celebrateWin(c,prior);
+      if (round.session) await nextItem(); else await dictItem();
     };
     ui.on('cy', () => rate(true)); ui.on('cn', () => rate(false));
   }));

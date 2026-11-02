@@ -10,6 +10,19 @@ const BADGES=[['m5','🥉','5 characters','Earned five reward stars for each of 
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const blank=()=>GroveState.emptyProfile();
 let PR={cur:null,list:[]},S=blank(),GROVE_SAVED_REGISTRY={cur:null,list:[]},GROVE_STATE_OWNER=null,GROVE_PROGRESS_READY=false,GROVE_SAVED_STATE=null;
+let GROVE_PENDING_WRITES=0,GROVE_LOAD_SEQUENCE=0;
+const groveCopy=value=>JSON.parse(JSON.stringify(value));
+function activeSave(owner,sequence){return PR.cur===owner&&GROVE_LOAD_SEQUENCE===sequence;}
+function requireActiveSave(owner,sequence){if(!activeSave(owner,sequence)){const error=Error('This action belongs to the previously active child.');error.groveActionObsolete=true;throw error;}}
+async function durableCommit(action){
+ GROVE_PENDING_WRITES++;A.setAttribute('aria-busy','true');
+ try{return await action();}finally{if(!--GROVE_PENDING_WRITES)A.removeAttribute('aria-busy');}
+}
+async function runAction(action,onError=showStorageFailure){
+ if(GROVE_PENDING_WRITES)return false;
+ try{return await action();}catch(error){if(!error.groveActionObsolete)onError(error);return false;}
+}
+document.addEventListener('click',event=>{if(GROVE_PENDING_WRITES){event.preventDefault();event.stopImmediatePropagation();}},true);
 let NAV=0,SESS=null,HS=[],HO=Object.create(null),catG='',catQ='',DI=-1,DL=[],dw=null,detailRequest=0,detailReturnFocus=null;
 const STROKES={},strokeRequests=new Map();
 let viewNavigation=null;
@@ -51,36 +64,47 @@ function batch(){
  const selected=SET(),last=selected.at(-1),group=CHK().find(group=>group.c.includes(last));
  const chars=group?group.c.filter(char=>selected.includes(char)):selected.slice(-BN());return chars.map(char=>ALL.find(card=>card.c===char)).filter(Boolean);
 }
-function loadS({persist=true}={}){
- const previous=S;GROVE_PROGRESS_READY=false;
- try{
-  const candidate=PR.cur?GROVE_REPOSITORY.readProfile(PR.cur):blank();
-  S=candidate;setCards();
-  if(persist&&PR.cur)S=GROVE_REPOSITORY.saveProfile(PR.cur,S);
-  GROVE_STATE_OWNER=PR.cur;GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));GROVE_PROGRESS_READY=true;
- }catch(error){S=previous;showStorageFailure(error);throw error;}
+async function loadS({persist=true}={}){
+ const owner=PR.cur,sequence=++GROVE_LOAD_SEQUENCE;GROVE_PROGRESS_READY=false;
+ return durableCommit(async()=>{try{
+  let candidate=owner?await GROVE_REPOSITORY.readProfile(owner):blank();requireActiveSave(owner,sequence);
+  if(persist&&owner)candidate=await GROVE_REPOSITORY.saveProfile(owner,candidate);
+  requireActiveSave(owner,sequence);S=candidate;setCards();
+  GROVE_STATE_OWNER=owner;GROVE_SAVED_STATE=groveCopy(S);GROVE_PROGRESS_READY=true;
+ }catch(error){if(activeSave(owner,sequence))showStorageFailure(error);throw error;}});
 }
-function savePR(){
- try{PR=GROVE_REPOSITORY.saveRegistry(PR);GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));}
- catch(error){PR=JSON.parse(JSON.stringify(GROVE_SAVED_REGISTRY));showStorageFailure(error);throw error;}
+async function savePR(){
+ const candidate=groveCopy(PR),stamp=JSON.stringify(PR);
+ return durableCommit(async()=>{try{
+  const saved=await GROVE_REPOSITORY.saveRegistry(candidate);
+  if(JSON.stringify(PR)!==stamp){const error=Error('The selected child changed while saving.');error.groveActionObsolete=true;throw error;}
+  PR=saved;GROVE_SAVED_REGISTRY=groveCopy(PR);
+ }catch(error){if(JSON.stringify(PR)===stamp){PR=groveCopy(GROVE_SAVED_REGISTRY);showStorageFailure(error);}throw error;}});
 }
-function save(cramSelectionChanged=false){
+async function save(cramSelectionChanged=false){
  if(!GROVE_PROGRESS_READY||GROVE_STATE_OWNER!==PR.cur){const error=Error('This child’s progress has not loaded. Reload before saving.');showStorageFailure(error);throw error;}
- const candidate=JSON.parse(JSON.stringify(S)),earned=refreshRewardState(candidate,GR());
- if(!cramSelectionChanged)candidate.cfg.cramUnits=storedCramSelections();
- try{S=PR.cur?GROVE_REPOSITORY.saveProfile(PR.cur,candidate):candidate;}
- catch(error){if(GROVE_SAVED_STATE){S=JSON.parse(JSON.stringify(GROVE_SAVED_STATE));setCards();}error.groveSaveRejected=true;showStorageFailure(error);throw error;}
- GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));
- // Rendering failures cannot undo an already committed durable save.
- hdr();announceRewards(earned);clearStorageFailure();
+ const owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE,candidate=groveCopy(S),earned=refreshRewardState(candidate,GR());
+ return durableCommit(async()=>{
+  let saved;
+  try{
+   if(!cramSelectionChanged)candidate.cfg.cramUnits=await storedCramSelections(owner,candidate.cfg.cramUnits);
+   requireActiveSave(owner,sequence);saved=owner?await GROVE_REPOSITORY.saveProfile(owner,candidate):candidate;
+  }catch(error){if(activeSave(owner,sequence)&&!error.groveActionObsolete){if(GROVE_SAVED_STATE){S=groveCopy(GROVE_SAVED_STATE);setCards();}error.groveSaveRejected=true;showStorageFailure(error);}throw error;}
+  // An acknowledged old-child write remains durable but cannot publish into
+  // another child or continue its navigation/reward callbacks.
+  requireActiveSave(owner,sequence);S=saved;GROVE_SAVED_STATE=groveCopy(S);
+  hdr();announceRewards(earned);clearStorageFailure();return saved;
+ });
 }
-function saveProfileSettings(registry,candidate){
+async function saveProfileSettings(registry,candidate){
  if(!GROVE_PROGRESS_READY||GROVE_STATE_OWNER!==PR.cur)throw Error('Reload this child before saving settings.');
- const profile=registry.list.find(p=>p.id===PR.cur),earned=refreshRewardState(candidate,profile.gr);
- candidate.cfg.cramUnits=storedCramSelections();let saved;
- try{saved=GROVE_REPOSITORY.saveChildSettings(PR.cur,registry,candidate);}catch(error){showStorageFailure(error);throw error;}
- PR=saved.registry;S=saved.profile;GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));GROVE_SAVED_STATE=JSON.parse(JSON.stringify(S));
- clearStorageFailure();hdr();announceRewards(earned);
+ const owner=PR.cur,sequence=GROVE_LOAD_SEQUENCE;registry=groveCopy(registry);candidate=groveCopy(candidate);
+ const profile=registry.list.find(p=>p.id===owner),earned=refreshRewardState(candidate,profile.gr);
+ return durableCommit(async()=>{
+  let saved;try{candidate.cfg.cramUnits=await storedCramSelections(owner,candidate.cfg.cramUnits);requireActiveSave(owner,sequence);saved=await GROVE_REPOSITORY.saveChildSettings(owner,registry,candidate);}catch(error){if(activeSave(owner,sequence))showStorageFailure(error);throw error;}
+  requireActiveSave(owner,sequence);PR=saved.registry;S=saved.profile;GROVE_SAVED_REGISTRY=groveCopy(PR);GROVE_SAVED_STATE=groveCopy(S);
+  clearStorageFailure();hdr();announceRewards(earned);
+ });
 }
 function today(date=new Date()){return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;}
 function touchStreak(){
@@ -91,11 +115,11 @@ function isM(card){return (S.pts[card.c]||0)>=MASTER;}
 function asleep(card){return isM(card)&&!!S.ok?.[card.c]&&Date.now()-S.ok[card.c]>SLEEP*DAY;}
 function mastered(){return CARDS.filter(isM).length;}
 function pop(text){const notice=document.createElement('div');notice.className='pop';notice.setAttribute('role','status');notice.textContent=text;document.body.append(notice);setTimeout(()=>notice.remove(),1200);}
-function award(id){
- if(S.bad?.[id])return;S.bad??={};S.bad[id]=Date.now();save();
+async function award(id){
+ if(S.bad?.[id])return;S.bad??={};S.bad[id]=Date.now();await save();
  const badge=BADGES.find(row=>row[0]===id);if(badge)after(900,()=>badgeShow(badge));
 }
-function checkBadges(){for(const [id,threshold]of [['m5',5],['m15',15],['m30',30]])if(mastered()>=threshold)award(id);if(S.streak>=7)award('s7');}
+async function checkBadges(){for(const [id,threshold]of [['m5',5],['m15',15],['m30',30]])if(mastered()>=threshold)await award(id);if(S.streak>=7)await award('s7');}
 function badgeShow(badge){
  const previous=document.activeElement,notice=document.createElement('dialog');notice.className='bdg';notice.setAttribute('aria-label','New badge');
  const symbol=document.createElement('div');symbol.className='badge-symbol';symbol.textContent=badge[1];
@@ -105,20 +129,20 @@ function badgeShow(badge){
 function creditWin(card,amount=1){
  const prior={count:S.pts[card.c]||0,sleeping:asleep(card)};touchStreak();S.stars+=amount;S.pts[card.c]=prior.count+1;S.ok??={};S.ok[card.c]=Date.now();return prior;
 }
-function celebrateWin(card,prior){
+async function celebrateWin(card,prior){
  if(prior.count<MASTER&&prior.count+1>=MASTER){const count=Object.values(S.pts).filter(n=>n>=MASTER).length,animal=ANIMALS[count-1];pop(animal||'🎉');if(animal)after(500,()=>pop('New friend!'));say('太棒了');}else pop(prior.sleeping?'☀️':'⭐');
- try{checkBadges();}catch(error){showStorageFailure(error);}
+ try{await checkBadges();}catch(error){showStorageFailure(error);}
 }
-function win(card,amount=1){const prior=creditWin(card,amount);save();celebrateWin(card,prior);}
+async function win(card,amount=1){const prior=creditWin(card,amount);await save();await celebrateWin(card,prior);}
 function shuffle(values){const result=[...values];let remaining=result.length;while(remaining>1){const index=Math.floor(Math.random()*remaining);remaining--;const value=result[remaining];result[remaining]=result[index];result[index]=value;}return result;}
 function hdr(){
  const host=$('hd');host.replaceChildren();const profile=prof();
- const button=(label,text,action)=>{const item=document.createElement('button');item.className='pill';item.setAttribute('aria-label',label);item.textContent=text;item.onclick=action;host.append(item);return item;};
+ const button=(label,text,action)=>{const item=document.createElement('button');item.className='pill';item.setAttribute('aria-label',label);item.textContent=text;item.onclick=()=>runAction(action);host.append(item);return item;};
  if(profile){const switcher=button(`${profile.av||'🐼'} ${profile.name} ${ORD(GR())}, Switch learner`,profile.av||'🐼',who),name=document.createElement('span'),grade=document.createElement('span');name.className='nm';name.textContent=profile.name;grade.className='gb';grade.textContent=ORD(GR());switcher.append(' ',name,' ',grade);}
  button('Appearance','◐',showAppearance).classList.add('appearance-toggle');button('Grown-ups settings, press and hold or activate with keyboard','⚙️',()=>{}).id='gear';
  const stats=document.createElement('span');stats.className='pill legacy-stats';stats.textContent=`⭐ ${S.stars}`;const streak=document.createElement('span');streak.className='legacy-streak';streak.textContent=` · 🔥 ${S.streak}`;stats.append(streak);host.append(stats);gearHold();renderRewards();
 }
-function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)action();},milliseconds);}
+function after(milliseconds,action){const token=NAV;setTimeout(()=>{if(token===NAV)Promise.resolve().then(action).catch(error=>{if(!error.groveActionObsolete)showStorageFailure(error);});},milliseconds);}
 let PAGE_BACK_DOUBLE=false;
 // A second click can land on Home after returning changes the scroll position.
 document.addEventListener('click',event=>{
@@ -129,9 +153,9 @@ function setPageBack(action=home,label='Back to Home'){
  const nav=$('page-navigation'),button=$('page-back');if(!nav||!button)return;
  nav.hidden=!prof()||typeof action!=='function';button.setAttribute('aria-label',label);
  const token=NAV,owner=PR.cur;button.onkeydown=feedbackButtonKeydown;
- const execute=()=>{
+ const execute=async()=>{
   if(token!==NAV||owner!==PR.cur||nav.hidden)return;
-  try{return action();}catch(error){if(error.groveSaveRejected){error.groveRetryAction=execute;error.groveRetryLabel='Retry saving and go back';}throw error;}
+  try{return await action();}catch(error){if(error.groveSaveRejected){error.groveRetryAction=execute;error.groveRetryLabel='Retry saving and go back';}throw error;}
  };
  button.onclick=event=>{
   if(event.detail>1||token!==NAV||owner!==PR.cur||nav.hidden)return;
@@ -146,10 +170,10 @@ function screen({scroll=true}={}){
  const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
-function home(){
- screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
+async function home(){
+ await archQ();screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
  hidePageBack();
- archQ();$('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();checkBadges();after(1200,PF);
+ $('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();await checkBadges();after(1200,PF);
 }
 function characterBrowserScope(){const el=$('progress-characters');return el?{grade:el.dataset.grade,unit:el.dataset.unit}:null;}
 function homeUnitKey(){const scope=characterBrowserScope();return [PR.cur||'_',scope?.grade||GR(),scope?.unit||''].join(':');}
@@ -184,25 +208,25 @@ function homeSets(){
 }
 function HTG(id){const expanded=HO[homeUnitKey()]??=new Set();expanded.has(id)?expanded.delete(id):expanded.add(id);homeSets();const toggle=$('unit-'+encodeURIComponent(id));toggle?.focus({preventScroll:true});toggle?.scrollIntoView({block:'nearest'});}
 function PSET(index){const group=HS[index];if(group)showStudySetup('practice',group.c.map(char=>ALL.find(card=>card.c===char)).filter(Boolean));}
-function selectPractice(chars){S.cfg.set=[...new Set(chars)];save();setCards();lq=[];mq=[];}
-function next10(quiet=false){const group=NCH(),added=group?.c.filter(char=>!SET().includes(char))||[];if(added.length){const previous=SET();selectPractice(previous.concat(added));if(!quiet){cat();undoT(previous,'Added '+added.length);}}else if(!quiet)pop('Every character in this grade is already in practice.');return added.length;}
+async function selectPractice(chars){S.cfg.set=[...new Set(chars)];await save();setCards();lq=[];mq=[];}
+async function next10(quiet=false){const group=NCH(),added=group?.c.filter(char=>!SET().includes(char))||[];if(added.length){const previous=SET();await selectPractice(previous.concat(added));if(!quiet){cat();undoT(previous,'Added '+added.length);}}else if(!quiet)pop('Every character in this grade is already in practice.');return added.length;}
 function undoT(previous,message){
- document.querySelectorAll('.undo').forEach(node=>node.remove());const notice=document.createElement('div');notice.className='undo';notice.textContent=message+' ';const undo=document.createElement('button');undo.textContent='Undo';undo.onclick=()=>{selectPractice(previous);notice.remove();cat();};notice.append(undo);document.body.append(notice);setTimeout(()=>notice.remove(),5000);
+ document.querySelectorAll('.undo').forEach(node=>node.remove());const notice=document.createElement('div');notice.className='undo';notice.textContent=message+' ';const undo=document.createElement('button');undo.textContent='Undo';undo.onclick=()=>runAction(async()=>{await selectPractice(previous);notice.remove();cat();});notice.append(undo);document.body.append(notice);setTimeout(()=>notice.remove(),5000);
 }
-function catT(char){const previous=SET();if(previous.includes(char)&&previous.length<=4){pop('Keep at least 4 characters in practice.');return;}selectPractice(previous.includes(char)?previous.filter(value=>value!==char):previous.concat(char));cat({focusChar:char});}
-function catAll(){const previous=SET(),add=ALL.filter(card=>(!catG||card.g.includes(catG))&&!previous.includes(card.c)).map(card=>card.c);if(add.length&&confirm(`Add ${add.length} characters to practice?`)){selectPractice(previous.concat(add));cat();undoT(previous,'Added '+add.length);}}
-function catNone(){const previous=SET(),remaining=previous.filter(char=>catG&&!ALL.find(card=>card.c===char)?.g.includes(catG));if(previous.length===remaining.length)return;if(confirm('Remove these characters from practice? Stars and progress stay.')){selectPractice(remaining.length>=4?remaining:[]);cat();undoT(previous,'Practice selection changed');}}
+async function catT(char){const previous=SET();if(previous.includes(char)&&previous.length<=4){pop('Keep at least 4 characters in practice.');return;}await selectPractice(previous.includes(char)?previous.filter(value=>value!==char):previous.concat(char));cat({focusChar:char});}
+async function catAll(){const previous=SET(),add=ALL.filter(card=>(!catG||card.g.includes(catG))&&!previous.includes(card.c)).map(card=>card.c);if(add.length&&confirm(`Add ${add.length} characters to practice?`)){await selectPractice(previous.concat(add));cat();undoT(previous,'Added '+add.length);}}
+async function catNone(){const previous=SET(),remaining=previous.filter(char=>catG&&!ALL.find(card=>card.c===char)?.g.includes(catG));if(previous.length===remaining.length)return;if(confirm('Remove these characters from practice? Stars and progress stay.')){await selectPractice(remaining.length>=4?remaining:[]);cat();undoT(previous,'Practice selection changed');}}
 function cat({focusChar=null}={}){
  screen({scroll:!focusChar});A.innerHTML='<h1>All characters</h1><p class="reading-note">Choose characters for practice. Your earned progress stays yours.</p><input id="cq" type="search" aria-label="Search all characters" placeholder="Character, pinyin, or meaning"><div class="catalog-grades"></div><p class="cst"></p><div class="catalog-actions"></div><div class="catalog-results"></div>';
  const grades=A.querySelector('.catalog-grades');for(const grade of ['',...Object.keys(GN)]){const button=document.createElement('button');button.className='chip';button.textContent=grade?`${GN[grade]} (${gList(grade).length})`:'All';button.setAttribute('aria-pressed',String(catG===grade));button.onclick=()=>{catG=grade;cat();};grades.append(button);}
  A.querySelector('.cst').textContent=`Practicing ${CARDS.length} characters`;
- for(const [label,action]of [['＋ Add next unit',()=>next10()],['＋ Add '+(GN[catG]||'all grades'),catAll],['− Remove '+(GN[catG]||'all'),catNone]]){const button=document.createElement('button');button.className='cb';button.textContent=label;button.onclick=action;A.querySelector('.catalog-actions').append(button);}
+ for(const [label,action]of [['＋ Add next unit',()=>next10()],['＋ Add '+(GN[catG]||'all grades'),catAll],['− Remove '+(GN[catG]||'all'),catNone]]){const button=document.createElement('button');button.className='cb';button.textContent=label;button.onclick=()=>runAction(action);A.querySelector('.catalog-actions').append(button);}
  const input=$('cq'),results=A.querySelector('.catalog-results');input.value=catQ;
  const render=()=>{
   const query=catQ.trim().toLowerCase(),key=pinyinBase(query).replace(/[1-5\s]/g,''),cards=ALL.filter(card=>(!catG||card.g.includes(catG))&&(!query||card.c.includes(query)||card.m.toLowerCase().includes(query)||readings(card).some(reading=>pinyinBase(reading).startsWith(key))));
   results.replaceChildren();if(!cards.length){const empty=document.createElement('p');empty.setAttribute('role','status');empty.textContent='No matches. Try another character, pinyin or meaning.';results.append(empty);}const letters=new Map();for(const card of cards){const initial=pinyinBase(card.p)[0].toUpperCase();if(!letters.has(initial))letters.set(initial,[]);letters.get(initial).push(card);}
   for(const [letter,cards]of [...letters].sort(([a],[b])=>a.localeCompare(b))){const title=document.createElement('h2');title.id='L_'+letter;title.textContent=letter;const grid=document.createElement('div');grid.className='zoo';
-   for(const card of cards){const tile=document.createElement('div');tile.className='z';const glyph=document.createElement('button');glyph.className='ch';glyph.textContent=card.c;glyph.onclick=()=>detail(0,[card]);const pinyin=document.createElement('div');pinyin.className='py';pinyin.textContent=card.p;const meaning=document.createElement('div');meaning.className='mean';meaning.textContent=card.m;const add=document.createElement('button');add.className='chip';const active=SET().includes(card.c);add.dataset.practiceChar=card.c;add.setAttribute('aria-label',(active?'✓ Practicing':'＋ Add')+' '+card.c+(active?', remove from practice':', add to practice'));glyph.lang='zh-Hans';pinyin.lang='zh-Latn-pinyin';add.textContent=active?'✓ Practicing':'＋ Add';add.onclick=()=>catT(card.c);tile.append(glyph,pinyin,meaning,add);grid.append(tile);}results.append(title,grid);
+   for(const card of cards){const tile=document.createElement('div');tile.className='z';const glyph=document.createElement('button');glyph.className='ch';glyph.textContent=card.c;glyph.onclick=()=>detail(0,[card]);const pinyin=document.createElement('div');pinyin.className='py';pinyin.textContent=card.p;const meaning=document.createElement('div');meaning.className='mean';meaning.textContent=card.m;const add=document.createElement('button');add.className='chip';const active=SET().includes(card.c);add.dataset.practiceChar=card.c;add.setAttribute('aria-label',(active?'✓ Practicing':'＋ Add')+' '+card.c+(active?', remove from practice':', add to practice'));glyph.lang='zh-Hans';pinyin.lang='zh-Latn-pinyin';add.textContent=active?'✓ Practicing':'＋ Add';add.onclick=()=>runAction(()=>catT(card.c));tile.append(glyph,pinyin,meaning,add);grid.append(tile);}results.append(title,grid);
   }
  };input.oninput=()=>{catQ=input.value;render();};render();if(focusChar)[...results.querySelectorAll('[data-practice-char]')].find(el=>el.dataset.practiceChar===focusChar)?.focus();
 }
@@ -217,8 +241,8 @@ function daysLeft(){const test=TESTD();if(!test)return null;const day=new Date()
 function UQ(){return [QU().map(([,chars])=>chars),QU().map(([number])=>number)];}
 function UN(chars=S.cfg.quiz){return QU().find(([,value])=>value===chars)?.[0]||0;}
 function NXT(chars){const units=QU(),index=units.findIndex(([,value])=>value===chars);return index>=0?units[index+1]?.[1]||'':'';}
-function archQ(){
- if(daysLeft()!==null&&daysLeft()<0&&S.cfg.quiz){const chars=S.cfg.quiz;S.cfg.past=[{...(S.cfg.past||[]).find(row=>row.q===chars),q:chars,d:S.cfg.test},...(S.cfg.past||[]).filter(row=>row.q!==chars)];S.cfg.quiz=NXT(chars);S.cfg.test='';save();}
+async function archQ(){
+ if(daysLeft()!==null&&daysLeft()<0&&S.cfg.quiz){const chars=S.cfg.quiz;S.cfg.past=[{...(S.cfg.past||[]).find(row=>row.q===chars),q:chars,d:S.cfg.test},...(S.cfg.past||[]).filter(row=>row.q!==chars)];S.cfg.quiz=NXT(chars);S.cfg.test='';await save();}
 }
 function QZ(chars=S.cfg.quiz||''){return [...chars].filter(char=>ALL.some(card=>card.c===char));}
 function QOPT(grade){return '<option value="">Custom (type below)</option>'+QU(grade).map(([number,chars])=>`<option value="${esc(chars)}"${chars===S.cfg.quiz?' selected':''}>Unit ${number} · ${esc(chars)}</option>`).join('');}
@@ -230,19 +254,19 @@ function qList(){
  if(S.cfg.past?.some(row=>!QU().some(([,chars])=>chars===row.q))){const button=document.createElement('button');button.className='btn gray';button.textContent='Past quizzes';button.onclick=pastQ;A.append(button);}
 }
 function pastQ(){screen();A.innerHTML='<h1>Past quizzes</h1><p class="mean">Tap one to try it again.</p>';for(const quiz of S.cfg.past||[]){const button=document.createElement('button');button.className='today';button.innerHTML=`<span lang="zh-Hans">${QZ(quiz.q).map(esc).join(' ')}</span> · Test on ${esc(quiz.d||'—')} · ▶ Start`;button.onclick=()=>dictStart(quiz.q);A.append(button);}}
-function startSession(pool=CARDS,title=''){SESS={q:progressiveQueue(S,pool,10,KG(),Date.now(),shuffle,Number(GR())>=2),i:0,t:title,pool};nextItem();}
+async function startSession(pool=CARDS,title=''){SESS={q:progressiveQueue(S,pool,10,KG(),Date.now(),shuffle,Number(GR())>=2),i:0,t:title,pool};await nextItem();}
 function RS(){const round=S.cfg.rs;if(!round?.q||round.i>=round.q.length)return null;return round.q.every(([,char])=>CARDS.some(card=>card.c===char))?round:null;}
-function resume(){
- if(!resumeLegacyRound('rs'))return showStudySetup('practice');const round=RS();if(!round)return startSession();const by=new Map(CARDS.map(card=>[card.c,card]));SESS={q:round.q.map(([mode,char])=>[mode,by.get(char)]),i:round.i,t:round.t||'',pool:(round.p||[]).map(char=>by.get(char)).filter(Boolean)};nextItem();
+async function resume(){
+ if(!await resumeLegacyRound('rs'))return showStudySetup('practice');const round=RS();if(!round)return startSession();const by=new Map(CARDS.map(card=>[card.c,card]));SESS={q:round.q.map(([mode,char])=>[mode,by.get(char)]),i:round.i,t:round.t||'',pool:(round.p||[]).map(char=>by.get(char)).filter(Boolean)};await nextItem();
 }
-function nextItem(){
+async function nextItem(){
  try{
- if(!SESS)return;if(SESS.study)return studyNextItem();
- if(SESS.i>=SESS.q.length){const session=SESS;delete S.cfg[session.cram?'cram':'rs'];save();SESS=null;screen();A.innerHTML='<div class="big">🎉</div><h1>Round done!</h1><p class="mean"></p><button class="btn" id="again">Practice again</button><button class="btn gray" id="round-choices">Choose units / mode</button>';A.querySelector('.mean').textContent=`You finished ${session.q.length} activities. Stars celebrate practice; the Parent dashboard shows saved app checks and self-checks.`;$('again').onclick=()=>CRAM?startCram(CRAM.mode,true):startSession(session.pool,session.t);$('round-choices').onclick=()=>CRAM?showCram():showStudySetup('practice');return;}
- saveRound();const [mode,card]=SESS.q[SESS.i++],actions={trace:()=>trace(practiceCards().indexOf(card)),listen:()=>listen(card),flip:()=>flip(card),memory:()=>memory(card),dictation:()=>dictQuestion(card)};actions[mode]?.();
+ if(!SESS)return;if(SESS.study)return await studyNextItem();
+ if(SESS.i>=SESS.q.length){const session=SESS;delete S.cfg[session.cram?'cram':'rs'];await save();SESS=null;screen();A.innerHTML='<div class="big">🎉</div><h1>Round done!</h1><p class="mean"></p><button class="btn" id="again">Practice again</button><button class="btn gray" id="round-choices">Choose units / mode</button>';A.querySelector('.mean').textContent=`You finished ${session.q.length} activities. Stars celebrate practice; the Parent dashboard shows saved app checks and self-checks.`;$('again').onclick=()=>runAction(()=>CRAM?startCram(CRAM.mode,true):startSession(session.pool,session.t));$('round-choices').onclick=()=>runAction(()=>CRAM?showCram():showStudySetup('practice'));return;}
+ await saveRound();const [mode,card]=SESS.q[SESS.i++],actions={trace:()=>trace(practiceCards().indexOf(card)),listen:()=>listen(card),flip:()=>flip(card),memory:()=>memory(card),dictation:()=>dictQuestion(card)};await actions[mode]?.();
  }catch(error){if(error.groveSaveRejected)error.groveRetryAction=nextItem;throw error;}
 }
-function go(action){skipReview();if(SESS)nextItem();else action();}
+async function go(action){await skipReview();if(SESS)await nextItem();else await action();}
 function sessBar(){if(SESS?.study)return studySessionBar();return SESS?`<div class="sess">${SESS.i} / ${SESS.q.length}<div class="bar"><i style="width:${100*SESS.i/SESS.q.length}%"></i></div></div>`:'';}
 function SL(char,done,onError=()=>{}){
  if(STROKES[char]){done(STROKES[char]);return;}
@@ -274,8 +298,9 @@ function srch(value){
  status.textContent=found.length?`${found.length} ${found.length===1?'character':'characters'} found in these units.`:'No characters found in these units. Try a character, pinyin or English meaning, or choose another Grade or Unit.';
 }
 function backup(){return GROVE_REPOSITORY.exportBackup();}
-$('ttl').onclick=()=>{if(prof())home();};$('totop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});$('report-problem')?.addEventListener('click',()=>showFeedback());
+$('ttl').onclick=()=>runAction(()=>{if(prof())return home();});$('totop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});$('report-problem')?.addEventListener('click',()=>runAction(()=>showFeedback()));
 addEventListener('scroll',()=>$('totop')?.classList.toggle('show',scrollY>innerHeight*1.5),{passive:true});
 document.addEventListener('keydown',event=>{const overlay=$('dov');if(!overlay)return;if(event.key==='Escape'){event.preventDefault();dclose();}else if(event.key==='ArrowLeft')detail(DI-1,DL);else if(event.key==='ArrowRight')detail(DI+1,DL);else if(event.key==='Tab'){const controls=[...overlay.querySelectorAll('button')],first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
 let LAST=Date.now();for(const event of ['pointerdown','keydown'])addEventListener(event,()=>LAST=Date.now(),{capture:true});function idleChk(){if(PR.list.length>1&&Date.now()-LAST>30*60*1000){LAST=Date.now();who();}}setInterval(idleChk,60000);
-try{PR=GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));loadS();hdr();if(PR.list.length>1)who();else if(PR.list.length)home();else setup(true);}catch(error){showProgressRecovery(error);}
+async function startGrove(){try{await GROVE_REPOSITORY.ready();await Promise.all([APPEARANCE_READY,VOICE_READY]);PR=await GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=groveCopy(PR);await loadS();hdr();if(PR.list.length>1)who();else if(PR.list.length)await home();else setup(true);}catch(error){showProgressRecovery(error);}}
+const GROVE_STARTED=startGrove();

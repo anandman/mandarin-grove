@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});try{
 const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(process.env.APP_URL||'http://127.0.0.1:4194');
 for(const chars of [['狗'],['狗','猫']]){
- await page.evaluate(chars=>{document.querySelectorAll('dialog').forEach(d=>d.remove());PR={cur:'draft',list:[{id:'draft',name:'Synthetic',gr:'2',av:'🐼'}]};savePR();loadS();S=blank();S.cfg.set=chars;S.cfg.notLearned=['狗'];S.cfg.studyChoices={'2':{review:{units:[],chars,modes:['flip'],limit:5}}};save();setCards();say=()=>{};home();showStudySetup('review');},chars);
+ await page.evaluate(async chars=>{document.querySelectorAll('dialog').forEach(d=>d.remove());PR={cur:'draft',list:[{id:'draft',name:'Synthetic',gr:'2',av:'🐼'}]};(await savePR());(await loadS());S=blank();S.cfg.set=chars;S.cfg.notLearned=['狗'];S.cfg.studyChoices={'2':{review:{units:[],chars,modes:['flip'],limit:5}}};(await save());setCards();say=()=>{};(await home());showStudySetup('review');},chars);
  await page.locator('#study-choice-editor > summary').click();await page.locator('#study-deferred > summary').click();await page.getByRole('button',{name:'Add 狗',exact:true}).click();
  assert.equal(await page.locator('#study-start').isEnabled(),true,'Restored-only selection can start');assert.match(await page.locator('#study-start').innerText(),new RegExp(chars.length+' question'));
  assert.deepEqual(await page.evaluate(()=>S.cfg.notLearned),['狗'],'Preview does not persist draft eligibility');
