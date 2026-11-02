@@ -11,6 +11,9 @@ for learner clarity. This is an explicit selection choice, not a finding that
 `fu3_FV3` is mislabeled. Both original recordings are preserved. The other 547
 selections, saved voice choices, learning state and backup formats are unchanged.
 Nine neutral-tone gaps still use explicitly unchecked Google/device fallback.
+Research-check details are available in Grown-ups/source information; routine MSU
+playback does not show a research-pending warning. Actual playback errors and
+unchecked fallback notices remain visible.
 
 The bounded model review covered 60 entries / 57 distinct source assets; 55
 transcriptions agreed with catalog labels, one differed and one was uncertain.

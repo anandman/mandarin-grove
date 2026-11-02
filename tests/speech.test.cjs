@@ -158,15 +158,15 @@ test('a failed expected Mainland catalog cannot silently become an unchecked bro
  assert.equal(await h.ctx.say('狗'),false);
  assert.equal(h.audio.length,0);assert.equal(h.spoken.length,0);assert.match(status.textContent,/recording list.*load/i);
 });
-test('source-curated MSU playback distinguishes unfinished checks without claiming qualification',async()=>{
+test('source-curated MSU playback keeps research details out of child status without claiming qualification',async()=>{
  const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;
  vm.runInContext("MAINLAND_AUDIO.acceptanceBasis='native-source-review';MAINLAND_AUDIO.pendingReadings=['gou3'];",h.ctx);
- const pending=h.ctx.say('狗');assert.match(status.textContent,/additional.*check pending/i);assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/source.*review/i);assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not qualified/i);
+ const pending=h.ctx.say('狗');assert.equal(status.textContent,'');assert.equal(status.hidden,true);assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/source.*review/i);assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not qualified/i);
  h.audio[0].onended();assert.equal(await pending,true);
  const next=h.ctx.say('子');assert.equal(status.textContent,'');assert.match(h.ctx.window.lastSpeechRequest.selectionNote,/not qualified/i);h.audio[1].onended();assert.equal(await next,true);
 });
-test('sequential preview clears the preceding clip check status without a new speech request',async()=>{
+test('sequential MSU preview stays quiet while adult settings disclose unqualified research',async()=>{
  const h=harness('mainland',true),status={textContent:'',hidden:true};h.ctx.document.getElementById=id=>id==='speech-status'?status:null;vm.runInContext("MAINLAND_AUDIO.acceptanceBasis='native-source-review';MAINLAND_AUDIO.pendingReadings=['gou3'];",h.ctx);
- const first=h.ctx.speakPrompt('狗',0);h.audio[0].onended();assert.equal(await first,true);assert.match(status.textContent,/check pending/);
+ const first=h.ctx.speakPrompt('狗',0);h.audio[0].onended();assert.equal(await first,true);assert.equal(status.textContent,'');const elements={'voice-choice':{value:'',innerHTML:''},'voice-note':{textContent:''}};h.ctx.document.getElementById=id=>elements[id]||null;h.ctx.refreshVoiceSettings();assert.match(elements['voice-note'].textContent,/not qualified/i);assert.match(elements['voice-note'].textContent,/user feedback/i);
  const second=h.ctx.speakPrompt('子',0);assert.equal(status.textContent,'');h.audio[1].onended();assert.equal(await second,true);
 });

@@ -158,7 +158,7 @@ async function speakPrompt(text, token, reading) {
     const checkPending=MAINLAND_AUDIO.pendingReadings?.includes(recordingKey(expected));
     window.lastSpeechRequest={character:text,pinyin:expected,prompt:recording?text:prompt,preference,
       voice:null,source:recording?'MSU Putonghua recording':'browser speech',recording:recording?.file||null,
-      selectionNote:recording?(sourceReviewed?'MSU native-source review; automatic pronunciation checker is not qualified. '+(checkPending?'Additional component check pending. ':'Three app component checks match; this is not a correctness guarantee. '):'Native-source isolated recording with separate calibrated consonant, vowel and tone checks. ')+'Exact source and limits in audio-sources/mainland.json.':'No source recording for this reading; device voice pronunciation is not verified.'};
+      selectionNote:recording?(sourceReviewed?'MSU native-source review; automatic pronunciation checker is not qualified. '+(checkPending?'Experimental component check abstained. ':'Three app component checks match; this is not a correctness guarantee. '):'Native-source isolated recording with separate calibrated consonant, vowel and tone checks. ')+'Exact source and limits in audio-sources/mainland.json.':'No source recording for this reading; device voice pronunciation is not verified.'};
     if (!recording) {
       if(expected!==readings(card)[0]){speechStatus('No checked recording for this alternate reading yet. Choose another pronunciation voice in Grown-ups.');return false;}
       const unchecked=uncheckedNeutralRecording(card,expected);
@@ -178,7 +178,7 @@ async function speakPrompt(text, token, reading) {
       if(!ok&&token===speechSequence)speechStatus('Could not play the device voice. Try again, or choose a voice in Grown-ups.');
       return ok;
     }
-    speechStatus(checkPending?'MSU recording · additional pronunciation check pending.':'');
+    speechStatus('');
     const ok=await playRecording(text,token,recording.file);
     if(!ok&&token===speechSequence)speechStatus('Recording could not play. Tap the speaker to retry, or choose another pronunciation voice in Grown-ups.');
     return ok;
@@ -247,7 +247,7 @@ function refreshVoiceSettings() {
   select.value = selected ? voiceKey(selected) : preference;
   const note=document.getElementById('voice-note');
   note.textContent = preference === 'mainland'
-    ? 'Native Putonghua recordings from MSU Tone Perfect, reviewed by the source team. Additional app checks remain unfinished; some readings are marked for an extra check. Nine neutral-tone gaps may use older Google or device audio, marked unchecked, including in listening activities. Other words and sentences use the device voice. Your saved voice choices are preserved.'
+    ? 'Native Putonghua recordings from MSU Tone Perfect, reviewed by the source team. Selected for static playback using source review, a bounded model review and user feedback. The automatic checker is not qualified and is retained as research. Nine neutral-tone gaps may use older Google or device audio, marked unchecked, including in listening activities. Other words and sentences use the device voice. Your saved voice choices are preserved.'
     : preference === 'reference'
     ? 'Taiwan Mandarin recordings from CNS11643, matched to the pinyin shown; not verified as Mainland pronunciation. Your saved choice is preserved. Plays bundled files without a speech service.'
     : preference === 'recorded'
