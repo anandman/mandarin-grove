@@ -7,4 +7,6 @@ export function createRepository(options:{
  now?:()=>number;
  makeId?:()=>string;
  beforeErase?:()=>Promise<void>;
+ feedbackEpoch?:()=>number;
+ onEraseRequested?:()=>void;
 }):NativeRepository;

@@ -3,7 +3,7 @@ let feedbackQuestion=null;
 const FEEDBACK_KEY='zh_feedback_v1';
 const FEEDBACK_CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};
 function feedbackReports(){return GROVE_REPOSITORY.readReports();}
-function feedbackStore(report){return GROVE_REPOSITORY.saveReport(report);}
+function feedbackStore(report,epoch){return epoch===undefined?GROVE_REPOSITORY.saveReport(report):GROVE_REPOSITORY.saveReport(report,{expectedFeedbackEpoch:epoch});}
 function feedbackId(){
  if(window.crypto?.randomUUID)return window.crypto.randomUUID();
  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,x=>{const n=window.crypto?.getRandomValues?window.crypto.getRandomValues(new Uint8Array(1))[0]&15:Math.random()*16|0;return (x==='x'?n:(n&3|8)).toString(16)});
@@ -30,25 +30,58 @@ function feedbackText(reports){return 'Mandarin Grove feedback\nDelivery status 
 function feedbackPayload(report){
  const payload={};for(const key of ['id','category','note','version','time','grade','question','speech','session','writing','content','browser','app'])if(report[key]!==undefined)payload[key]=report[key];if(payload.content){const content=feedbackContentMetadata(payload.content);if(content)payload.content=content;else delete payload.content;}return payload;
 }
-function feedbackCanSend(){return document.documentElement.dataset.feedback!=='local';}
-async function feedbackSendReport(report){
+function feedbackNativeService(){const platform=window.GrovePlatform;return platform&&typeof platform.prepareFeedback==='function'&&typeof platform.sendFeedback==='function'&&Number.isSafeInteger(platform.feedbackEpoch)?platform:null;}
+function feedbackCanSend(){return !!feedbackNativeService()||document.documentElement.dataset.feedback!=='local';}
+function feedbackDelivery(report,patch){const value=JSON.parse(JSON.stringify(report));if(value.delivery!=null&&(typeof value.delivery!=='object'||Array.isArray(value.delivery)))throw Error('unsupported-delivery');value.delivery={...(value.delivery&&typeof value.delivery==='object'&&!Array.isArray(value.delivery)?value.delivery:{}),...patch};return value;}
+async function feedbackSendReport(report,consent){
  if(!feedbackCanSend())return {ok:false,message:'This copy saves reports on this device. Ask a grown-up to copy or download the report.'};
- const pending={...feedbackPayload(report),delivery:{state:'pending'}};
- try{await feedbackStore(pending);}catch{return {ok:false,message:'Not sent. This device could not save the report. Ask a grown-up to copy or download it below.'};}
+ const native=feedbackNativeService(),epoch=native?.feedbackEpoch,current=()=>!native||(feedbackNativeService()===native&&native.feedbackEpoch===epoch);
+ const changed=()=>({ok:false,message:'This device data changed. Open a new report to continue.'});
+ let pending;try{pending=feedbackDelivery(report,{state:'pending'});}catch{return {ok:false,message:'This report uses an unsupported delivery format. It has been kept unchanged. Copy the report or create a new one.'};}
+ if(native){
+  if(!consent||consent.epoch!==epoch)return {ok:false,message:'Review this report with a grown-up before sending.'};
+  try{if(JSON.stringify(native.prepareFeedback(pending))!==JSON.stringify(consent.payload))return {ok:false,message:'This report changed. Review it again before sending.'};}catch{return {ok:false,message:'Could not prepare this report. Your local report has been kept.'};}
+ }
+ try{await feedbackStore(pending,epoch);}catch{return current()?{ok:false,message:'Not sent. This device could not save the report. Ask a grown-up to copy or download it below.'}:changed();}
  try{
+  if(!current())return changed();
   if(navigator.onLine===false)throw Error('offline');
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
-  let response;try{response=await fetch('/api/feedback',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify(feedbackPayload(pending)),signal:controller.signal});}finally{clearTimeout(timeout);}
-  const receipt=await response.json();
-  if(!response.ok||receipt.sent!==true||receipt.id!==pending.id||!Number.isSafeInteger(receipt.receipt)||receipt.receipt<1)throw Error(receipt.error==='feedback-not-configured'?'not-configured':'not-confirmed');
-  // A receipt confirms GitHub accepted the report. If saving the receipt fails,
-  // keep the server truth and let a later retry find its existing issue by ID.
-  try{await feedbackStore({...pending,delivery:{state:'sent',receipt:receipt.receipt,sentAt:new Date().toISOString()}});}catch{}
+  let receipt;
+  if(native)receipt=await native.sendFeedback(consent.payload,epoch);
+  else{
+   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);let response;
+   try{response=await fetch('/api/feedback',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify(feedbackPayload(pending)),signal:controller.signal});}finally{clearTimeout(timeout);}
+   receipt=await response.json();if(!response.ok)throw Error(receipt.error==='feedback-not-configured'?'not-configured':'not-confirmed');
+  }
+  if(!current())return changed();
+  if(receipt.sent!==true||receipt.id!==pending.id||!Number.isSafeInteger(receipt.receipt)||receipt.receipt<1)throw Error('not-confirmed');
+  // Preserve raw local fields while recording the server's acknowledged receipt.
+  try{await feedbackStore(feedbackDelivery(pending,{state:'sent',receipt:receipt.receipt,sentAt:new Date().toISOString()}),epoch);}catch{}
+  if(!current())return changed();
   return {ok:true,message:'Sent to the app maker. Thank you!'};
  }catch(error){
-  try{await feedbackStore({...pending,delivery:{state:'failed'}});}catch{}
+  if(!current())return changed();
+  try{await feedbackStore(feedbackDelivery(pending,{state:'failed'}),epoch);}catch{}
+  if(!current())return changed();
   return {ok:false,message:error.message==='not-configured'?'Not sent yet. Sending is not set up. Your report is saved on this device. You can retry later.':'Not sent or confirmed. Your report is saved on this device. Check your connection and retry.'};
  }
+}
+function feedbackPreview(report,owner){
+ const native=feedbackNativeService();if(!native)return Promise.resolve(undefined);
+ const epoch=native.feedbackEpoch,payload=native.prepareFeedback(report),dialog=profileDialog('feedback-preview','Grown-ups: review report');
+ const intro=profileElement('p','Only this message and the listed app/content details will be sent privately to the app maker. Stored learner history, grades, writing drafts and device/account identifiers are not attached. Check the message and leave out names or other personal information.',{class:'reading-note'});
+ const category=profileElement('p',FEEDBACK_CATEGORIES[payload.category]||'App report'),heading=profileElement('h3','Message'),message=profileElement('p',payload.note||'No extra message.');message.style.whiteSpace='pre-wrap';message.style.overflowWrap='anywhere';
+ dialog.append(intro,category,heading,message);
+ if(payload.question){const q=payload.question;dialog.append(profileElement('p',[q.character,q.pinyin,q.meaning,q.mode].filter(Boolean).join(' · ')));}
+ dialog.append(profileElement('p','Mandarin Grove '+payload.version+' · '+(payload.platform==='ios'?'iOS/iPadOS':'Android'),{class:'reading-note'}));
+ const details=profileElement('details'),summary=profileElement('summary','Exact report details'),text=profileElement('pre',JSON.stringify(payload,null,2),{tabindex:'0',role:'document','aria-label':'Exact report details'});text.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.5;';details.append(summary,text);dialog.append(details);
+ return new Promise(resolve=>{
+  let settled=false;const finish=value=>{if(settled)return;settled=true;resolve(value);};
+  dialog.addEventListener('close',()=>finish(null),{once:true});
+  const cancel=profileButton(dialog,'Cancel','feedback-preview-cancel',()=>profileClose(dialog),true);
+  profileButton(dialog,'Send privately','feedback-preview-send',()=>{if(!owner.isConnected||feedbackNativeService()!==native||native.feedbackEpoch!==epoch){finish(null);profileClose(dialog);return;}finish({payload,epoch});profileClose(dialog);});
+  document.body.append(dialog);dialog.showModal();cancel.focus();
+ });
 }
 function feedbackButtonKeydown(event){
  if(event.repeat&&(event.key==='Enter'||event.key===' ')&&event.target.closest('button'))event.preventDefault();
@@ -67,7 +100,7 @@ function contentFeedbackOffer(container,offer=null,fallback=null){
  container.append(note,button);if(focused)button.focus({preventScroll:true});
 }
 async function showFeedback({category:initialCategory=null,note:initialNote='',context=feedbackQuestion}={}){
- const canSend=feedbackCanSend();
+ const canSend=feedbackCanSend(),nativeOwner=feedbackNativeService(),formEpoch=nativeOwner?.feedbackEpoch,ownerValid=()=>!nativeOwner||(feedbackNativeService()===nativeOwner&&nativeOwner.feedbackEpoch===formEpoch);
  const existing=document.getElementById('feedback-dialog');
  if(existing?.open)return;existing?.remove();
  const snapshot=feedbackSnapshot(context),previous=document.activeElement;
@@ -88,6 +121,7 @@ async function showFeedback({category:initialCategory=null,note:initialNote='',c
  document.body.append(dialog);dialog.showModal();
  const note=dialog.querySelector('#feedback-note'),output=dialog.querySelector('#feedback-output'),status=dialog.querySelector('#feedback-status');
  const send=dialog.querySelector('#feedback-send'),retry=dialog.querySelector('#feedback-retry'),categories=[...dialog.querySelectorAll('[data-category]')];
+ if(nativeOwner){send.textContent='Review report';retry.textContent='Review saved report';status.tabIndex=-1;note.parentElement.nextElementSibling.textContent='A grown-up can review the exact report before sending. Stored learner history, grades, writing drafts and device/account identifiers are not attached. Please leave personal information out of the message.';}
  let reports=[],refreshSequence=0;
  let id=feedbackId(),category=Object.hasOwn(FEEDBACK_CATEGORIES,initialCategory)?initialCategory:null,saved=false,all=false,locked=false,busy=false,delivered=false;
  const suffix='\n[Text shortened for this report.]',raw=String(initialNote);
@@ -111,18 +145,29 @@ async function showFeedback({category:initialCategory=null,note:initialNote='',c
  categories.forEach(button=>button.onclick=()=>{if(locked)return;category=button.dataset.category;categories.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));send.disabled=false;saved=false;dialog.querySelector('#feedback-save').disabled=false;all=false;refresh();});
  note.oninput=()=>{saved=false;all=false;dialog.querySelector('#feedback-save').disabled=false;refresh()};
  send.onclick=async()=>{
-  if(!canSend||busy||!category)return;locked=true;setBusy(true);status.textContent='Sending…';
-  const result=await feedbackSendReport(current());delivered=result.ok;status.textContent=result.message;setBusy(false);send.textContent=result.ok?'Report sent':'Retry report';refresh();
+  if(!canSend||busy||!category)return;
+  if(!ownerValid()){status.textContent='This device data changed. Close this report and open a new one.';return;}
+  setBusy(true);const report=current();let consent;
+  try{consent=nativeOwner?await feedbackPreview(report,dialog):undefined;}catch{status.textContent='Could not prepare this report. Nothing was sent.';setBusy(false);return;}
+  if(nativeOwner&&!consent){setBusy(false);status.textContent='This review did not send a report.';if(dialog.isConnected)send.focus({preventScroll:true});return;}
+  if(!dialog.isConnected||!ownerValid()){setBusy(false);return;}
+  locked=true;status.textContent='Sending…';const result=await feedbackSendReport(report,consent);delivered=result.ok;status.textContent=result.message;setBusy(false);send.textContent=result.ok?'Report sent':nativeOwner?'Review retry':'Retry report';if(nativeOwner&&dialog.isConnected)status.focus({preventScroll:true});refresh();
  };
  retry.onclick=async()=>{
-  if(!canSend||busy)return;const report=pending()[0];if(!report)return;setBusy(true);status.textContent='Sending saved report…';
-  const result=await feedbackSendReport(report);if(report.id===id&&result.ok){delivered=true;send.textContent='Report sent';}status.textContent=result.message;setBusy(false);refresh();
+  if(!canSend||busy)return;
+  if(!ownerValid()){status.textContent='This device data changed. Close this report and open a new one.';return;}
+  const report=pending()[0];if(!report)return;setBusy(true);let consent;
+  try{consent=nativeOwner?await feedbackPreview(report,dialog):undefined;}catch{status.textContent='Could not prepare this report. Your local report has been kept.';setBusy(false);return;}
+  if(nativeOwner&&!consent){setBusy(false);status.textContent='This review did not send a report.';if(dialog.isConnected)retry.focus({preventScroll:true});return;}
+  if(!dialog.isConnected||!ownerValid()){setBusy(false);return;}
+  status.textContent='Sending saved report…';const result=await feedbackSendReport(report,consent);if(report.id===id&&result.ok){delivered=true;send.textContent='Report sent';}status.textContent=result.message;setBusy(false);if(nativeOwner&&dialog.isConnected)status.focus({preventScroll:true});refresh();
  };
  dialog.querySelector('#feedback-save').onclick=async()=>{
   if(saved)return;
   if(locked||busy)return;
+  if(!ownerValid()){status.textContent='This device data changed. Close this report and open a new one.';return;}
   if(!category&&!note.value.trim()){status.textContent='Choose a problem or add a note first.';return;}
-  setBusy(true);try{await feedbackStore({...current(),delivery:{state:'local'}});saved=true;dialog.querySelector('#feedback-save').disabled=true;status.textContent='Saved on this device. Nothing has been sent.';refresh();}catch{status.textContent='Could not save here. Copy or download the report instead.';}finally{setBusy(false);}
+  setBusy(true);try{await feedbackStore({...current(),delivery:{state:'local'}},formEpoch);saved=true;dialog.querySelector('#feedback-save').disabled=true;status.textContent='Saved on this device. Nothing has been sent.';refresh();}catch{status.textContent='Could not save here. Copy or download the report instead.';}finally{setBusy(false);}
  };
  dialog.querySelector('#feedback-all').onclick=async()=>{all=true;await refresh();dialog.querySelector('#feedback-details').open=true;status.textContent=`${reports.length} saved reports on this device (latest 50). Delivery status is included. Copy, download or share them together.`;};
  dialog.querySelector('#feedback-copy').onclick=async()=>{

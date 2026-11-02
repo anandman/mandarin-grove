@@ -9,10 +9,14 @@
   return {getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key),key:index=>[...values.keys()][index]??null,get length(){return values.size;},values};
  }
  async function hash(text){const data=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(data)].map(n=>n.toString(16).padStart(2,'0')).join('');}
- function createRepository({database,codec,migrate,now=Date.now,makeId,beforeErase}){
+ function createRepository({database,codec,migrate,now=Date.now,makeId,beforeErase,feedbackEpoch,onEraseRequested}){
   let tail=Promise.resolve(),registryBase;const profileBases=new Map();
   function serial(action){const result=tail.then(action);tail=result.then(()=>undefined,()=>undefined);return result;}
   async function invoke(method,args){
+   if(method==='saveReport'&&args[1]?.expectedFeedbackEpoch!==undefined){
+    const expected=args[1].expectedFeedbackEpoch;
+    if(!Number.isSafeInteger(expected)||expected<0||typeof feedbackEpoch!=='function'||expected!==feedbackEpoch())throw Error('This feedback report is stale after device data changed. Open it again before saving.');
+   }
    const before=await database.readSnapshot(),store=memory(before.entries);
    const repository=web.createRepository({storage:store,codec,migrate,now,makeId});
    // Seed the pure merge engine with this caller's acknowledged read baselines,
@@ -49,7 +53,7 @@
    if(method==='deleteProfile')profileBases.delete(args[0]);
    return copy(result);
   }
-  const repository={};for(const method of methods)repository[method]=(...args)=>{let captured;try{captured=args.map(copy);}catch(error){return Promise.reject(error);}return serial(()=>invoke(method,captured));};
+  const repository={};for(const method of methods)repository[method]=(...args)=>{let captured;try{if(method==='eraseLocal'&&onEraseRequested)onEraseRequested();captured=args.map(copy);}catch(error){return Promise.reject(error);}return serial(()=>invoke(method,captured));};
   repository.exportRecovery=()=>serial(()=>database.exportRecovery());
   return Object.freeze(repository);
  }

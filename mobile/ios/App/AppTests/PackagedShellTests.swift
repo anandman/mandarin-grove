@@ -6,6 +6,39 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testNativeFeedbackDurabilityWithMockedDelivery() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        var web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-feedback-scenarios", extension: "js"))
+        let output = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("GroveSyntheticFeedback-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        let refused = try await asyncJavaScript("return JSON.stringify(await GroveFeedbackScenarios.refusedPendingSave());", in: web) as? String
+        try XCTUnwrap(refused).write(to: output.appendingPathComponent("refused-save.json"), atomically: true, encoding: .utf8)
+        let pendingValue = try await asyncJavaScript("return JSON.stringify(await GroveFeedbackScenarios.beginPending());", in: web) as? String, pending = try XCTUnwrap(pendingValue)
+        try pending.write(to: output.appendingPathComponent("pending.json"), atomically: true, encoding: .utf8)
+        web = try await reload(web)
+        _ = try await web.evaluateJavaScript(resource("native-feedback-scenarios", extension: "js"))
+        let result = try await asyncJavaScript("return JSON.stringify(await GroveFeedbackScenarios.recoverAndRetry(\(pending)));", in: web) as? String
+        try XCTUnwrap(result).write(to: output.appendingPathComponent("retry.json"), atomically: true, encoding: .utf8)
+    }
+
+    @MainActor func testNativeFeedbackOrdinaryPreviewAndReadonlyHTTP() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; if(window.GroveNativeTest)throw Error('Ordinary package required'); return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-feedback-scenarios", extension: "js"))
+        let preview = try await asyncJavaScript("return JSON.stringify(await GroveFeedbackScenarios.previewCancel());", in: web) as? String
+        XCTAssertNotNil(preview)
+        let result = try await asyncJavaScript("const endpoint='https://mandarin-grove.vercel.app/api/native-feedback', http=Capacitor.Plugins.CapacitorHttp, options={url:endpoint,method:'OPTIONS',headers:{Origin:'capacitor://localhost','Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type'},disableRedirects:true,connectTimeout:10000,readTimeout:10000}; const preflight=await http.request(options), get=await http.request({...options,method:'GET',headers:{Origin:'capacitor://localhost'}}); const foreign=await http.request({...options,headers:{Origin:'https://foreign.invalid','Access-Control-Request-Method':'POST'}}); if(preflight.status!==204||get.status!==405||foreign.status!==403||Object.entries(preflight.headers).find(([k])=>k.toLowerCase()==='access-control-allow-origin')?.[1]!=='capacitor://localhost')throw Error('Native readonly HTTP contract failed'); return JSON.stringify({preflight,get,foreign});", in: web) as? String
+        let output = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("GroveSyntheticFeedbackReadonly-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        try XCTUnwrap(preview).write(to: output.appendingPathComponent("preview.json"), atomically: true, encoding: .utf8)
+        try XCTUnwrap(result).write(to: output.appendingPathComponent("readonly-http.json"), atomically: true, encoding: .utf8)
+    }
+
     @MainActor func testNativeBundledNoticesAndExternalRouting() async throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }

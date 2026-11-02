@@ -5,10 +5,10 @@ try{({createDatabase}=require('../mobile/src/database.ts'));}catch(error){if(err
 const codec={decodeUtf8:code=>new TextDecoder('utf-8',{fatal:true}).decode(Buffer.from(code,'base64')),encodeUtf8:text=>Buffer.from(text,'utf8').toString('base64')};
 const fixture=name=>JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/backups',name),'utf8'));
 const code=value=>codec.encodeUtf8(JSON.stringify(value)),digest=value=>crypto.createHash('sha256').update(value).digest('hex');
-async function setup({file,migrate,wrap,beforeErase}={}){
+async function setup({file,migrate,wrap,beforeErase,feedbackEpoch,onEraseRequested}={}){
  assert.equal(typeof createDatabase,'function','Real SQLite transaction implementation is available');assert.equal(typeof Native?.createRepository,'function','Native repository is available');
  file=file||path.join(fs.mkdtempSync(path.join(os.tmpdir(),'grove-native-repository-')),'grove.sqlite');const driver=openDriver(file);
- const database=await createDatabase(wrap?wrap(driver):driver,{now:()=>123});return {file,driver,database,repository:Native.createRepository({database,codec,migrate,beforeErase,now:()=>123,makeId:()=> 'fixed'})};
+ const database=await createDatabase(wrap?wrap(driver):driver,{now:()=>123});return {file,driver,database,repository:Native.createRepository({database,codec,migrate,beforeErase,feedbackEpoch,onEraseRequested,now:()=>123,makeId:()=> 'fixed'})};
 }
 
 test('native initialization uses query for Android row-returning PRAGMAs and verifies durable settings',async()=>{
@@ -279,4 +279,14 @@ test('native erase waits for private file cleanup and keeps SQL data unchanged u
 });
 test('failed private file cleanup refuses native erase without changing any progress or original',async()=>{
  const a=await setup({beforeErase:async()=>{throw Error('Synthetic temporary file cleanup refused');}});await a.repository.importBackup(code(fixture('original-v1.json')));const before=await a.database.exportRecovery();await assert.rejects(a.repository.eraseLocal(),/temporary file cleanup refused/);assert.deepEqual(await a.database.exportRecovery(),before);await a.driver.close();
+});
+
+
+test('an old feedback callback queued behind erase cannot recreate a raw report through the Promise facade',async()=>{
+ let epoch=0,release,block=false;const gate=new Promise(r=>release=r);const a=await setup({feedbackEpoch:()=>epoch,onEraseRequested:()=>{epoch++;},wrap:d=>({...d,query:async(...args)=>{if(block){block=false;await gate;}return d.query(...args);}})});
+ try{await a.repository.importBackup(code(fixture('original-v1.json')));const raw={id:'synthetic-report',note:'PRIVATE_RAW',future:{keep:true},delivery:{state:'pending',future:{keep:true}}};await a.repository.saveReport(raw);const facade=require('../adapters/persistence.js').createRepository({repository:a.repository});block=true;const held=facade.readReports();await new Promise(r=>setImmediate(r));const erase=facade.eraseLocal(),late=facade.saveReport({...raw,delivery:{state:'sent',receipt:48}},{expectedFeedbackEpoch:epoch});release();await held;await erase;await assert.rejects(late,/stale|changed|erased/i);assert.deepEqual(await a.repository.readReports(),[]);assert.equal(epoch,1);}finally{await a.driver.close();}
+});
+test('failed native erasure invalidates an old feedback owner but preserves raw reports for a fresh retry',async()=>{
+ let epoch=0;const a=await setup({feedbackEpoch:()=>epoch,onEraseRequested:()=>{epoch++;},beforeErase:async()=>{throw Error('Synthetic cleanup refusal');}});
+ try{await a.repository.importBackup(code(fixture('original-v1.json')));const raw={id:'synthetic-report',note:'PRIVATE_RAW',future:{keep:true},delivery:{state:'pending',future:{keep:true}}};await a.repository.saveReport(raw);const before=await a.database.readSnapshot();await assert.rejects(a.repository.eraseLocal(),/cleanup refusal/);assert.deepEqual(await a.database.readSnapshot(),before);await assert.rejects(a.repository.saveReport({...raw,note:'stale'},{expectedFeedbackEpoch:0}),/stale|changed|erased/i);assert.deepEqual(await a.repository.readReports(),[raw]);await a.repository.saveReport({...raw,delivery:{...raw.delivery,state:'sent',receipt:48}},{expectedFeedbackEpoch:epoch});assert.deepEqual((await a.repository.readReports())[0].future,raw.future);assert.equal(epoch,1);}finally{await a.driver.close();}
 });

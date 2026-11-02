@@ -1,4 +1,5 @@
-import {Capacitor,registerPlugin,type PluginListenerHandle} from '@capacitor/core';
+import {Capacitor,CapacitorHttp,registerPlugin,type PluginListenerHandle} from '@capacitor/core';
+import {createNativeFeedback,type FeedbackHttp,type FeedbackReceipt} from './feedback';
 import {App} from '@capacitor/app';
 import {installBundledNotices} from './navigation';
 import {createAndroidBackController,installAudioLifecycle} from './lifecycle';
@@ -10,10 +11,12 @@ import {createRepository,type NativeRepository} from '../../adapters/native-stor
 import {files,type NativeFiles} from './files';
 
 declare const __GROVE_INTERNAL_TESTS__:boolean;
-type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase};
+declare const MAINLAND_AUDIO:{readings:Record<string,string>};
+declare const REFERENCE_AUDIO:{readings:Record<string,string>};
+type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase;feedbackRequest?:FeedbackHttp['request']};
 declare global {
  interface Window {
-  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;speech:NativeSpeech;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
+  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;readonly feedbackEpoch:number;prepareFeedback(report:unknown):Record<string,unknown>;sendFeedback(report:unknown,epoch:number):Promise<FeedbackReceipt>;speech:NativeSpeech;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
   GroveNativeTest?:TestControl;
   prepareWebProgress?(value:any,now:number,profile:any):any;
   showStorageFailure?(error:Error):void;
@@ -22,6 +25,18 @@ declare global {
  }
 }
 const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
+const feedback=createNativeFeedback({request:options=>{
+ // Synthetic test packages must never forward a live report, even if a fixture
+ // forgot its mock. Ordinary packages omit this entire compile-time branch.
+ if(__GROVE_INTERNAL_TESTS__&&options.method==='POST'){
+  const mock=window.GroveNativeTest?.feedbackRequest;
+  return mock?mock(options):Promise.reject(Error('test-send-disabled'));
+ }
+ return CapacitorHttp.request(options);
+}},{platform,isPublicRecording:path=>{
+ const catalogs=[typeof MAINLAND_AUDIO==='undefined'?undefined:MAINLAND_AUDIO.readings,typeof REFERENCE_AUDIO==='undefined'?undefined:REFERENCE_AUDIO.readings];
+ return catalogs.some(c=>c&&Object.values(c).includes(path));
+}});
 installBundledNotices({createDialog:(id,title)=>window.profileDialog(id,title),stopSpeech:()=>window.stopSpeech?.()});
 interface NativeSpeechPlugin extends SpeechPlugin {addListener(name:'interrupted',listener:()=>void):Promise<PluginListenerHandle>}
 const speechPlugin=registerPlugin<NativeSpeechPlugin>('GroveSpeech');
@@ -64,7 +79,7 @@ const ready=(async()=>{
    decodeUtf8:(code:string)=>new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(code),char=>char.charCodeAt(0))),
    encodeUtf8:(text:string)=>{let bytes='';for(const byte of new TextEncoder().encode(text))bytes+=String.fromCharCode(byte);return btoa(bytes);}
   };
-  repository=createRepository({database,codec,beforeErase:async()=>{restoredFiles.invalidate();if(window.stopSpeech)await window.stopSpeech();else await speech.cancel();await files.clearTemporaryFiles();},migrate:(value,now,profile)=>{
+  repository=createRepository({database,codec,feedbackEpoch:()=>feedback.epoch,onEraseRequested:()=>feedback.invalidate(),beforeErase:async()=>{restoredFiles.invalidate();if(window.stopSpeech)await window.stopSpeech();else await speech.cancel();await files.clearTemporaryFiles();},migrate:(value,now,profile)=>{
    if(!window.prepareWebProgress)throw Error('The learner initialization is not ready. Existing data has been kept.');
    return window.prepareWebProgress(value,now,profile);
   }});
@@ -72,7 +87,7 @@ const ready=(async()=>{
 })();
 // Startup observes ready; also handle a failure before the next script loads.
 void ready.catch(()=>{});
-window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,speech,setBackHandler:handler=>platform==='android'?backController.install(handler):Promise.resolve(false),get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
+window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,get feedbackEpoch(){return feedback.epoch;},prepareFeedback:feedback.prepare,async sendFeedback(report,epoch){const payload=feedback.prepare(report);await ready;return feedback.send(payload,epoch);},speech,setBackHandler:handler=>platform==='android'?backController.install(handler):Promise.resolve(false),get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
  await ready.catch(()=>{});
  if(repository){try{return await repository.exportRecovery();}catch{/* Preserve raw files when semantic recovery cannot read this schema. */}}
  // Close the owned connection before reading fixed DB/WAL/SHM paths. Never
