@@ -17,11 +17,11 @@ export interface NativeDatabase {
  commit(expectedRevision:number,changes:Array<[string,string|null]>,metadata?:CommitMetadata):Promise<NativeSnapshot>;
  exportRecovery():Promise<{format:string;snapshot:NativeSnapshot;originals:Row[];revisions:Row[]}>;
 }
-const SCHEMA=2;
+const SCHEMA=3;
 const TABLES=['grove_meta','grove_entries','grove_revisions','grove_originals','grove_outbox'];
 const CREATE=`
- CREATE TABLE grove_meta(id INTEGER PRIMARY KEY CHECK(id=1),schema_version INTEGER NOT NULL,revision INTEGER NOT NULL);
- INSERT INTO grove_meta VALUES(1,2,0);
+ CREATE TABLE grove_meta(id INTEGER PRIMARY KEY CHECK(id=1),schema_version INTEGER NOT NULL,revision INTEGER NOT NULL,erase_pending INTEGER NOT NULL CHECK(erase_pending IN(0,1)));
+ INSERT INTO grove_meta VALUES(1,3,0,0);
  CREATE TABLE grove_entries(namespace TEXT NOT NULL,key TEXT PRIMARY KEY,value TEXT NOT NULL);
  CREATE TABLE grove_revisions(revision INTEGER PRIMARY KEY,reason TEXT NOT NULL,created INTEGER NOT NULL,changes_hash TEXT NOT NULL,before_json TEXT);
  CREATE TABLE grove_originals(sha256 TEXT PRIMARY KEY,code TEXT NOT NULL,payload_hash TEXT NOT NULL,created INTEGER NOT NULL,code_json TEXT NOT NULL);
@@ -42,9 +42,13 @@ export async function inspectSchema(connection:Pick<SQLiteDriver,'query'>){
  let version=SCHEMA;
  if(names.includes('grove_meta')){
   const meta=(await connection.query('SELECT schema_version,revision FROM grove_meta WHERE id=1')).values||[];
-  if(meta.length!==1||typeof meta[0].schema_version!=='number'||![1,SCHEMA].includes(meta[0].schema_version))throw Error('This native database uses a newer or unsupported schema. Existing files have been kept.');
+  if(meta.length!==1||typeof meta[0].schema_version!=='number'||![1,2,SCHEMA].includes(meta[0].schema_version))throw Error('This native database uses a newer or unsupported schema. Existing files have been kept.');
   version=meta[0].schema_version;
   if(TABLES.some(name=>!names.includes(name))||names.some(name=>!TABLES.includes(name)&&name!=='android_metadata'))throw Error('The native database schema needs recovery. Existing files have been kept.');
+  if(version===SCHEMA){
+   const pending=(await connection.query('SELECT erase_pending FROM grove_meta WHERE id=1')).values?.[0]?.erase_pending;
+   if(pending!==0&&pending!==1)throw Error('Native erasure metadata needs recovery. Existing files have been kept.');
+  }
  }else if(names.some(name=>name!=='android_metadata'))throw Error('Unrecognized native database schema. Existing files have been kept.');
  return {names,version};
 }
@@ -87,7 +91,30 @@ export async function createDatabase(connection:SQLiteDriver,{now=Date.now}: {no
    throw error;
   }
  }
+ async function finishErasure(){
+  try{
+   const marker=(await rows('SELECT revision,erase_pending FROM grove_meta WHERE id=1'))[0];
+   if(marker?.erase_pending===0)return; // Another recovery connection finished it.
+   if(marker?.erase_pending!==1)throw Error('Invalid erasure marker');
+   const remaining=(await rows('SELECT (SELECT count(*) FROM grove_entries)+(SELECT count(*) FROM grove_originals)+(SELECT count(*) FROM grove_outbox)+(SELECT count(*) FROM grove_revisions WHERE before_json IS NOT NULL) AS remaining'))[0]?.remaining;
+   if(remaining!==0)throw Error('Unexpected data after erasure');
+   // secure_delete handles this transaction's cells. VACUUM also removes
+   // free pages left by older versions, then TRUNCATE drops old WAL frames.
+   // Neither operation touches OS-selected external backup files.
+   await connection.execute('VACUUM',false);
+   const checkpoint=(await rows('PRAGMA wal_checkpoint(TRUNCATE)'))[0];
+   if(checkpoint?.busy!==0||checkpoint?.log!==0||checkpoint?.checkpointed!==0)throw Error('Erasure checkpoint is busy or unavailable');
+   // Clearing this device-private flag writes only anonymous metadata. All
+   // earlier learner frames have already been purged, even if this ACK is lost.
+   await connection.run('UPDATE grove_meta SET erase_pending=0 WHERE id=1 AND revision=? AND erase_pending=1',[marker.revision],false);
+   if((await rows('SELECT erase_pending FROM grove_meta WHERE id=1'))[0]?.erase_pending!==0)throw Error('A newer erasure is pending');
+  }catch{
+   recoveryError=Error('Device erasure is incomplete. Restart the app to finish before using progress. External backup files were kept.');
+   throw recoveryError;
+  }
+ }
  const {names,version}=await inspectSchema(connection);
+ let erasureSchema=version===SCHEMA;
  // Android execSQL refuses row-returning PRAGMAs. Use the driver's query API
  // for each setting, then require the durability settings actually in force.
  await rows('PRAGMA journal_mode=WAL');
@@ -97,12 +124,13 @@ export async function createDatabase(connection:SQLiteDriver,{now=Date.now}: {no
     (await rows('PRAGMA synchronous'))[0]?.synchronous!==2||
     (await rows('PRAGMA busy_timeout'))[0]?.timeout!==5000)throw Error('Native durable storage settings could not be applied. Existing files have been kept.');
  if(!names.includes('grove_meta'))await transaction(()=>connection.execute(CREATE,false));
- if(version===1){
+ if(version<SCHEMA){
   // Keep every legacy column. Native UTF-16 binding removes a leading BOM,
   // so store a JSON string (opening quote first) as the authoritative code.
   // A legacy missing BOM is recoverable only against its pre-existing hash.
   await transaction(async()=>{
-   const before=await snapshot(),originals=await rows('SELECT sha256,code FROM grove_originals'),encoded=[];
+   const before=await snapshot(),originals=version===1?await rows('SELECT sha256,code FROM grove_originals'):[],encoded=[];
+   const legacyErasure=(await rows('SELECT reason FROM grove_revisions ORDER BY revision DESC LIMIT 1'))[0]?.reason==='erase';
    for(const row of originals){
     let code=String(row.code);
     if(await sha256(code)!==row.sha256){
@@ -112,17 +140,30 @@ export async function createDatabase(connection:SQLiteDriver,{now=Date.now}: {no
     encoded.push([JSON.stringify(code),row.sha256]);
    }
    if(before.revision===Number.MAX_SAFE_INTEGER)throw Error('Native progress revision needs an upgrade.');
-   await connection.execute('ALTER TABLE grove_originals ADD COLUMN code_json TEXT;',false);
-   for(const values of encoded)await connection.run('UPDATE grove_originals SET code_json=? WHERE sha256=?',values,false);
-   await connection.run('INSERT INTO grove_revisions(revision,reason,created,changes_hash,before_json) VALUES(?,?,?,?,?)',[before.revision+1,'upgrade',now(),await sha256('schema:1->2:original-code-json'),JSON.stringify(before)],false);
-   await connection.run('UPDATE grove_meta SET schema_version=2,revision=? WHERE id=1',[before.revision+1],false);
+   if(version===1){
+    await connection.execute('ALTER TABLE grove_originals ADD COLUMN code_json TEXT;',false);
+    for(const values of encoded)await connection.run('UPDATE grove_originals SET code_json=? WHERE sha256=?',values,false);
+   }
+   await connection.execute('ALTER TABLE grove_meta ADD COLUMN erase_pending INTEGER NOT NULL DEFAULT 0 CHECK(erase_pending IN(0,1));',false);
+   await connection.run('INSERT INTO grove_revisions(revision,reason,created,changes_hash,before_json) VALUES(?,?,?,?,?)',[before.revision+1,'upgrade',now(),await sha256('schema:'+version+'->3:private-erasure'),legacyErasure?null:JSON.stringify(before)],false);
+   await connection.run('UPDATE grove_meta SET schema_version=3,revision=?,erase_pending=? WHERE id=1',[before.revision+1,legacyErasure?1:0],false);
   });
+  erasureSchema=true;
  }
+ const pending=(await rows('SELECT erase_pending FROM grove_meta WHERE id=1'))[0]?.erase_pending;
+ if(pending!==0&&pending!==1)throw Error('Native erasure metadata needs recovery. Existing files have been kept.');
+ // The independent flag survives kills and lost COMMIT acknowledgements.
+ // Finish cleanup before constructing a repository or creating a new profile.
+ if(pending===1)await finishErasure();
  let tail:Promise<unknown>=Promise.resolve();
  function serial<T>(action:()=>Promise<T>):Promise<T>{const result=tail.then(action);tail=result.then(()=>undefined,()=>undefined);return result;}
- async function snapshot():Promise<NativeSnapshot>{
+ async function snapshot(allowErasure=false):Promise<NativeSnapshot>{
   requireHealthy();
-  const data=await rows('SELECT m.revision,e.namespace,e.key,e.value FROM grove_meta m LEFT JOIN grove_entries e ON 1=1 WHERE m.id=1 ORDER BY e.key');
+  const data=await rows('SELECT m.revision,'+(erasureSchema?'m.erase_pending':'0 AS erase_pending')+',e.namespace,e.key,e.value FROM grove_meta m LEFT JOIN grove_entries e ON 1=1 WHERE m.id=1 ORDER BY e.key');
+  if(data[0]?.erase_pending!==0){
+   if(data[0]?.erase_pending!==1)throw Error('Native erasure metadata needs recovery. Existing files have been kept.');
+   if(!allowErasure)throw Error('Device erasure is incomplete. Restart the app to finish before using progress. External backup files were kept.');
+  }
   const revision=data[0]?.revision;
   if(typeof revision!=='number'||!Number.isSafeInteger(revision)||revision<0)throw Error('Native progress metadata needs recovery.');
   const entries=Object.fromEntries(data.filter(row=>row.key!==null).map(row=>{
@@ -148,11 +189,19 @@ export async function createDatabase(connection:SQLiteDriver,{now=Date.now}: {no
    }catch(error){return Promise.reject(error);}
    return serial(async()=>{
     const changesHash=await sha256(JSON.stringify(captured)),originalHash=meta.originalCode===undefined?null:await sha256(meta.originalCode);
-    return transaction(async()=>{
+    const reason=meta.reason||'save';
+    if(reason==='erase'){
+     requireHealthy();
+     if(captured.some(([,value])=>value!==null)||originalHash)throw Error('An erase cannot also save progress. Existing data has been kept.');
+     await rows('PRAGMA secure_delete=ON');
+     if((await rows('PRAGMA secure_delete'))[0]?.secure_delete!==1)throw Error('Could not prepare private erasure. Progress has been kept.');
+    }
+    const saved=await transaction(async()=>{
      const before=await snapshot();if(before.revision!==expectedRevision)throw Error('Native progress revision changed. Reload before saving again.');
      if(before.revision===Number.MAX_SAFE_INTEGER)throw Error('Native progress revision needs an upgrade.');
-     const revision=before.revision+1,reason=meta.reason||'save';
+     const revision=before.revision+1;
      if(reason==='erase'){
+      await connection.run('DELETE FROM grove_entries',[],false);
       await connection.run('DELETE FROM grove_revisions',[],false);await connection.run('DELETE FROM grove_originals',[],false);await connection.run('DELETE FROM grove_outbox',[],false);
      }
      for(const [key,value]of captured){
@@ -166,9 +215,11 @@ export async function createDatabase(connection:SQLiteDriver,{now=Date.now}: {no
      }
      const keepBefore=['import','reset','delete','bootstrap','upgrade'].includes(reason);
      await connection.run('INSERT INTO grove_revisions(revision,reason,created,changes_hash,before_json) VALUES(?,?,?,?,?)',[revision,reason,now(),changesHash,keepBefore?JSON.stringify(before):null],false);
-     await connection.run('UPDATE grove_meta SET revision=? WHERE id=1',[revision],false);
-     return snapshot();
+     await connection.run('UPDATE grove_meta SET revision=?,erase_pending=? WHERE id=1',[revision,reason==='erase'?1:0],false);
+     return snapshot(reason==='erase');
     });
+    if(reason==='erase'){await finishErasure();return snapshot();}
+    return saved;
    });
   },
   exportRecovery:()=>serial(()=>transaction(async()=>({

@@ -34,5 +34,22 @@ globalThis.GroveNativeScenarios=(()=>{
    check(/full/i.test(message),'Real native driver reports SQLITE_FULL: '+message);equal(await GroveNativeTest.database.readSnapshot(),before,'Disk full preserves every acknowledged row');return message;
   }finally{await c.query('PRAGMA max_page_count='+prior);}
  }
- return {check,equal,encode,decode,syntheticOnly,importFrozen,practice,diskFull};
+ async function prepareErasure(fixture){
+  await syntheticOnly();
+  const priorBackup=await backup(),priorFiles=await GrovePlatform.files.rawRecovery(),c=GroveNativeTest.connection;
+  const retired='synthetic-retired-private-'+crypto.randomUUID(),current='synthetic-current-private-'+crypto.randomUUID();
+  await c.query('PRAGMA secure_delete=OFF');await c.query('PRAGMA wal_autocheckpoint=0');
+  await c.run('INSERT INTO grove_entries(namespace,key,value) VALUES(?,?,?)',['progress','zh_retired',retired.repeat(500)],false);await c.run('DELETE FROM grove_entries WHERE key=?',['zh_retired'],false);await c.query('PRAGMA wal_checkpoint(TRUNCATE)');
+  const seeded=await GrovePlatform.files.rawRecovery();check(seeded.files.some(f=>atob(f.base64).includes(retired)),'Actual old native database pages retain the synthetic marker before erase');
+  fixture=JSON.parse(JSON.stringify(fixture));fixture.PR.list[0].name=current;const original=encode(fixture);await GROVE_REPOSITORY.importBackup(original);
+  await GROVE_REPOSITORY.writePreference('zh_voice',current);await GROVE_REPOSITORY.saveReport({id:'synthetic-erasure-report',note:current});await c.run('INSERT INTO grove_outbox(operation_id,payload,created) VALUES(?,?,?)',['synthetic-erasure-op',current,Date.now()],false);
+  return {priorBackup,priorFiles,beforeFiles:await GrovePlatform.files.rawRecovery(),retired,current,original};
+ }
+ async function eraseAndVerify({retired,current,original}){
+  check(await GROVE_REPOSITORY.eraseLocal(),'Explicit erase acknowledged');equal((await GroveNativeTest.database.readSnapshot()).entries,{},'No logical progress remains after erase');
+  const recovery=await GroveNativeTest.database.exportRecovery();equal(recovery.originals,[],'Original recovery codes erased');equal(recovery.revisions.map(r=>[r.reason,r.before]),[['erase',null]],'Only anonymous erase receipt remains');
+  const files=await GrovePlatform.files.rawRecovery();for(const f of files.files)for(const marker of [retired,current,original])check(!atob(f.base64).includes(marker),'Private bytes absent from actual native '+f.name);
+  return files;
+ }
+ return {check,equal,encode,decode,syntheticOnly,importFrozen,practice,diskFull,prepareErasure,eraseAndVerify};
 })();

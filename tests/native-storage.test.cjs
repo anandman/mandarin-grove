@@ -40,7 +40,7 @@ async function legacyNative(){
 test('v1 upgrade preserves legacy rows and recovers a missing leading BOM only with its exact existing SHA-256 proof',async()=>{
  const a=await legacyNative(),before=(await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values,legacy=(await a.d.query('SELECT code FROM grove_originals')).values[0].code;
  const database=await createDatabase(a.d);assert.deepEqual((await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values,before);assert.equal((await a.d.query('SELECT code FROM grove_originals')).values[0].code,legacy);
- assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,2);const recovery=await database.exportRecovery();assert.equal(recovery.originals[0].code,a.original);assert.equal(recovery.snapshot.revision,8);assert.ok(recovery.revisions.some(r=>r.reason==='upgrade'&&r.before.revision===7));
+ assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,3);const recovery=await database.exportRecovery();assert.equal(recovery.originals[0].code,a.original);assert.equal(recovery.snapshot.revision,8);assert.ok(recovery.revisions.some(r=>r.reason==='upgrade'&&r.before.revision===7));
  await createDatabase(a.d);assert.equal((await database.readSnapshot()).revision,8);await a.d.close();
 });
 
@@ -51,7 +51,7 @@ test('an unrecognized legacy original hash mismatch refuses upgrade and keeps al
 
 test('failed v1 upgrade rolls back schema, original encoding and recovery receipt together, then retries',async()=>{
  const a=await legacyNative(),before=(await a.d.query('SELECT * FROM grove_originals')).values;
- await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=2'))throw Error('Synthetic migration interruption');return a.d.run(sql,...args);}}),/migration interruption/);
+ await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=3'))throw Error('Synthetic migration interruption');return a.d.run(sql,...args);}}),/migration interruption/);
  assert.equal((await a.d.query('SELECT schema_version,revision FROM grove_meta')).values[0].schema_version,1);assert.equal((await a.d.query('PRAGMA table_info(grove_originals)')).values.some(r=>r.name==='code_json'),false);assert.deepEqual((await a.d.query('SELECT * FROM grove_originals')).values,before);assert.deepEqual((await a.d.query('SELECT * FROM grove_revisions')).values,[]);
  const database=await createDatabase(a.d);assert.equal((await database.exportRecovery()).originals[0].code,a.original);await a.d.close();
 });
@@ -194,6 +194,81 @@ test('unknown future schema is refused without modifying its database bytes',asy
 
 test('native bootstrap can inspect supported and future schemas through an actual read-only connection',async()=>{
  const {inspectSchema}=require('../mobile/src/database.ts');assert.equal(typeof inspectSchema,'function','A read-only preflight precedes native read-write opening');
- const a=await setup();await a.driver.close();const readOnly=openDriver(a.file,{readOnly:true});assert.equal((await inspectSchema(readOnly)).version,2);await readOnly.close();
+ const a=await setup();await a.driver.close();const readOnly=openDriver(a.file,{readOnly:true});assert.equal((await inspectSchema(readOnly)).version,3);await readOnly.close();
  const write=openDriver(a.file);await write.run('UPDATE grove_meta SET schema_version=99 WHERE id=1');await write.close();const before=fs.readFileSync(a.file),future=openDriver(a.file,{readOnly:true});await assert.rejects(inspectSchema(future),/newer|unsupported/);await future.close();assert.deepEqual(fs.readFileSync(a.file),before);
+});
+
+async function privateEraseFixture(options={}){
+ const a=await setup(options),retired='synthetic-retired-page-'+crypto.randomUUID(),current='synthetic-current-private-'+crypto.randomUUID();
+ await a.driver.query('PRAGMA secure_delete=OFF');await a.driver.query('PRAGMA wal_autocheckpoint=0');
+ await a.driver.run('INSERT INTO grove_entries(namespace,key,value) VALUES(?,?,?)',['progress','zh_retired',retired.repeat(500)]);await a.driver.run('DELETE FROM grove_entries WHERE key=?',['zh_retired']);await a.driver.query('PRAGMA wal_checkpoint(TRUNCATE)');
+ assert.ok(fs.readFileSync(a.file).includes(Buffer.from(retired)),'Retired data really exists in the old free pages before the explicit erase');
+ const f=fixture('original-v1.json');f.PR.list[0].name=current;const original=code(f);await a.repository.importBackup(original);await a.repository.writePreference('zh_voice',current);await a.repository.saveReport({id:'synthetic-private-report',note:current});
+ await a.driver.run('INSERT INTO grove_outbox(operation_id,payload,created) VALUES(?,?,?)',['synthetic-op',current,123]);
+ const external=a.file+'.selected-backup.txt';fs.writeFileSync(external,original);return {...a,retired,current,original,external};
+}
+function erasedFiles(a){
+ for(const suffix of ['', '-wal'])if(fs.existsSync(a.file+suffix)){
+  const bytes=fs.readFileSync(a.file+suffix);for(const marker of [a.retired,a.current,a.original])assert.equal(bytes.includes(Buffer.from(marker)),false,'No private source remains in DB'+suffix);
+ }
+ assert.equal(fs.readFileSync(a.external,'utf8'),a.original,'User-selected backup is untouched');
+}
+test('explicit native erase clears old free pages, originals, reports and WAL before acknowledgement',async()=>{
+ const a=await privateEraseFixture();assert.equal(await a.repository.eraseLocal(),true);assert.deepEqual((await a.database.readSnapshot()).entries,{});
+ for(const table of ['grove_entries','grove_originals','grove_outbox'])assert.equal((await a.driver.query('SELECT count(*) AS n FROM '+table)).values[0].n,0);
+ assert.deepEqual((await a.database.exportRecovery()).revisions.map(r=>[r.reason,r.before]),[['erase',null]]);erasedFiles(a);await a.driver.close();
+});
+test('erase cleanup failure is not acknowledged and a fresh bootstrap finishes it before exposing a repository',async()=>{
+ let fail=false;const a=await privateEraseFixture({wrap:d=>({...d,execute:async(sql,...rest)=>{if(fail&&sql==='VACUUM'){fail=false;throw Error('Synthetic erase disk full');}return d.execute(sql,...rest);}})});fail=true;
+ await assert.rejects(a.repository.eraseLocal(),/erasure.*incomplete|erase.*incomplete/i);await assert.rejects(a.database.readSnapshot(),/erasure.*incomplete|erase.*incomplete/i);
+ const reopened=await setup({file:a.file});assert.deepEqual((await reopened.database.readSnapshot()).entries,{});erasedFiles(a);await reopened.driver.close();await a.driver.close();
+});
+test('a real reader blocking WAL truncation prevents erase acknowledgement until restart can finish',async()=>{
+ const a=await privateEraseFixture(),reader=openDriver(a.file);await reader.execute('BEGIN');await reader.query('SELECT * FROM grove_entries');await a.driver.query('PRAGMA busy_timeout=10');
+ try{await assert.rejects(a.repository.eraseLocal(),/erasure.*incomplete|erase.*incomplete/i);await assert.rejects(a.database.readSnapshot(),/erasure.*incomplete|erase.*incomplete/i);}finally{await reader.execute('ROLLBACK');await reader.close();}
+ const reopened=await setup({file:a.file});assert.deepEqual((await reopened.database.readSnapshot()).entries,{});erasedFiles(a);await reopened.driver.close();await a.driver.close();
+});
+test('an OS kill after erase COMMIT resumes page and WAL cleanup before fresh repository readiness',async()=>{
+ const {fork}=require('node:child_process'),a=await privateEraseFixture();await a.driver.close();
+ const child=fork(path.join(__dirname,'helpers/native-commit-child.cjs'),[],{stdio:['ignore','ignore','ignore','ipc']});
+ const exited=new Promise(resolve=>child.once('exit',(code,signal)=>resolve({code,signal})));
+ try{
+  const observed=new Promise((resolve,reject)=>{child.once('message',m=>m.error?reject(Error(m.error)):resolve(m));child.once('error',reject);});
+  child.send({file:a.file,code:a.original,stage:'erase'});assert.equal((await observed).stage,'erase');
+  assert.ok(['','-wal'].some(suffix=>fs.existsSync(a.file+suffix)&&fs.readFileSync(a.file+suffix).includes(Buffer.from(a.retired))),'Killed database history really contains retired private bytes before cleanup');
+ }finally{child.kill('SIGKILL');await exited;}
+ const reopened=await setup({file:a.file});assert.deepEqual((await reopened.database.readSnapshot()).entries,{});erasedFiles(a);await reopened.driver.close();
+});
+test('another existing connection cannot read or write while physical erasure is pending',async()=>{
+ let armed=false,reached,release;const arrived=new Promise(r=>reached=r),gate=new Promise(r=>release=r);
+ const a=await privateEraseFixture({wrap:d=>({...d,execute:async(sql,...args)=>{if(armed&&sql==='VACUUM'){reached();await gate;throw Error('Synthetic interrupted erasure');}return d.execute(sql,...args);}})}),b=await setup({file:a.file});armed=true;
+ const erasing=a.repository.eraseLocal();const failed=assert.rejects(erasing,/erasure.*incomplete/i);
+ try{await arrived;await assert.rejects(b.database.readSnapshot(),/erasure/i);await assert.rejects(b.repository.writePreference('zh_voice','synthetic-new-setting'),/erasure/i);}finally{release();await failed;await b.driver.close();}
+ const reopened=await setup({file:a.file});assert.deepEqual((await reopened.database.readSnapshot()).entries,{});erasedFiles(a);await reopened.driver.close();await a.driver.close();
+});
+test('a lost erase COMMIT acknowledgement cannot expose erased state or mask cleanup with another save',async()=>{
+ let armed=false;const a=await privateEraseFixture({wrap:d=>({...d,commitTransaction:async()=>{const result=await d.commitTransaction();if(armed){armed=false;throw Error('Synthetic lost erase acknowledgement');}return result;}})});armed=true;
+ await assert.rejects(a.repository.eraseLocal(),/lost erase acknowledgement/);await assert.rejects(a.database.readSnapshot(),/erasure/i);await assert.rejects(a.repository.writePreference('zh_voice','synthetic-new-setting'),/erasure/i);
+ const reopened=await setup({file:a.file});assert.deepEqual((await reopened.database.readSnapshot()).entries,{});erasedFiles(a);await reopened.driver.close();await a.driver.close();
+});
+async function legacySchemaTwo(){
+ const a=await legacyNative();await a.d.execute('ALTER TABLE grove_originals ADD COLUMN code_json TEXT;');await a.d.run('UPDATE grove_originals SET code_json=?',[JSON.stringify(a.original)]);await a.d.run('UPDATE grove_meta SET schema_version=2 WHERE id=1');return a;
+}
+test('schema2 upgrades atomically to private-erasure metadata without changing original or profile bytes',async()=>{
+ const a=await legacySchemaTwo(),originals=(await a.d.query('SELECT * FROM grove_originals')).values,entries=(await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values;
+ const database=await createDatabase(a.d);assert.deepEqual((await a.d.query('SELECT * FROM grove_originals')).values,originals);assert.deepEqual((await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values,entries);assert.equal((await a.d.query('SELECT erase_pending FROM grove_meta')).values[0].erase_pending,0);assert.equal((await database.exportRecovery()).originals[0].code,a.original);await a.d.close();
+});
+test('interrupted schema2 metadata upgrade retains the old schema and all original bytes, then retries',async()=>{
+ const a=await legacySchemaTwo(),originals=(await a.d.query('SELECT * FROM grove_originals')).values;
+ await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=3'))throw Error('Synthetic erase-metadata migration failure');return a.d.run(sql,...args);}}),/migration failure/);
+ assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,2);assert.equal((await a.d.query('PRAGMA table_info(grove_meta)')).values.some(r=>r.name==='erase_pending'),false);assert.deepEqual((await a.d.query('SELECT * FROM grove_originals')).values,originals);await createDatabase(a.d);await a.d.close();
+});
+test('legacy schema2 erase receipt resumes private cleanup during the metadata upgrade',async()=>{
+ const a=await legacySchemaTwo(),marker='synthetic-legacy-erased-private-'+crypto.randomUUID();await a.d.query('PRAGMA secure_delete=OFF');
+ await a.d.run('INSERT INTO grove_entries(namespace,key,value) VALUES(?,?,?)',['progress','zh_retired',marker.repeat(500)]);
+ for(const table of ['grove_entries','grove_originals','grove_revisions','grove_outbox'])await a.d.run('DELETE FROM '+table);
+ await a.d.run('INSERT INTO grove_revisions(revision,reason,created,changes_hash,before_json) VALUES(?,?,?,?,?)',[7,'erase',123,digest('legacy erase'),null]);
+ assert.ok(fs.readFileSync(a.file).includes(Buffer.from(marker)));
+ const database=await createDatabase(a.d);assert.deepEqual((await database.readSnapshot()).entries,{});assert.equal((await a.d.query('SELECT erase_pending FROM grove_meta')).values[0].erase_pending,0);
+ for(const suffix of ['','-wal'])if(fs.existsSync(a.file+suffix))assert.equal(fs.readFileSync(a.file+suffix).includes(Buffer.from(marker)),false);await a.d.close();
 });

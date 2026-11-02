@@ -16,7 +16,9 @@ const fixture=JSON.parse(fs.readFileSync('tests/fixtures/backups/original-v1.jso
    const meta=(await c.query({...options,statement:'SELECT schema_version FROM grove_meta WHERE id=1',values:[]})).values.find(r=>typeof r.schema_version==='number');
    const row=(await c.query({...options,statement:'SELECT value FROM grove_entries WHERE key=?',values:['zh_profiles']})).values.find(r=>typeof r.value==='string');
    if(meta.schema_version!==99||!JSON.parse(row.value).list.every(p=>p.id.startsWith('synthetic-')))throw Error('Refuse to change any real or unrecognized schema');
-   await c.run({...options,statement:'UPDATE grove_meta SET schema_version=2 WHERE id=1',values:[],transaction:false});
+   const columns=(await c.query({...options,statement:'PRAGMA table_info(grove_meta)',values:[]})).values;
+   const version=columns.some(column=>column.name==='erase_pending')?3:2;
+   await c.run({...options,statement:'UPDATE grove_meta SET schema_version=? WHERE id=1',values:[version],transaction:false});
   }finally{await c.closeConnection(options);}
  });}
  function ui(label){

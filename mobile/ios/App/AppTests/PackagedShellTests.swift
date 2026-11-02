@@ -9,6 +9,32 @@ final class PackagedShellTests: XCTestCase {
         XCTAssertEqual(Data(try GroveFilesPlugin.decodeBackupText(bytes).utf8), bytes, "Preserve the selected file's BOM and line endings")
         XCTAssertThrowsError(try GroveFilesPlugin.decodeBackupText(Data([0xff, 0xfe, 0x61])))
     }
+    @MainActor func testNativeDatabasePrivateErasure() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard let id = ProcessInfo.processInfo.environment["SIMULATOR_UDID"], allowed.contains(id) else {
+            throw XCTSkip("Erasure test is limited to dedicated synthetic simulators")
+        }
+        let web = try await webView()
+        _ = try await web.evaluateJavaScript(resource("native-scenarios", extension: "js"))
+        let original = try resource("original-v1", extension: "json")
+        let preparedValue = try await asyncJavaScript("window.grovePreparedErase=await GroveNativeScenarios.prepareErasure(\(original)); return JSON.stringify(grovePreparedErase);", in: web)
+        let preparedString = try XCTUnwrap(preparedValue as? String)
+        let prepared = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(preparedString.utf8)) as? [String: Any])
+        let priorCode = try XCTUnwrap(prepared["priorBackup"] as? String)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let evidence = documents.appendingPathComponent("GroveSyntheticErase-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: evidence, withIntermediateDirectories: true)
+        try Data(preparedString.utf8).write(to: evidence.appendingPathComponent("before.json"), options: .atomic)
+        let selectedBackup = evidence.appendingPathComponent("preserved-backup.txt")
+        try Data(priorCode.utf8).write(to: selectedBackup, options: .atomic)
+        let afterValue = try await asyncJavaScript("return JSON.stringify(await GroveNativeScenarios.eraseAndVerify(grovePreparedErase));", in: web)
+        let after = try XCTUnwrap(afterValue as? String)
+        try Data(after.utf8).write(to: evidence.appendingPathComponent("after.json"), options: .atomic)
+        XCTAssertEqual(try Data(contentsOf: selectedBackup), Data(priorCode.utf8))
+        // Preserve the dedicated simulator's previous synthetic progress too.
+        let restored = try await asyncJavaScript("await GROVE_REPOSITORY.importBackup(grovePreparedErase.priorBackup); PR=await GROVE_REPOSITORY.readRegistry(); GROVE_SAVED_REGISTRY=groveCopy(PR); await loadS({persist:false}); await home(); return await backup();", in: web) as? String
+        XCTAssertEqual(restored, priorCode)
+    }
     @MainActor private func webView(requirePersistence: Bool = true) async throws -> WKWebView {
         func find(_ view: UIView) -> WKWebView? {
             if let web = view as? WKWebView { return web }
@@ -90,7 +116,7 @@ final class PackagedShellTests: XCTestCase {
         } catch { failure = error }
         if injected {
             do {
-                _ = try await asyncJavaScript("if(document.documentElement.dataset.nativeInternalTests!=='true')throw Error('Internal package only'); const c=Capacitor.Plugins.CapacitorSQLite,o={database:'mandarin_grove',readonly:false}; await c.createConnection({...o,encrypted:false,mode:'no-encryption',version:1}); await c.open(o); try{const r=(await c.query({...o,statement:'SELECT schema_version FROM grove_meta WHERE id=1',values:[]})).values.find(r=>typeof r.schema_version==='number');const p=(await c.query({...o,statement:'SELECT value FROM grove_entries WHERE key=?',values:['zh_profiles']})).values.find(r=>typeof r.value==='string');if(r.schema_version!==99||!JSON.parse(p.value).list.every(p=>p.id.startsWith('synthetic-')))throw Error('Refuse unrecognized or real schema');await c.run({...o,statement:'UPDATE grove_meta SET schema_version=2 WHERE id=1',values:[],transaction:false});}finally{await c.closeConnection(o);} return true;", in: web)
+                _ = try await asyncJavaScript("if(document.documentElement.dataset.nativeInternalTests!=='true')throw Error('Internal package only'); const c=Capacitor.Plugins.CapacitorSQLite,o={database:'mandarin_grove',readonly:false}; await c.createConnection({...o,encrypted:false,mode:'no-encryption',version:1}); await c.open(o); try{const r=(await c.query({...o,statement:'SELECT schema_version FROM grove_meta WHERE id=1',values:[]})).values.find(r=>typeof r.schema_version==='number');const p=(await c.query({...o,statement:'SELECT value FROM grove_entries WHERE key=?',values:['zh_profiles']})).values.find(r=>typeof r.value==='string');if(r.schema_version!==99||!JSON.parse(p.value).list.every(p=>p.id.startsWith('synthetic-')))throw Error('Refuse unrecognized or real schema');const version=(await c.query({...o,statement:'PRAGMA table_info(grove_meta)',values:[]})).values.some(column=>column.name==='erase_pending')?3:2;await c.run({...o,statement:'UPDATE grove_meta SET schema_version=? WHERE id=1',values:[version],transaction:false});}finally{await c.closeConnection(o);} return true;", in: web)
                 web = try await reload(web)
                 let restored = try await asyncJavaScript("await GROVE_STARTED; return await backup();", in: web) as? String
                 XCTAssertEqual(restored, backup)
