@@ -12,6 +12,9 @@
   "plugins": {
     "CapacitorSQLite": {
       "iosDatabaseLocation": "Library/CapacitorDatabase"
+    },
+    "App": {
+      "disableBackButtonHandler": true
     }
   }
 }

@@ -124,3 +124,24 @@ async function restoreBackupFile(input){
   const status=$('backup-status');if(status)status.textContent='Could not read that file. Try again, or paste its backup code.';
  }finally{input.value='';}
 }
+
+// A restored OS-picker result never opens Grown-ups or applies a backup itself.
+// Only a generic notice is visible until the grown-up explicitly enters.
+function showRestoredNativeFileNotice(){
+ let notice=document.getElementById('native-file-notice');
+ if(!GrovePlatform.hasRestoredFileResult){notice?.remove();return;}
+ if(!notice){notice=document.createElement('p');notice.id='native-file-notice';notice.className='wrap reading-note';notice.setAttribute('role','status');document.getElementById('app')?.before(notice);}
+ notice.textContent='A file operation finished. Open Grown-ups to check it.';
+}
+async function consumeRestoredNativeFileResult(){
+ const dialog=document.getElementById('gov');if(!dialog?.open)return;
+ const result=GrovePlatform.takeRestoredFileResult?.();if(!result)return;
+ showRestoredNativeFileNotice();const status=dialog.querySelector('#backup-status');
+ if(result.error){status.textContent=result.saved?'File saved. Its private temporary copy could not be removed. Your progress is unchanged.':'Could not finish the file operation. '+result.error;return;}
+ if(result.method==='save'){status.textContent=result.saved?'File saved. Keep it safe; it may include every child’s progress and names.':'File save cancelled. Your progress is unchanged.';return;}
+ if(result.cancelled){status.textContent='File selection cancelled. Your progress is unchanged.';return;}
+ await previewBackupFileCode(result.text);
+}
+document.addEventListener('grove-native-file-result',()=>{showRestoredNativeFileNotice();if(document.getElementById('gov')?.open)runAction(()=>consumeRestoredNativeFileResult());});
+document.addEventListener('DOMContentLoaded',showRestoredNativeFileNotice,{once:true});
+showRestoredNativeFileNotice();

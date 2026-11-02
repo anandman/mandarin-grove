@@ -164,4 +164,5 @@ async function grown(sectionName='child'){
  for(const [key,label]of [['child','Child'],['device','Device'],['kids','Kids'],['backup','Backup'],['maintenance','Fix & reset'],['about','About']])if(key!=='child'||child){const button=profileElement('button',label,{type:'button'});button.onclick=()=>jump(key);navigation.append(button);}
  dialog.querySelector('header').append(navigation);if(childId!==PR.cur||navigationToken!==NAV)return;document.body.append(dialog);dialog.showModal();bindVoiceSettings();dialog.querySelector('[aria-label="Close"]').focus();
  if(sectionName!=='child')jump(sectionName);
+ await consumeRestoredNativeFileResult();
 }

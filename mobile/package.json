@@ -13,10 +13,11 @@
     "build:testing": "esbuild src/bridge.ts --bundle --platform=browser --format=iife --define:__GROVE_INTERNAL_TESTS__=true --minify-syntax --outfile=dist/bridge-testing.js && node ../scripts/export-mobile.cjs --internal-tests"
   },
   "dependencies": {
-    "@capacitor/core": "8.6.0",
-    "@capacitor/ios": "8.6.0",
+    "@capacitor-community/sqlite": "8.1.1",
     "@capacitor/android": "8.6.0",
-    "@capacitor-community/sqlite": "8.1.1"
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",

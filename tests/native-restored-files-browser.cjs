@@ -1,0 +1,25 @@
+// Real isolated web UI/repository, narrow restored-native-result service double.
+const assert=require('node:assert/strict'),fs=require('node:fs'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});
+ try{
+  // A retained native result can precede the classic scripts in <head>.
+  // It must still produce a generic notice after the body is parsed.
+  const early=await browser.newContext({viewport:{width:820,height:1060},serviceWorkers:'block'}),earlyPage=await early.newPage();
+  await earlyPage.addInitScript(()=>Object.defineProperty(window,'GrovePlatform',{configurable:true,set(value){let pending=true;Object.defineProperty(window,'GrovePlatform',{configurable:true,writable:true,value:{...value,get hasRestoredFileResult(){return pending;},takeRestoredFileResult(){if(!pending)return;pending=false;return {method:'save',saved:true,error:'Synthetic retained cleanup failure'};}}});}}));
+  await earlyPage.route('**/api/feedback',r=>r.abort());await earlyPage.goto(process.env.APP_URL||'http://127.0.0.1:4263');await earlyPage.evaluate(()=>GROVE_STARTED);await earlyPage.locator('#native-file-notice').waitFor({timeout:5000});assert.equal(await earlyPage.locator('#gov').count(),0);await earlyPage.evaluate(()=>grown('backup'));assert.match(await earlyPage.locator('#backup-status').innerText(),/^File saved\./);await early.close();
+  const context=await browser.newContext({viewport:{width:820,height:1060},serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/api/feedback',r=>r.abort());await page.goto(process.env.APP_URL||'http://127.0.0.1:4263');
+  const fixture=JSON.parse(fs.readFileSync('tests/fixtures/backups/original-v1.json','utf8')),incoming=JSON.parse(fs.readFileSync('tests/fixtures/backups/grove-v1.json','utf8'));
+  await page.evaluate(async fixture=>{await GROVE_STARTED;await GROVE_REPOSITORY.importBackup(GROVE_CODEC.encodeUtf8(JSON.stringify(fixture)));PR=await GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=groveCopy(PR);await loadS({persist:false});await home();window.restoredResult=undefined;window.restoredTakes=0;window.GrovePlatform={...GrovePlatform,get hasRestoredFileResult(){return !!window.restoredResult;},takeRestoredFileResult(){restoredTakes++;const result=restoredResult;restoredResult=undefined;return result;}};},fixture);
+  const before=await page.evaluate(()=>backup());
+  async function deliver(result){await page.evaluate(result=>{document.getElementById('gov')?.remove();window.restoredResult=result;document.dispatchEvent(new Event('grove-native-file-result'));},result);await page.locator('#native-file-notice').waitFor();assert.equal(await page.locator('#gov').count(),0,'Restored result never bypasses parent entry');assert.equal(await page.locator('#grr').count(),0);assert.equal(await page.evaluate(()=>backup()),before);assert.doesNotMatch(await page.locator('#native-file-notice').innerText(),/Synthetic|合成|base64/);await page.evaluate(()=>grown('backup'));assert.equal(await page.locator('#native-file-notice').count(),0);}
+  await deliver({method:'save',saved:true});assert.match(await page.locator('#backup-status').innerText(),/^File saved\./);
+  await deliver({method:'save',saved:false});assert.match(await page.locator('#backup-status').innerText(),/cancelled/);
+  await deliver({method:'save',saved:true,error:'Synthetic cleanup refusal'});assert.match(await page.locator('#backup-status').innerText(),/^File saved\./);assert.match(await page.locator('#backup-status').innerText(),/temporary copy/);
+  await deliver({method:'open',error:'Synthetic permission refusal'});assert.match(await page.locator('#backup-status').innerText(),/Could not finish/);assert.equal(await page.locator('#grr').count(),0);
+  await deliver({method:'open',cancelled:true});assert.match(await page.locator('#backup-status').innerText(),/cancelled/);assert.equal(await page.locator('#grr').count(),0);
+  const exact='\ufeff\n'+Buffer.from(JSON.stringify(incoming)).toString('base64')+'\r\n';await deliver({method:'open',cancelled:false,text:exact});await page.locator('#grr').waitFor();assert.equal(await page.evaluate(()=>backup()),before,'Recovered selection previews without importing');assert.equal(await page.locator('#grt').inputValue(),exact.replace(/\r\n/g,'\n'),'Only textarea display normalizes CRLF');assert.equal(await page.evaluate(()=>restoredResult),undefined);
+  await page.locator('#grr').click();await page.waitForFunction(()=>!document.getElementById('grr'));const actual=JSON.parse(Buffer.from(await page.evaluate(()=>backup()),'base64').toString('utf8'));assert.deepEqual(actual,incoming,'Only explicit Replace restores every raw child and unknown field');assert.deepEqual(errors,[]);
+  console.log('PASS restored native file results retain parent entry, truthful save/cancel/failure status, exact original preview and explicit replacement');await context.close();
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});
