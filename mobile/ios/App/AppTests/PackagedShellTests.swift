@@ -259,7 +259,7 @@ final class PackagedShellTests: XCTestCase {
         guard FileManager.default.fileExists(atPath: controlURL.path) else { throw XCTSkip("Requires the explicit host OS-kill orchestrator") }
         let control = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: controlURL)) as? [String: String])
         let mode = try XCTUnwrap(control["mode"]), stage = try XCTUnwrap(control["stage"])
-        XCTAssertTrue(["practice", "before", "after"].contains(stage))
+        XCTAssertTrue(["practice", "before", "after", "erase"].contains(stage))
         let web = try await webView()
         _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
         _ = try await web.evaluateJavaScript(resource("native-scenarios", extension: "js"))
@@ -267,7 +267,22 @@ final class PackagedShellTests: XCTestCase {
         let original = try resource("original-v1", extension: "json")
         let current = try resource("grove-v1", extension: "json")
         if mode == "hold" {
-            if stage == "practice" {
+            if stage == "erase" {
+                let preparedValue = try await asyncJavaScript("return JSON.stringify(await GroveNativeScenarios.prepareErasure(\(original)));", in: web)
+                let prepared = try XCTUnwrap(preparedValue as? String)
+                try prepared.write(to: documents.appendingPathComponent("GroveSyntheticEraseKillPrepared.json"), atomically: true, encoding: .utf8)
+                let value = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(prepared.utf8)) as? [String: Any])
+                try XCTUnwrap(value["priorBackup"] as? String).write(to: documents.appendingPathComponent("GroveSyntheticEraseKillSelected.txt"), atomically: true, encoding: .utf8)
+                _ = try await web.evaluateJavaScript("GroveNativeTest.holdNextCommit('after'); window.syntheticPausedErase=GROVE_REPOSITORY.eraseLocal(); void window.syntheticPausedErase.catch(()=>{}); true;")
+                var paused = false
+                for _ in 0..<150 {
+                    paused = (try await web.evaluateJavaScript("GroveNativeTest.phase === 'after'") as? Bool) == true
+                    if paused { break }
+                    try await Task.sleep(nanoseconds: 100_000_000)
+                }
+                XCTAssertTrue(paused, "Actual erasure COMMIT completed before physical cleanup or acknowledgement")
+                guard paused else { return }
+            } else if stage == "practice" {
                 let practiced = try await asyncJavaScript("return await GroveNativeScenarios.practice(\(original));", in: web) as? [String: Any]
                 let code = try XCTUnwrap(practiced?["code"] as? String)
                 try code.write(to: documents.appendingPathComponent("GroveSyntheticPracticeBackup.txt"), atomically: true, encoding: .utf8)
@@ -288,7 +303,17 @@ final class PackagedShellTests: XCTestCase {
             XCTFail("Host did not perform the requested OS kill")
         } else {
             XCTAssertEqual(mode, "recover")
-            if stage == "practice" {
+            if stage == "erase" {
+                let prepared = try String(contentsOf: documents.appendingPathComponent("GroveSyntheticEraseKillPrepared.json"), encoding: .utf8)
+                let result = try await asyncJavaScript("const p=\(prepared),s=await GroveNativeTest.database.readSnapshot(); GroveNativeScenarios.equal(s.profiles,{},'No learner exposed before erasure recovery'); const m=(await GroveNativeTest.connection.query('SELECT erase_pending FROM grove_meta WHERE id=1')).values.find(r=>typeof r.erase_pending==='number'); GroveNativeScenarios.equal(m.erase_pending,0,'Pending erasure cleared before readiness'); const r=await GroveNativeTest.database.exportRecovery(); GroveNativeScenarios.equal(r.originals,[],'Original codes erased'); GroveNativeScenarios.check(r.revisions.every(r=>!r.before),'No learner recovery revisions'); const f=await GrovePlatform.files.rawRecovery(); for(const file of f.files) for(const marker of [p.retired,p.current,p.original])GroveNativeScenarios.check(!atob(file.base64).includes(marker),'No private marker after fresh-process cleanup'); return JSON.stringify(f);", in: web) as? String
+                try XCTUnwrap(result).write(to: documents.appendingPathComponent("GroveSyntheticEraseKillCleaned.json"), atomically: true, encoding: .utf8)
+                let value = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(prepared.utf8)) as? [String: Any])
+                let expected = try XCTUnwrap(value["priorBackup"] as? String)
+                XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("GroveSyntheticEraseKillSelected.txt"), encoding: .utf8), expected, "Selected backup is unchanged")
+                let literal = String(decoding: try JSONSerialization.data(withJSONObject: expected, options: [.fragmentsAllowed]), as: UTF8.self)
+                let restored = try await asyncJavaScript("await GROVE_REPOSITORY.importBackup(\(literal)); PR=await GROVE_REPOSITORY.readRegistry(); GROVE_SAVED_REGISTRY=groveCopy(PR); await loadS({persist:false}); await home(); return await backup();", in: web) as? String
+                XCTAssertEqual(restored, expected, "Prior synthetic progress restored exactly")
+            } else if stage == "practice" {
                 let expected = try String(contentsOf: documents.appendingPathComponent("GroveSyntheticPracticeBackup.txt"), encoding: .utf8)
                 let code = try await asyncJavaScript("return await backup();", in: web) as? String
                 XCTAssertEqual(code, expected, "Full offline round survives actual OS kill and a fresh native process")

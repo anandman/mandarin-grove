@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import signal
 import sqlite3
+import uuid
 import subprocess
 import time
 
@@ -69,6 +70,12 @@ def preserve_and_verify(stage, expected):
     db = sqlite3.connect((target / "mandarin_groveSQLite.db").as_uri() + "?mode=ro", uri=True)
     try:
         values = dict(db.execute("SELECT key,value FROM grove_entries"))
+        if stage == "erase":
+            assert db.execute("SELECT erase_pending FROM grove_meta WHERE id=1").fetchone()[0] == 1, "Durable pending marker must survive actual SIGKILL"
+            assert values == {}, "Logical erasure committed before kill"
+            assert db.execute("SELECT count(*) FROM grove_originals").fetchone()[0] == 0
+            assert any(expected["retired"].encode() in (target / row["name"]).read_bytes() for row in rows), "Retired private pages still require bootstrap cleanup"
+            return
         assert json.loads(values["zh_profiles"]) == expected["PR"]
         for key, raw in expected["data"].items():
             assert values["zh_p_" + key] == raw, "Raw child differs at actual OS-kill boundary: " + key
@@ -85,7 +92,23 @@ def preserve_and_verify(stage, expected):
 try:
     device = next(d for devices in json.loads(simctl("list", "devices", "--json"))["devices"].values() for d in devices if d["udid"] == SIM)
     assert device["name"] == NAMES[SIM]
-    for stage in ["practice", "before", "after"]:
+    if os.environ.get("GROVE_NATIVE_ERASE_KILL") == "1":
+        # Explicit erase removes abandoned app-generated exports. Preserve any
+        # pre-existing synthetic proof copies first; no selected backup access.
+        archived = []
+        for directory in sorted((container() / "tmp").glob("GroveExport-*")):
+            uuid.UUID(directory.name.removeprefix("GroveExport-"))
+            assert directory.is_dir() and not directory.is_symlink()
+            for file in directory.rglob("*"):
+                assert file.is_file() and not file.is_symlink(), "Unrecognized staging content must remain untouched"
+                target = OUTPUT / "prior-staging" / directory.name / file.name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                data = file.read_bytes()
+                target.write_bytes(data)
+                assert hashlib.sha256(target.read_bytes()).digest() == hashlib.sha256(data).digest()
+                archived.append({"path": str(file.relative_to(container())), "sha256": hashlib.sha256(data).hexdigest()})
+        receipt["priorStagingCopiesArchived"] = archived
+    for stage in (["erase"] if os.environ.get("GROVE_NATIVE_ERASE_KILL") == "1" else ["practice", "before", "after"]):
         documents = container() / "Documents"
         control = documents / "GroveSyntheticKillControl.json"
         marker = documents / ("GroveSyntheticReady-" + stage + ".txt")
@@ -124,7 +147,21 @@ try:
                 os.killpg(process.pid, signal.SIGTERM)
                 hold_exit = process.wait(timeout=15)
             assert app_pid() is None, "Killed app must not be restarted by the test runner"
-        if stage == "practice":
+        if stage == "erase":
+            prepared = documents / "GroveSyntheticEraseKillPrepared.json"
+            expected = json.loads(prepared.read_text())
+            (OUTPUT / prepared.name).write_bytes(prepared.read_bytes())
+            for label, envelope in [("prior-originals", expected["priorFiles"]), ("before-erase", expected["beforeFiles"])]:
+                target = OUTPUT / label
+                target.mkdir()
+                for item in envelope["files"]:
+                    assert item["name"] in ["mandarin_groveSQLite.db", "mandarin_groveSQLite.db-wal", "mandarin_groveSQLite.db-shm"]
+                    data = base64.b64decode(item["base64"], validate=True)
+                    assert hashlib.sha256(data).hexdigest() == item["sha256"]
+                    (target / item["name"]).write_bytes(data)
+            selected = documents / "GroveSyntheticEraseKillSelected.txt"
+            (OUTPUT / selected.name).write_bytes(selected.read_bytes())
+        elif stage == "practice":
             code = (documents / "GroveSyntheticPracticeBackup.txt").read_text()
             (OUTPUT / "ios-after-practice.txt").write_text(code)
             expected = json.loads(base64.b64decode(code))
@@ -142,10 +179,22 @@ try:
         control = documents / "GroveSyntheticKillControl.json"
         recovered_file = documents / ("GroveSyntheticRecovered-" + stage + ".json")
         (OUTPUT / recovered_file.name).write_bytes(recovered_file.read_bytes())
+        if stage == "erase":
+            cleaned = json.loads((documents / "GroveSyntheticEraseKillCleaned.json").read_text())
+            target = OUTPUT / "bootstrap-cleaned"
+            target.mkdir()
+            for item in cleaned["files"]:
+                assert item["name"] in ["mandarin_groveSQLite.db", "mandarin_groveSQLite.db-wal", "mandarin_groveSQLite.db-shm"]
+                data = base64.b64decode(item["base64"], validate=True)
+                assert hashlib.sha256(data).hexdigest() == item["sha256"]
+                assert all(expected[key].encode() not in data for key in ["retired", "current", "original"])
+                (target / item["name"]).write_bytes(data)
+            assert (documents / "GroveSyntheticEraseKillSelected.txt").read_bytes() == (OUTPUT / "GroveSyntheticEraseKillSelected.txt").read_bytes()
+            receipt["checks"][-1].update({"pendingMarkerVerifiedBeforeRelaunch": True, "privateMarkersAbsentAfterBootstrap": True, "selectedBackupUnchanged": True, "priorSyntheticProgressRestoredExactly": True})
         receipt["checks"][-1]["freshProcessRecoveryPassed"] = True
         print("PASS iOS actual SIGKILL and physical/fresh-process recovery:", stage, flush=True)
     # Keep the completed control in the container without enabling later tests.
-    control.rename(documents / "GroveSyntheticKillControl.completed.json")
+    control.rename(documents / ("GroveSyntheticKillControl.completed-" + OUTPUT.name + ".json"))
     receipt["passed"] = True
 finally:
     (OUTPUT / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
