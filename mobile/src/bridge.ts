@@ -1,5 +1,6 @@
 import {Capacitor} from '@capacitor/core';
 import {App} from '@capacitor/app';
+import {createAndroidBackController} from './lifecycle';
 import {createRestoredFileMailbox,type RestoredFileResult} from './restored-files';
 import {CapacitorSQLite,SQLiteConnection,type SQLiteDBConnection} from '@capacitor-community/sqlite';
 import {createDatabase,inspectSchema,type SQLiteDriver,type NativeDatabase} from './database';
@@ -10,14 +11,16 @@ declare const __GROVE_INTERNAL_TESTS__:boolean;
 type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase};
 declare global {
  interface Window {
-  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
+  GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
   GroveNativeTest?:TestControl;
   prepareWebProgress?(value:any,now:number,profile:any):any;
+  showStorageFailure?(error:Error):void;
  }
 }
 const platform=Capacitor.getPlatform(),sqlite=new SQLiteConnection(CapacitorSQLite);
 const restoredFiles=createRestoredFileMailbox({notify:()=>document.dispatchEvent(new Event('grove-native-file-result'))});
 const restoredReady=App.addListener('appRestoredResult',result=>{restoredFiles.accept(result);});
+const backController=createAndroidBackController(App,error=>window.showStorageFailure?.(error instanceof Error?error:Error('Could not go back. Your saved progress was kept.')));
 let repository:NativeRepository|undefined;
 let installationId:string|undefined;
 function driver(connection:SQLiteDBConnection):SQLiteDriver{
@@ -57,7 +60,7 @@ const ready=(async()=>{
 })();
 // Startup observes ready; also handle a failure before the next script loads.
 void ready.catch(()=>{});
-window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
+window.GrovePlatform=Object.freeze({platform,ready:()=>ready,get persistenceReady(){return !!repository;},get repository(){return repository;},recoveryRetention:true,setBackHandler:handler=>platform==='android'?backController.install(handler):Promise.resolve(false),get hasRestoredFileResult(){return restoredFiles.hasPending;},takeRestoredFileResult:()=>restoredFiles.take(),files,get installationId(){return installationId;},async exportRecovery(){
  await ready.catch(()=>{});
  if(repository){try{return await repository.exportRecovery();}catch{/* Preserve raw files when semantic recovery cannot read this schema. */}}
  // Close the owned connection before reading fixed DB/WAL/SHM paths. Never

@@ -1,4 +1,4 @@
-const VER='20261102-native-recovery-85';
+const VER='20261102-native-back-86';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

@@ -162,6 +162,20 @@ function setPageBack(action=home,label='Back to Home'){
   PAGE_BACK_DOUBLE=event.detail>0;return ActivityUI.run(execute);
  };
 }
+async function handleNativeBack(){
+ // Match disabled onscreen controls while an acknowledged save is pending.
+ if(GROVE_PENDING_WRITES)return true;
+ const dialog=[...document.querySelectorAll('dialog[open]')].filter(d=>d.getClientRects().length).at(-1);
+ if(dialog){if(dialog.dispatchEvent(new Event('cancel',{cancelable:true}))){stopSpeech();dialog.close();}return true;}
+ if($('dov')){stopSpeech();dclose();return true;}
+ // Recovery remains visible until the grown-up takes an explicit action.
+ if($('recovery-file-status')){stopSpeech();return false;}
+ const navigation=$('page-navigation'),button=$('page-back');
+ if(navigation&&!navigation.hidden&&typeof button?.onclick==='function'){
+  stopSpeech();await button.onclick(new MouseEvent('click',{detail:0}));return true;
+ }
+ stopSpeech();return false;
+}
 function hidePageBack(){const nav=$('page-navigation');if(nav)nav.hidden=true;const button=$('page-back');if(button)button.onclick=null;}
 function screen({scroll=true}={}){
  viewNavigation={origin:document.activeElement};
@@ -304,3 +318,5 @@ document.addEventListener('keydown',event=>{const overlay=$('dov');if(!overlay)r
 let LAST=Date.now();for(const event of ['pointerdown','keydown'])addEventListener(event,()=>LAST=Date.now(),{capture:true});function idleChk(){if(PR.list.length>1&&Date.now()-LAST>30*60*1000){LAST=Date.now();who();}}setInterval(idleChk,60000);
 async function startGrove(){try{await GROVE_REPOSITORY.ready();await Promise.all([APPEARANCE_READY,VOICE_READY]);PR=await GROVE_REPOSITORY.readRegistry();GROVE_SAVED_REGISTRY=groveCopy(PR);await loadS();hdr();if(PR.list.length>1)who();else if(PR.list.length)await home();else setup(true);}catch(error){showProgressRecovery(error);}}
 const GROVE_STARTED=startGrove();
+
+const GROVE_BACK_READY=GROVE_STARTED.then(()=>GrovePlatform.setBackHandler?.(handleNativeBack)).catch(error=>{showStorageFailure(error);return false;});
