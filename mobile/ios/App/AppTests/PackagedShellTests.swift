@@ -6,6 +6,48 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testNativeJournalInterruptedProcess() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        guard let data = try? Data(contentsOf: documents.appendingPathComponent("GroveSyntheticJournalKillControl.json")), let control = try JSONSerialization.jsonObject(with: data) as? [String: String], let name = control["name"], let stage = control["stage"], let mode = control["mode"] else { throw XCTSkip("Explicit host kill orchestrator only") }
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-journal-scenarios", extension: "js") + "\n;true;")
+        let nameJSON = String(decoding: try JSONSerialization.data(withJSONObject: name, options: [.fragmentsAllowed]), as: UTF8.self)
+        let stageJSON = String(decoding: try JSONSerialization.data(withJSONObject: stage, options: [.fragmentsAllowed]), as: UTF8.self)
+        if mode == "hold" {
+            _ = try await asyncJavaScript("return await GroveNativeJournalKill.begin(\(nameJSON),\(stageJSON));", in: web)
+            var ready = false
+            for _ in 0..<150 {
+                ready = (try await web.evaluateJavaScript("GroveNativeJournalKill.phase === \(stageJSON)") as? Bool) == true
+                if ready { break }
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+            XCTAssertTrue(ready)
+            guard ready else { return }
+            try "ready".write(to: documents.appendingPathComponent(name + "-ready.txt"), atomically: true, encoding: .utf8)
+            for _ in 0..<600 { try await Task.sleep(nanoseconds: 100_000_000) }
+            XCTFail("Host did not perform the requested actual process kill")
+        } else {
+            XCTAssertEqual(mode,"recover")
+            let receipt = try await asyncJavaScript("return JSON.stringify(await GroveNativeJournalKill.recover(\(nameJSON),\(stageJSON)));", in: web) as? String
+            try XCTUnwrap(receipt).write(to: documents.appendingPathComponent(name + "-recovered.json"), atomically: true, encoding: .utf8)
+        }
+    }
+    @MainActor func testNativeDurableJournal() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let web = try await webView()
+        _ = try await asyncJavaScript("await GROVE_STARTED; return true;", in: web)
+        _ = try await web.evaluateJavaScript(resource("native-journal-scenarios", extension: "js") + "\n;true;")
+        let result = try await asyncJavaScript("return JSON.stringify(await GroveNativeJournal());", in: web) as? String
+        let raw = try XCTUnwrap(result)
+        let value = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any])
+        XCTAssertEqual(value["passed"] as? Bool, true)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        try raw.write(to: documents.appendingPathComponent("GroveSyntheticJournal-" + UUID().uuidString + ".json"), atomically: true, encoding: .utf8)
+    }
     @MainActor func testInstalledHotTextChangePreservesDraft() async throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
@@ -489,7 +531,7 @@ final class PackagedShellTests: XCTestCase {
         } catch { failure = error }
         if injected {
             do {
-                _ = try await asyncJavaScript("if(document.documentElement.dataset.nativeInternalTests!=='true')throw Error('Internal package only'); const c=Capacitor.Plugins.CapacitorSQLite,o={database:'mandarin_grove',readonly:false}; await c.createConnection({...o,encrypted:false,mode:'no-encryption',version:1}); await c.open(o); try{const r=(await c.query({...o,statement:'SELECT schema_version FROM grove_meta WHERE id=1',values:[]})).values.find(r=>typeof r.schema_version==='number');const p=(await c.query({...o,statement:'SELECT value FROM grove_entries WHERE key=?',values:['zh_profiles']})).values.find(r=>typeof r.value==='string');if(r.schema_version!==99||!JSON.parse(p.value).list.every(p=>p.id.startsWith('synthetic-')))throw Error('Refuse unrecognized or real schema');const version=(await c.query({...o,statement:'PRAGMA table_info(grove_meta)',values:[]})).values.some(column=>column.name==='erase_pending')?3:2;await c.run({...o,statement:'UPDATE grove_meta SET schema_version=? WHERE id=1',values:[version],transaction:false});}finally{await c.closeConnection(o);} return true;", in: web)
+                _ = try await asyncJavaScript("if(document.documentElement.dataset.nativeInternalTests!=='true')throw Error('Internal package only'); const c=Capacitor.Plugins.CapacitorSQLite,o={database:'mandarin_grove',readonly:false}; await c.createConnection({...o,encrypted:false,mode:'no-encryption',version:1}); await c.open(o); try{const r=(await c.query({...o,statement:'SELECT schema_version FROM grove_meta WHERE id=1',values:[]})).values.find(r=>typeof r.schema_version==='number');const p=(await c.query({...o,statement:'SELECT value FROM grove_entries WHERE key=?',values:['zh_profiles']})).values.find(r=>typeof r.value==='string');if(r.schema_version!==99||!JSON.parse(p.value).list.every(p=>p.id.startsWith('synthetic-')))throw Error('Refuse unrecognized or real schema');const hasJournal=(await c.query({...o,statement:\"SELECT name FROM sqlite_master WHERE type='table' AND name='grove_sync_binding'\",values:[]})).values.some(row=>row.name==='grove_sync_binding');const version=hasJournal?4:(await c.query({...o,statement:'PRAGMA table_info(grove_meta)',values:[]})).values.some(column=>column.name==='erase_pending')?3:2;await c.run({...o,statement:'UPDATE grove_meta SET schema_version=? WHERE id=1',values:[version],transaction:false});}finally{await c.closeConnection(o);} return true;", in: web)
                 web = try await reload(web)
                 let restored = try await asyncJavaScript("await GROVE_STARTED; return await backup();", in: web) as? String
                 XCTAssertEqual(restored, backup)

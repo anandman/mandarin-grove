@@ -14,7 +14,7 @@ import {files,type NativeFiles} from './files';
 declare const __GROVE_INTERNAL_TESTS__:boolean;
 declare const MAINLAND_AUDIO:{readings:Record<string,string>};
 declare const REFERENCE_AUDIO:{readings:Record<string,string>};
-type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase;feedbackRequest?:FeedbackHttp['request']};
+type TestControl={phase:string|null;holdNextCommit(stage:'before'|'after'):void;releaseCommit():void;connection:SQLiteDBConnection;database?:NativeDatabase;feedbackRequest?:FeedbackHttp['request'];journalFixture(name:string):Promise<{connection:SQLiteDBConnection;create(wrap?:(driver:SQLiteDBConnection)=>SQLiteDriver):Promise<NativeDatabase>;close():Promise<void>}>};
 declare global {
  interface Window {
   GrovePlatform:{platform:string;ready():Promise<void>;readonly persistenceReady:boolean;readonly repository:NativeRepository|undefined;recoveryRetention:boolean;readonly feedbackEpoch:number;prepareFeedback(report:unknown):Record<string,unknown>;sendFeedback(report:unknown,epoch:number):Promise<FeedbackReceipt>;speech:NativeSpeech;setBackHandler(handler:()=>boolean|Promise<boolean>):Promise<boolean>;readonly hasRestoredFileResult:boolean;takeRestoredFileResult():RestoredFileResult|undefined;files:NativeFiles;readonly installationId:string|undefined;exportRecovery():Promise<unknown>};
@@ -56,7 +56,11 @@ let installationId:string|undefined;
 function driver(connection:SQLiteDBConnection):SQLiteDriver{
  if(!__GROVE_INTERNAL_TESTS__)return connection;
  let next:'before'|'after'|null=null,release:(()=>void)|undefined;
- const control:TestControl={phase:null,connection,holdNextCommit(stage){next=stage;control.phase=null;},releaseCommit(){release?.();}};
+ const control:TestControl={phase:null,connection,holdNextCommit(stage){next=stage;control.phase=null;},releaseCommit(){release?.();},async journalFixture(name){
+  if(!/^grove_journal_synthetic_[a-f0-9_]{1,100}$/.test(name))throw Error('Synthetic journal database only');
+  const fixture=await sqlite.createConnection(name,false,'no-encryption',1,false);await fixture.open();
+  return {connection:fixture,create:wrap=>createDatabase(wrap?wrap(fixture):fixture),close:async()=>{await sqlite.closeConnection(name,false);}};
+ }};
  window.GroveNativeTest=control;
  const pause=async(stage:'before'|'after')=>{if(next!==stage)return;next=null;control.phase=stage;await new Promise<void>(resolve=>release=resolve);control.phase=null;release=undefined;};
  return {

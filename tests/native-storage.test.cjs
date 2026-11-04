@@ -40,7 +40,7 @@ async function legacyNative(){
 test('v1 upgrade preserves legacy rows and recovers a missing leading BOM only with its exact existing SHA-256 proof',async()=>{
  const a=await legacyNative(),before=(await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values,legacy=(await a.d.query('SELECT code FROM grove_originals')).values[0].code;
  const database=await createDatabase(a.d);assert.deepEqual((await a.d.query('SELECT * FROM grove_entries ORDER BY key')).values,before);assert.equal((await a.d.query('SELECT code FROM grove_originals')).values[0].code,legacy);
- assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,3);const recovery=await database.exportRecovery();assert.equal(recovery.originals[0].code,a.original);assert.equal(recovery.snapshot.revision,8);assert.ok(recovery.revisions.some(r=>r.reason==='upgrade'&&r.before.revision===7));
+ assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,4);const recovery=await database.exportRecovery();assert.equal(recovery.originals[0].code,a.original);assert.equal(recovery.snapshot.revision,8);assert.ok(recovery.revisions.some(r=>r.reason==='upgrade'&&r.before.revision===7));
  await createDatabase(a.d);assert.equal((await database.readSnapshot()).revision,8);await a.d.close();
 });
 
@@ -51,7 +51,7 @@ test('an unrecognized legacy original hash mismatch refuses upgrade and keeps al
 
 test('failed v1 upgrade rolls back schema, original encoding and recovery receipt together, then retries',async()=>{
  const a=await legacyNative(),before=(await a.d.query('SELECT * FROM grove_originals')).values;
- await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=3'))throw Error('Synthetic migration interruption');return a.d.run(sql,...args);}}),/migration interruption/);
+ await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=4'))throw Error('Synthetic migration interruption');return a.d.run(sql,...args);}}),/migration interruption/);
  assert.equal((await a.d.query('SELECT schema_version,revision FROM grove_meta')).values[0].schema_version,1);assert.equal((await a.d.query('PRAGMA table_info(grove_originals)')).values.some(r=>r.name==='code_json'),false);assert.deepEqual((await a.d.query('SELECT * FROM grove_originals')).values,before);assert.deepEqual((await a.d.query('SELECT * FROM grove_revisions')).values,[]);
  const database=await createDatabase(a.d);assert.equal((await database.exportRecovery()).originals[0].code,a.original);await a.d.close();
 });
@@ -194,7 +194,7 @@ test('unknown future schema is refused without modifying its database bytes',asy
 
 test('native bootstrap can inspect supported and future schemas through an actual read-only connection',async()=>{
  const {inspectSchema}=require('../mobile/src/database.ts');assert.equal(typeof inspectSchema,'function','A read-only preflight precedes native read-write opening');
- const a=await setup();await a.driver.close();const readOnly=openDriver(a.file,{readOnly:true});assert.equal((await inspectSchema(readOnly)).version,3);await readOnly.close();
+ const a=await setup();await a.driver.close();const readOnly=openDriver(a.file,{readOnly:true});assert.equal((await inspectSchema(readOnly)).version,4);await readOnly.close();
  const write=openDriver(a.file);await write.run('UPDATE grove_meta SET schema_version=99 WHERE id=1');await write.close();const before=fs.readFileSync(a.file),future=openDriver(a.file,{readOnly:true});await assert.rejects(inspectSchema(future),/newer|unsupported/);await future.close();assert.deepEqual(fs.readFileSync(a.file),before);
 });
 
@@ -260,7 +260,7 @@ test('schema2 upgrades atomically to private-erasure metadata without changing o
 });
 test('interrupted schema2 metadata upgrade retains the old schema and all original bytes, then retries',async()=>{
  const a=await legacySchemaTwo(),originals=(await a.d.query('SELECT * FROM grove_originals')).values;
- await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=3'))throw Error('Synthetic erase-metadata migration failure');return a.d.run(sql,...args);}}),/migration failure/);
+ await assert.rejects(createDatabase({...a.d,run:async(sql,...args)=>{if(sql.includes('SET schema_version=4'))throw Error('Synthetic erase-metadata migration failure');return a.d.run(sql,...args);}}),/migration failure/);
  assert.equal((await a.d.query('SELECT schema_version FROM grove_meta')).values[0].schema_version,2);assert.equal((await a.d.query('PRAGMA table_info(grove_meta)')).values.some(r=>r.name==='erase_pending'),false);assert.deepEqual((await a.d.query('SELECT * FROM grove_originals')).values,originals);await createDatabase(a.d);await a.d.close();
 });
 test('legacy schema2 erase receipt resumes private cleanup during the metadata upgrade',async()=>{
