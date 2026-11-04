@@ -24,6 +24,10 @@ function exportMobile(root,output,{internalTests=false}={}){
  // Keep the original notices and copy byte-identical text aliases for its reader.
  fs.mkdirSync(path.join(out,'native/notices'));
  for(const [source,name]of [['vendor/cc-cedict/LICENSE','cc-cedict.txt'],['vendor/writing-spark/LICENSE','writing-spark.txt']])fs.copyFileSync(path.join(out,source),path.join(out,'native/notices',name));
+ // Reuse the existing offline notices reader; these SDKs are native-only.
+ const nativeNotices=path.join(base,'mobile/resources/THIRD-PARTY-NOTICES.txt');
+ if(!fs.lstatSync(nativeNotices).isFile()||fs.lstatSync(nativeNotices).isSymbolicLink()||!fs.realpathSync(nativeNotices).startsWith(base+path.sep))throw Error('Unsafe native notices source');
+ fs.appendFileSync(path.join(out,'vendor/SOURCE-NOTICES.md'),'\n\n'+fs.readFileSync(nativeNotices,'utf8'));
  return out;
 }
 if(require.main===module){

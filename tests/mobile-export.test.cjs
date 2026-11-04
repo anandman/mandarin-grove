@@ -39,3 +39,13 @@ test('native extensionless-license aliases preserve exact source bytes and origi
  const out=exporter()(root,destination());
  for(const [source,alias]of [['vendor/cc-cedict/LICENSE','native/notices/cc-cedict.txt'],['vendor/writing-spark/LICENSE','native/notices/writing-spark.txt']]){assert.equal(hash(path.join(out,alias)),hash(path.join(root,source)));assert.equal(hash(path.join(out,source)),hash(path.join(root,source)));}
 });
+test('native source-notices reader receives the complete native SDK notices without changing web notices',()=>{
+ const source=fs.readFileSync(path.join(root,'vendor/SOURCE-NOTICES.md'),'utf8'),out=exporter()(root,destination());
+ const shipped=fs.readFileSync(path.join(out,'vendor/SOURCE-NOTICES.md'),'utf8');
+ assert.match(shipped,/Native application third-party notices/,'Native runtime licenses must be available through the existing notices reader');
+ const native=fs.readFileSync(path.join(root,'mobile/resources/THIRD-PARTY-NOTICES.txt'),'utf8');
+ assert.equal(shipped,source+'\n\n'+native);
+ const {exportStatic}=require('../scripts/export-static.cjs'),web=exportStatic(root,destination());
+ assert.equal(fs.readFileSync(path.join(web,'vendor/SOURCE-NOTICES.md'),'utf8'),source);
+ assert.equal(fs.readFileSync(path.join(root,'vendor/SOURCE-NOTICES.md'),'utf8'),source);
+});
