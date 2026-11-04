@@ -1,4 +1,4 @@
-const VER='20261102-native-text-90';
+const VER='20261103-local-native-91';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

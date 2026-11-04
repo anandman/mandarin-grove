@@ -161,7 +161,7 @@ function buildGroveProject(s,id,now=Date.now(),catalog=GROVE_PROJECT_CATALOG){
  const stage=wallet?.projects?.[id]?.stage||0,piece=project?.stages[stage];
  if(!piece||!wallet||!Number.isInteger(piece.cost)||piece.cost<0||wallet.balance<piece.cost)return false;
  ensureGroveWallet(s);wallet.balance-=piece.cost;
- wallet.projects[id]={stage:stage+1,visible:true};
+ wallet.projects[id]={...(wallet.projects[id]||{}),stage:stage+1,visible:true};
  wallet.transactions.push({id:'build:'+id+':'+now,type:'build',project:id,piece:piece.name,stage:stage+1,amount:-piece.cost,at:now});
  wallet.transactions=wallet.transactions.slice(-100);return true;
 }

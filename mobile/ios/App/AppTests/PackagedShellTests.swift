@@ -6,6 +6,37 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testLocalSaveSpendingWithHostRestarts() async throws {
+        let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
+        guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let controlURL = documents.appendingPathComponent("GroveSyntheticLocalSaveControl.json")
+        guard let data = try? Data(contentsOf: controlURL), let control = try JSONSerialization.jsonObject(with: data) as? [String: Any], let action = control["action"] as? String, ["begin", "afterPurchase", "finish", "restore"].contains(action), let runID = control["runID"] as? String, UUID(uuidString: runID) != nil, ProcessInfo.processInfo.environment["GROVE_LOCAL_SAVE_RUN_ID"] == runID, let version = control["version"] as? String else { throw XCTSkip("Explicit current host restart invocation only") }
+        let output = documents.appendingPathComponent("GroveSyntheticLocalSave-" + runID)
+        if !FileManager.default.fileExists(atPath: output.path) { try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false) }
+        let web = try await webView()
+        _ = try await web.evaluateJavaScript(resource("native-local-save-scenarios", extension: "js"))
+        let argument: Any
+        if action == "begin" { argument = version } else { argument = try XCTUnwrap(control["context"]) }
+        let json = String(decoding: try JSONSerialization.data(withJSONObject: argument, options: [.fragmentsAllowed]), as: UTF8.self)
+        if action == "begin" {
+            let original = try await asyncJavaScript("return JSON.stringify(await GroveLocalSaveScenario.preserve());", in: web)
+            try XCTUnwrap(original as? String).write(to: output.appendingPathComponent("prior-progress.json"), atomically: true, encoding: .utf8)
+        }
+        let method = action == "afterPurchase" ? "afterPurchaseRestart" : action
+        let result = try await asyncJavaScript("return JSON.stringify(await GroveLocalSaveScenario.\(method)(\(json)));", in: web)
+        let raw = try XCTUnwrap(result as? String)
+        try raw.write(to: output.appendingPathComponent(action + ".json"), atomically: true, encoding: .utf8)
+        if action == "finish" || action == "restore" {
+            let receipt = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any])
+            XCTAssertEqual(receipt[action == "finish" ? "passed" : "restoredOriginalBackupSemanticsExact"] as? Bool, true)
+        } else {
+            // The host verifies a live app PID, kills it, and stops XCTest
+            // before its automatic relaunch. Saved stage results survive.
+            while true { try await Task.sleep(nanoseconds: 100_000_000) }
+        }
+    }
+
     @MainActor func testNativeJournalInterruptedProcess() async throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }

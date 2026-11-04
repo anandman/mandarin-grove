@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A33D30000000000000000003 /* GroveTextSizePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000003; };
 		A33D10000000000000000005 /* native-interaction-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000005; };
+		A33D10000000000000000007 /* native-local-save-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000007; };
 		A33D10000000000000000006 /* native-journal-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000006; };
 		A33D10000000000000000004 /* native-feedback-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000004; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
@@ -32,6 +33,7 @@
 /* Begin PBXFileReference section */
 		A33D20000000000000000003 /* GroveTextSizePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroveTextSizePlugin.swift; sourceTree = "<group>"; };
 		A33D00000000000000000005 /* native-interaction-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-interaction-scenarios.js"; path = "../../../tests/fixtures/native-interaction-scenarios.js"; sourceTree = SOURCE_ROOT; };
+		A33D00000000000000000007 /* native-local-save-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-local-save-scenarios.js"; path = "../../../tests/fixtures/native-local-save-scenarios.js"; sourceTree = SOURCE_ROOT; };
 		A33D00000000000000000006 /* native-journal-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-journal-scenarios.js"; path = "../../../tests/fixtures/native-journal-scenarios.js"; sourceTree = SOURCE_ROOT; };
 		A33D00000000000000000004 /* native-feedback-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-feedback-scenarios.js"; path = "../../../tests/fixtures/native-feedback-scenarios.js"; sourceTree = SOURCE_ROOT; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -110,7 +112,7 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		59E48028CCBD907AA414A793 = {isa = PBXGroup; children = (1FB109AF27259D1E6D1BFBB1,A33D00000000000000000001,A33D00000000000000000002,A33D00000000000000000003,A33D00000000000000000004,A33D00000000000000000005,A33D00000000000000000006,); path = AppTests; sourceTree = "<group>"; };
+		59E48028CCBD907AA414A793 = {isa = PBXGroup; children = (1FB109AF27259D1E6D1BFBB1,A33D00000000000000000001,A33D00000000000000000002,A33D00000000000000000003,A33D00000000000000000004,A33D00000000000000000005,A33D00000000000000000006,A33D00000000000000000007,); path = AppTests; sourceTree = "<group>"; };
 		A3284FA8B0D7D4E594B6EC3E = {isa = PBXGroup; children = (C8740D43CC27D58654F7528D,); path = AppUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
@@ -198,7 +200,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B2B6FF110931020DCC8FD13A = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A33D10000000000000000003,A33D10000000000000000002,A33D10000000000000000001,A33D10000000000000000004,A33D10000000000000000005,A33D10000000000000000006,); runOnlyForDeploymentPostprocessing = 0; };
+		B2B6FF110931020DCC8FD13A = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A33D10000000000000000003,A33D10000000000000000002,A33D10000000000000000001,A33D10000000000000000004,A33D10000000000000000005,A33D10000000000000000006,A33D10000000000000000007,); runOnlyForDeploymentPostprocessing = 0; };
 		0283363DADF76881D19F8F59 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
