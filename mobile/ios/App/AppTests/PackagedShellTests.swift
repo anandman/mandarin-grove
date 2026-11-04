@@ -6,6 +6,56 @@ import AVFoundation
 @testable import App
 
 final class PackagedShellTests: XCTestCase {
+    @MainActor func testFreshLocalBackupRestore() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let runID = env["GROVE_FRESH_RESTORE_RUN_ID"], UUID(uuidString: runID) != nil,
+              let simID = env["GROVE_FRESH_RESTORE_SIMULATOR_ID"], UUID(uuidString: simID) != nil,
+              env["SIMULATOR_UDID"] == simID else { throw XCTSkip("Explicit fresh synthetic simulator invocation only") }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let controlURL = documents.appendingPathComponent("GroveSyntheticFreshRestoreControl.json")
+        guard let data = try? Data(contentsOf: controlURL),
+              let control = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              control["runID"] as? String == runID,
+              let action = control["action"] as? String, ["restore", "verify"].contains(action),
+              control["code"] is String, control["syntheticProfileID"] is String else { throw XCTSkip("Matching current host control required") }
+        let payload = String(decoding: try JSONSerialization.data(withJSONObject: control), as: UTF8.self)
+        let web = try await webView()
+        let result = try await asyncJavaScript("""
+        await GROVE_STARTED;
+        const control=\(payload),check=(v,m)=>{if(!v)throw Error(m);};
+        check(GrovePlatform.platform==='ios'&&GrovePlatform.persistenceReady,'Actual native SQLite ready');
+        check(typeof GroveNativeTest==='undefined','Ordinary app without internal controls');
+        check(Object.keys(localStorage).length===0,'No browser progress fallback');
+        const originalFetch=window.fetch.bind(window);
+        window.fetch=(input,options)=>{const u=new URL(typeof input==='string'?input:input.url,location.href);if(u.hostname!=='localhost')throw Error('External fetch blocked in recovery proof');return originalFetch(input,options);};
+        const decode=code=>JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(code.replace(/\\s/g,'')),c=>c.charCodeAt(0))));
+        const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+        const expected=decode(control.code),allow=new Set(['synthetic-a','synthetic-b',control.syntheticProfileID]);
+        check(expected.PR.list.every(p=>allow.has(p.id)),'Only exact source SDK synthetic profile IDs');
+        const identity=GrovePlatform.installationId;
+        let freshCode=null;
+        if(control.action==='restore'){
+            const registry=await GROVE_REPOSITORY.peekRegistry(),recovery=await GROVE_REPOSITORY.exportRecovery();
+            check(registry.list.length===0&&recovery.originals.length===0,'Refuse to replace any preexisting learner or import');
+            freshCode=await backup();
+            await grown('backup');document.getElementById('grest').click();
+            const field=document.getElementById('grt');field.value=control.code;field.dispatchEvent(new Event('input',{bubbles:true}));
+            const wait=async predicate=>{const end=Date.now()+15000;while(!predicate()){check(Date.now()<end,'Backup UI deadline');await new Promise(r=>setTimeout(r,25));}};
+            await wait(()=>document.getElementById('grr'));
+            check(await backup()===freshCode,'Preview never writes a fresh destination');
+            document.getElementById('grr').click();await wait(()=>!document.getElementById('grr'));
+        }else check(identity===control.expectedIdentity,'Installation identity retained across actual restart');
+        const code=await backup();check(stable(decode(code))===stable(expected),'Every raw profile/envelope/reward/unknown value exact');
+        const recovery=await GROVE_REPOSITORY.exportRecovery();check(recovery.originals.some(o=>o.code===control.code),'Exact original imported code retained');
+        return JSON.stringify({passed:true,platform:'ios',action:control.action,ordinaryBuild:true,nativeSQLite:true,noBrowserStorage:true,freshEmptySandbox:control.action==='restore',previewReadOnly:control.action==='restore',rawProfileAndEnvelopeValuesExact:true,exactOriginalRetained:true,externalFetchBlockedAfterStartup:true,installationIdentity:identity,freshCode,code});
+        """, in: web) as? String
+        let exact = try XCTUnwrap(result)
+        let receipt = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(exact.utf8)) as? [String: Any])
+        XCTAssertEqual(receipt["passed"] as? Bool, true)
+        let output = documents.appendingPathComponent("GroveSyntheticFreshRestore-" + runID)
+        if !FileManager.default.fileExists(atPath: output.path) { try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false) }
+        try exact.write(to: output.appendingPathComponent(action + ".json"), atomically: true, encoding: .utf8)
+    }
     @MainActor func testLocalSaveSpendingWithHostRestarts() async throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
