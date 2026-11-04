@@ -49,3 +49,10 @@ test('native source-notices reader receives the complete native SDK notices with
  assert.equal(fs.readFileSync(path.join(web,'vendor/SOURCE-NOTICES.md'),'utf8'),source);
  assert.equal(fs.readFileSync(path.join(root,'vendor/SOURCE-NOTICES.md'),'utf8'),source);
 });
+test('the privacy policy ships byte-identically in both native and web packages',()=>{
+ const {exportStatic}=require('../scripts/export-static.cjs');
+ for(const out of [exporter()(root,destination()),exportStatic(root,destination())]){
+  const policy=path.join(out,'privacy-support.txt');assert.ok(fs.existsSync(policy),'Ship the public privacy policy, including its contact and recovery instructions');
+  assert.equal(hash(policy),hash(path.join(root,'privacy-support.txt')));
+ }
+});

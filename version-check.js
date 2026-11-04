@@ -1,4 +1,4 @@
-const VER='20261103-local-native-91';
+const VER='20261104-privacy-92';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

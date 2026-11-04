@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A33D30000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000004; };
 		A33D30000000000000000003 /* GroveTextSizePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D20000000000000000003; };
 		A33D10000000000000000005 /* native-interaction-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000005; };
 		A33D10000000000000000007 /* native-local-save-scenarios.js in Test Resources */ = {isa = PBXBuildFile; fileRef = A33D00000000000000000007; };
@@ -31,6 +32,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A33D20000000000000000004 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A33D20000000000000000003 /* GroveTextSizePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroveTextSizePlugin.swift; sourceTree = "<group>"; };
 		A33D00000000000000000005 /* native-interaction-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-interaction-scenarios.js"; path = "../../../tests/fixtures/native-interaction-scenarios.js"; sourceTree = SOURCE_ROOT; };
 		A33D00000000000000000007 /* native-local-save-scenarios.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "native-local-save-scenarios.js"; path = "../../../tests/fixtures/native-local-save-scenarios.js"; sourceTree = SOURCE_ROOT; };
@@ -106,6 +108,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				A33D20000000000000000004 /* PrivacyInfo.xcprivacy */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
@@ -191,6 +194,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A33D30000000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 				504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */,
 				50B271D11FEDC1A000F3C39B /* public in Resources */,
 				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,

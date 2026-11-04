@@ -298,7 +298,7 @@ final class PackagedShellTests: XCTestCase {
         let priorValue = try await asyncJavaScript("return await backup();", in: web) as? String, prior = try XCTUnwrap(priorValue)
         try prior.write(to: output.appendingPathComponent("prior-backup.txt"), atomically: true, encoding: .utf8)
         let appURL = try await web.evaluateJavaScript("location.href") as? String
-        let files = ["audio-sources/LICENSE-MSU.txt", "audio-sources/MSU-VERIFICATION.json", "vendor/SOURCE-NOTICES.md", "vendor/cc-cedict/LICENSE", "content/online-reading-notices.txt", "vendor/writing-spark/LICENSE"]
+        let files = ["privacy-support.txt", "audio-sources/LICENSE-MSU.txt", "audio-sources/MSU-VERIFICATION.json", "vendor/SOURCE-NOTICES.md", "vendor/cc-cedict/LICENSE", "content/online-reading-notices.txt", "vendor/writing-spark/LICENSE"]
         for file in files {
             let literal = String(decoding: try JSONSerialization.data(withJSONObject: file, options: [.fragmentsAllowed]), as: UTF8.self)
             let contents = try await asyncJavaScript("const a=document.createElement('a'); a.id='synthetic-notice-link'; a.href=\(literal); a.target='_blank'; a.textContent='Synthetic notice'; document.getElementById('gov').append(a); a.click(); const end=Date.now()+10000; while(Date.now()<end){const p=document.querySelector('#grove-native-notice pre'); if(p&&!p.hidden)return p.textContent; await new Promise(r=>setTimeout(r,20));} throw Error('Native notice did not open');", in: web) as? String

@@ -6,11 +6,18 @@ test('existing bundled notice paths resolve on both native schemes, dropping que
   const result=resolve('audio-sources/LICENSE-MSU.txt?v=87#source',base);assert.equal(result.url,base+'audio-sources/LICENSE-MSU.txt');assert.match(result.title,/MSU.*license/);
  }
 });
+test('the privacy policy and support contact open offline on both native schemes',()=>{
+ for(const base of ['https://localhost/','capacitor://localhost/']){
+  const result=resolve('privacy-support.txt?v=current#contact',base);
+  assert.ok(result,'The bundled privacy policy needs an offline native reader');
+  assert.equal(result.url,base+'privacy-support.txt');assert.match(result.title,/Privacy.*support/);
+ }
+});
 test('a null custom-scheme origin never admits a different host or scheme',()=>{
  for(const url of ['capacitor://evil/audio-sources/LICENSE-MSU.txt','https://localhost/audio-sources/LICENSE-MSU.txt','javascript:alert(1)','data:text/plain,notice','file:///audio-sources/LICENSE-MSU.txt'])assert.equal(resolve(url,'capacitor://localhost/'),undefined);
 });
-test('only six shipped notices are admitted, never arbitrary app files or credentials',()=>{
- const paths=['audio-sources/LICENSE-MSU.txt','audio-sources/MSU-VERIFICATION.json','vendor/SOURCE-NOTICES.md','vendor/cc-cedict/LICENSE','content/online-reading-notices.txt','vendor/writing-spark/LICENSE'];
+test('only seven shipped notices are admitted, never arbitrary app files or credentials',()=>{
+ const paths=['privacy-support.txt','audio-sources/LICENSE-MSU.txt','audio-sources/MSU-VERIFICATION.json','vendor/SOURCE-NOTICES.md','vendor/cc-cedict/LICENSE','content/online-reading-notices.txt','vendor/writing-spark/LICENSE'];
  for(const p of paths)assert.ok(resolve(p,'https://localhost/'));
  for(const p of ['index.html','app.js','exports/backup.txt','https://user:password@localhost/vendor/cc-cedict/LICENSE','https://example.com/vendor/cc-cedict/LICENSE','http://localhost/vendor/cc-cedict/LICENSE'])assert.equal(resolve(p,'https://localhost/'),undefined);
 });

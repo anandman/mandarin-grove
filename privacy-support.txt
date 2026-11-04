@@ -1,0 +1,107 @@
+Mandarin Grove - Privacy Policy and Support
+Updated November 4, 2026
+
+This policy covers Mandarin Grove's installed iPhone/iPad and Android apps and
+its web/PWA version. The first native release is local-only.
+
+Privacy questions and support: dev@highgain.design
+
+Your family's practice
+
+Grove does not require a Grove account. Learner profiles, practice results,
+writing drafts, stars, oranges, decorations and preferences are saved on the
+device. Native apps use their local app storage; the web/PWA uses storage in
+that browser. Grove does not upload these saves to the app maker. There are
+no ads, advertising identifiers or analytics SDKs in Grove.
+
+Saves and backups
+
+This release does not automatically synchronize progress between devices.
+Progress and oranges are independent on each device. A device's operating
+system backup or device-transfer feature may include Grove app data according
+to its own settings and availability; that is separate from Grove live sync.
+Keep a current exported backup outside the device for manual recovery.
+
+Backup codes and files include learner profiles, progress and settings. Treat
+them as private. When you choose a file destination or system sharing service,
+that service handles the exported copy under its own settings and policy.
+Grove does not send exported backups to the app maker. Do not attach a learner
+backup to a support report.
+
+Optional problem reports
+
+Practice works without sending a report. Only an explicit Send or Retry sends
+feedback; reports are not uploaded in the background. The native apps show a
+Grown-ups review of the exact report before sending or sharing it.
+
+A native report contains your message and selected report category, a random
+ID for that report, report time, app version and platform. It may also contain
+the public lesson/question details, public content identifiers and audio
+source/recording filename shown in the review. Stored learner history, grades,
+writing drafts, learner names, account IDs and installation/device IDs are not
+automatically attached to a native report. Leave names, email addresses and
+other personal information out of the message. Reports are not guaranteed to
+be anonymous if you include identifying information yourself.
+
+The web/PWA's report can include additional context shown with the report:
+grade, current activity/question position, a writing excerpt when reporting
+writing, requested voice settings, browser description and site address.
+Review the report before sending, copying, downloading or sharing it. Saved
+local report files can contain this additional context even on a native app;
+the native Send/Share review shows the smaller payload it actually sends.
+
+Reports sent through Grove use HTTPS to a Vercel-hosted receiver and are saved
+in the app maker's private GitHub support inbox, for investigating problems
+and maintaining the app. They are not posted publicly or used for advertising.
+Vercel and GitHub process these requests as service providers, including the
+network/request information needed to deliver and secure the service. Grove's
+receiver briefly uses an IP address in memory for abuse limits; it does not
+add that IP address to the saved feedback report.
+
+Support reports remain in the private support inbox until removed; this
+version has no automatic report-expiry schedule. To request removal, contact
+dev@highgain.design and give the report receipt if available. Do not send
+child names or backups to identify a report. A request can also be sent using
+Report a problem with the earlier receipt. Deleting local Grove data does not
+delete a report that was already sent or a backup stored elsewhere.
+
+Other connections you choose
+
+Bundled lessons, dictionary, stroke guides and recordings are available offline.
+If you choose online reading or an outside website, the content provider
+receives that network request under its own policy. Grove does not attach a
+learner profile, progress or backup. Device speech is handled by the system
+speech service and available installed voices; its settings are controlled by
+the device. Grove does not record a child's voice or use the microphone.
+
+Manage local data
+
+Grown-ups > Backup lets you export a backup and preview a backup before
+replacing local progress. Export a backup before changing or resetting data.
+Grown-ups > Fix & reset > Erase everything on this device removes Grove's
+local learner/settings/report data after its confirmation. Remove exported
+copies and operating-system backups separately through their chosen services.
+There is no Grove account to delete.
+
+Support and manual recovery
+
+For help, contact dev@highgain.design or use Report a problem. Check a
+message for personal information before sending it. A report receipt confirms
+that the private inbox accepted the report; an offline or failed send is not
+confirmed delivery.
+
+To move from the PWA or another device, export a current backup in Grown-ups >
+Backup, keep the original, open Backup in the destination app and preview the
+code or file before confirming Replace. This replaces that destination's
+progress; the source device remains independent. After an update, open the
+same installed app and check the learner/profile before continuing. Do not
+uninstall or erase the app as a troubleshooting step before saving a backup.
+If the device is lost, recovery requires an accessible exported backup or a
+working operating-system backup; this release cannot promise automatic
+Grove account/cloud recovery.
+
+Changes
+
+This policy describes the current local-only release. Any future cloud-save
+feature will need an updated disclosure before it sends save files. It will
+not silently upload existing learner saves through the feedback service.

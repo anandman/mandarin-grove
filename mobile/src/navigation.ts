@@ -1,4 +1,5 @@
 const notices=new Map([
+ ['privacy-support.txt','Privacy policy and support'],
  ['audio-sources/LICENSE-MSU.txt','MSU recording license'],
  ['audio-sources/MSU-VERIFICATION.json','MSU source notes'],
  ['vendor/SOURCE-NOTICES.md','Third-party source notices'],
