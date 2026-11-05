@@ -1,6 +1,26 @@
 import XCTest
 
 final class NativeBackupUITests: XCTestCase {
+    @MainActor private func requireGroveContent(_ app: XCUIApplication, context: String,
+                                               timeout: TimeInterval = 30,
+                                               file: StaticString = #filePath, line: UInt = #line) -> Bool {
+        guard app.webViews.buttons["Report a problem"].waitForExistence(timeout: timeout) else {
+            let tree = XCTAttachment(string: app.debugDescription)
+            tree.name = "Grove content unavailable " + context
+            tree.lifetime = .keepAlways
+            add(tree)
+            if app.state == .runningForeground {
+                let screenshot = XCTAttachment(screenshot: app.screenshot())
+                screenshot.name = "Grove readiness failure " + context
+                screenshot.lifetime = .keepAlways
+                add(screenshot)
+            }
+            XCTFail("Grove content is not accessible \(context). A WebView container alone is not readiness.", file: file, line: line)
+            return false
+        }
+        return true
+    }
+
     @MainActor func testInstalledDeviceRotationPreservesVisibleApp() throws {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
@@ -12,17 +32,19 @@ final class NativeBackupUITests: XCTestCase {
         app.launch()
         let web = app.webViews.firstMatch
         XCTAssertTrue(web.waitForExistence(timeout: 20), app.debugDescription)
+        guard requireGroveContent(app, context: "before rotation") else { return }
         let portrait = web.frame
         XCTAssertLessThan(portrait.width, portrait.height)
         device.orientation = .landscapeLeft
         let wide = expectation(for: NSPredicate { _, _ in web.frame.width > web.frame.height }, evaluatedWith: web)
         wait(for: [wide], timeout: 10)
-        XCTAssertTrue(app.webViews.buttons["Report a problem"].exists, "The packaged app remains accessible after device rotation")
+        guard requireGroveContent(app, context: "after landscape rotation", timeout: 10) else { return }
         let landscape = XCTAttachment(screenshot: app.screenshot()); landscape.name = "Actual iPad device rotation at system text size"; landscape.lifetime = .keepAlways; add(landscape)
         let frames = XCTAttachment(string: "Portrait: \(portrait); landscape: \(web.frame)"); frames.name = "Actual installed viewport frames"; frames.lifetime = .keepAlways; add(frames)
         device.orientation = .portrait
         let tall = expectation(for: NSPredicate { _, _ in web.frame.width < web.frame.height }, evaluatedWith: web)
         wait(for: [tall], timeout: 10)
+        guard requireGroveContent(app, context: "after returning to portrait", timeout: 10) else { return }
         XCTAssertEqual(web.frame.width, portrait.width, accuracy: 2)
         XCTAssertEqual(web.frame.height, portrait.height, accuracy: 2)
     }
@@ -83,6 +105,7 @@ final class NativeBackupUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
         app.launch()
+        guard requireGroveContent(app, context: "before backup transfer") else { return }
         let gear = app.webViews.buttons["Grown-ups settings, press and hold or activate with keyboard"]
         XCTAssertTrue(gear.waitForExistence(timeout: 20), app.debugDescription)
         gear.press(forDuration: 2.2)
