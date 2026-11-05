@@ -4,7 +4,7 @@ const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE;
 assert.ok(sdk&&serial&&output,'Set SDK, dedicated serial and ignored evidence directory');
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
-const app='io.github.anandman.mandaringrove';
+const app='design.highgain.mandaringrove';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 (async()=>{
  fs.mkdirSync(output,{recursive:true});const receipt={platform:'android',serial,package:app,syntheticOnly:true,checks:[],scope:'L1 engineering shell only; durable saves/sync/family beta unimplemented'};let browser;

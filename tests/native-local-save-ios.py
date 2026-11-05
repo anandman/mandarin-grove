@@ -6,7 +6,7 @@ output = pathlib.Path(os.environ['GROVE_NATIVE_EVIDENCE'])
 sim = os.environ['GROVE_IOS_SIMULATOR']
 derived = pathlib.Path(os.environ['GROVE_IOS_DERIVED_DATA'])
 assert sim in ['9EFE4227-7925-437A-99B7-FBD467913AE2', 'F8FF1550-0D71-4718-AB66-9A037F9D720F']
-bundle = 'io.github.anandman.mandaringrove'
+bundle = 'design.highgain.mandaringrove'
 def run(args):
     return subprocess.run(args, check=True, text=True, capture_output=True).stdout.strip()
 def stop(proc):

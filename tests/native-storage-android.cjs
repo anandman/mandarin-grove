@@ -1,7 +1,7 @@
 // Actual APK, dedicated synthetic AVD, real SQLite, airplane mode and OS kills.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{execFileSync,spawnSync}=require('node:child_process'),{DatabaseSync}=require('node:sqlite');
 const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';
 assert.ok(sdk&&serial&&output,'Explicit SDK, dedicated serial and new ignored evidence directory required');
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
 const fixtures=Object.fromEntries(['original-v1','grove-v1'].map(n=>[n,JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/backups',n+'.json'),'utf8'))]));

@@ -1,6 +1,6 @@
 // Actual ordinary synthetic AVD. Only cancel the share UI; never choose a recipient.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync,spawnSync}=require('node:child_process'),{_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';assert.ok(sdk&&serial&&output);
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';assert.ok(sdk&&serial&&output);
 const executable=path.join(sdk,'platform-tools/adb'),args=['-s',serial],adb=(...rest)=>execFileSync(executable,[...args,...rest],{encoding:'utf8'}).trim();
 function ui(label){const remote='/data/local/tmp/grove-feedback-'+path.basename(output)+'-'+label+'.xml';adb('shell','uiautomator','dump',remote);const xml=adb('exec-out','cat',remote);fs.writeFileSync(path.join(output,label+'.xml'),xml);return [...xml.matchAll(/<node\b[^>]*>/g)].map(m=>Object.fromEntries([...m[0].matchAll(/([\w:-]+)="([^"]*)"/g)].map(a=>[a[1],a[2]])));}
 function tap(node){assert.ok(node,'An observed native control is required');const [x1,y1,x2,y2]=node.bounds.match(/\d+/g).map(Number);adb('shell','input','tap',String((x1+x2)/2|0),String((y1+y2)/2|0));}

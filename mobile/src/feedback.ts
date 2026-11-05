@@ -1,4 +1,4 @@
-const ENDPOINT='https://mandarin-grove.vercel.app/api/native-feedback',APP='io.github.anandman.mandaringrove';
+const ENDPOINT='https://mandarin-grove.vercel.app/api/native-feedback',APP='design.highgain.mandaringrove';
 const origins=new Map([['ios','capacitor://localhost'],['android','https://localhost']]);
 const categories=new Set(['sound','meaning','broken','missing']);
 const contentLimits={packId:100,itemId:160,version:100,sourceId:120,reviewStatus:100};

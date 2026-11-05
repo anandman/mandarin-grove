@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync,spawnSync}=require('node:child_process'),{DatabaseSync}=require('node:sqlite');
-const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';assert.ok(sdk&&serial&&output);
+const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';assert.ok(sdk&&serial&&output);
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim(),source=fs.readFileSync(path.join(__dirname,'fixtures/native-journal-scenarios.js'),'utf8');
 (async()=>{fs.mkdirSync(output,{recursive:false});let device;const receipt={passed:false,platform:'android',checks:[]};try{
  assert.match(adb('emu','avd','name'),/^Grove_API36_Play/);assert.equal(adb('shell','settings','get','global','airplane_mode_on'),'1');

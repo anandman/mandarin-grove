@@ -8,7 +8,7 @@ root = pathlib.Path(__file__).resolve().parents[1]
 output = pathlib.Path(os.environ['GROVE_NATIVE_EVIDENCE'])
 source = pathlib.Path(os.environ['GROVE_RECOVERY_SOURCE'])
 derived = pathlib.Path(os.environ['GROVE_IOS_DERIVED_DATA'])
-bundle = 'io.github.anandman.mandaringrove'
+bundle = 'design.highgain.mandaringrove'
 run_id = str(uuid.uuid4())
 
 def run(args, **kwargs):

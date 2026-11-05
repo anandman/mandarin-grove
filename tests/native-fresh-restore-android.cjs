@@ -7,7 +7,7 @@ const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const output=process.env.GROVE_NATIVE_EVIDENCE,source=process.env.GROVE_RECOVERY_SOURCE;
 const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL;
 assert.ok(output&&source&&sdk&&serial,'Explicit dedicated emulator, source receipt and new evidence directory required');
-const app='io.github.anandman.mandaringrove',executable=path.join(sdk,'platform-tools/adb');
+const app='design.highgain.mandaringrove',executable=path.join(sdk,'platform-tools/adb');
 const adb=(...args)=>execFileSync(executable,['-s',serial,...args],{encoding:'utf8',timeout:90000}).trim();
 const decode=code=>JSON.parse(Buffer.from(code.replace(/\s/g,''),'base64').toString('utf8'));
 const hash=text=>crypto.createHash('sha256').update(text).digest('hex');

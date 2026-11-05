@@ -1,4 +1,4 @@
-package io.github.anandman.mandaringrove;
+package design.highgain.mandaringrove;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

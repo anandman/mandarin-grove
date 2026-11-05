@@ -1,7 +1,7 @@
 // Real installed SDK, separate synthetic journal database; never reset app data.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process'),{DatabaseSync}=require('node:sqlite');
 const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const output=process.env.GROVE_NATIVE_EVIDENCE,sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,app='io.github.anandman.mandaringrove';
+const output=process.env.GROVE_NATIVE_EVIDENCE,sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,app='design.highgain.mandaringrove';
 assert.ok(output&&sdk&&serial);const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
 (async()=>{fs.mkdirSync(output,{recursive:false});let device;try{
  assert.match(adb('emu','avd','name'),/^Grove_API36_Play/);adb('shell','cmd','connectivity','airplane-mode','enable');adb('shell','svc','wifi','disable');adb('shell','svc','data','disable');assert.equal(adb('shell','settings','get','global','airplane_mode_on'),'1');

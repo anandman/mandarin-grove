@@ -3,7 +3,8 @@
 const GITHUB='https://api.github.com/repos/anandman/mandarin-grove-feedback';
 const ORIGIN='https://mandarin-grove.vercel.app';
 const MAX_BYTES=16384;
-const NATIVE_APP='io.github.anandman.mandaringrove';
+// Keep the exact prototype identity compatible with preserved family builds.
+const NATIVE_APPS=new Set(['design.highgain.mandaringrove','io.github.anandman.mandaringrove']);
 const NATIVE_ORIGINS=new Map([['capacitor://localhost','ios'],['https://localhost','android']]);
 const CATEGORIES={sound:'Sound seems wrong',meaning:'Meaning is confusing',broken:'Something did not work',missing:'The app could not find or check this'};
 const CONTENT_LIMITS={packId:100,itemId:160,version:100,sourceId:120,reviewStatus:100};
@@ -43,7 +44,7 @@ function validateNativeReport(value,origin){
  const r=object(value,['id','category','note','version','time','app','platform','question','audio','content']);
  if(typeof r.id!=='string'||typeof r.category!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(r.id)||!own(CATEGORIES,r.category))throw Error('invalid');
  text(r.note,2000);text(r.version,100,true);text(r.time,40,true);
- if(!Number.isFinite(Date.parse(r.time))||r.app!==NATIVE_APP||r.platform!==NATIVE_ORIGINS.get(origin))throw Error('invalid');
+ if(!Number.isFinite(Date.parse(r.time))||!NATIVE_APPS.has(r.app)||r.platform!==NATIVE_ORIGINS.get(origin))throw Error('invalid');
  optionalObject(r.question,['character','pinyin','meaning','mode'],q=>{text(q.character,32,true);text(q.pinyin,200);text(q.meaning,400);text(q.mode,40,true);});
  optionalObject(r.audio,['source','recording'],audio=>{
   if(!['msu','cns','bundled','device','unknown'].includes(audio.source))throw Error('invalid');

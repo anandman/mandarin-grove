@@ -1,4 +1,4 @@
-package io.github.anandman.mandaringrove;
+package design.highgain.mandaringrove;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

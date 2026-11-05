@@ -1,7 +1,7 @@
 // Actual system-picker cancellation and bounded app-private staging ownership.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync,spawnSync}=require('node:child_process');
 const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';
 assert.ok(sdk&&serial&&output,'Explicit SDK, dedicated serial and new ignored evidence directory required');
 const executable=path.join(sdk,'platform-tools/adb'),args=['-s',serial],adb=(...rest)=>execFileSync(executable,[...args,...rest],{encoding:'utf8'}).trim();
 function stages(){

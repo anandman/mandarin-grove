@@ -1,7 +1,7 @@
 // Real Storage Access Framework dialogs, fixed private paths, synthetic AVD only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,sdk=process.env.ANDROID_HOME,app='io.github.anandman.mandaringrove';
+const serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,sdk=process.env.ANDROID_HOME,app='design.highgain.mandaringrove';
 assert.ok(serial&&output&&sdk);const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/backups/original-v1.json','utf8')),scenarios=fs.readFileSync('tests/fixtures/native-scenarios.js','utf8'),hash=data=>crypto.createHash('sha256').update(data).digest('hex');
 (async()=>{

@@ -2,7 +2,7 @@
 // Dedicated synthetic AVD only. Preserve prior originals and restore progress.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync,spawnSync}=require('node:child_process'),{DatabaseSync}=require('node:sqlite');
 const {_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';
 assert.ok(sdk&&serial&&output,'Explicit SDK, dedicated serial and fresh ignored evidence directory required');
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');

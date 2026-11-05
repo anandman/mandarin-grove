@@ -1,6 +1,6 @@
 // Actual packaged recording and OS Home/resume, dedicated synthetic AVD only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process'),{_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';assert.ok(sdk&&serial&&output);
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';assert.ok(sdk&&serial&&output);
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim();
 (async()=>{
  fs.mkdirSync(output,{recursive:false});let device,page,prior,preference;const receipt={platform:'android',syntheticOnly:true,passed:false};

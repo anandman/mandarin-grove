@@ -1,4 +1,4 @@
-package io.github.anandman.mandaringrove;
+package design.highgain.mandaringrove;
 
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;

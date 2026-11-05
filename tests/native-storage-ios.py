@@ -22,7 +22,7 @@ assert SIM in NAMES, "Dedicated Grove synthetic simulators only"
 OUTPUT = Path(os.environ["GROVE_NATIVE_EVIDENCE"]).resolve()
 OUTPUT.mkdir()  # Refuse to overwrite any previous evidence.
 RUN = Path(os.environ["GROVE_XCTESTRUN"]).resolve()
-APP = "io.github.anandman.mandaringrove"
+APP = "design.highgain.mandaringrove"
 ROOT = Path(__file__).resolve().parent.parent
 receipt = {"platform": "ios", "syntheticOnly": True, "checks": [], "passed": False}
 

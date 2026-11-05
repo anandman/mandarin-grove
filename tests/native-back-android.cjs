@@ -1,6 +1,6 @@
 // Actual Android KEYCODE_BACK, supported App callback, synthetic AVD only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process'),{_android}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='io.github.anandman.mandaringrove';assert.ok(sdk&&serial&&output);
+const sdk=process.env.ANDROID_HOME,serial=process.env.GROVE_ANDROID_SERIAL,output=process.env.GROVE_NATIVE_EVIDENCE,app='design.highgain.mandaringrove';assert.ok(sdk&&serial&&output);
 const adb=(...args)=>execFileSync(path.join(sdk,'platform-tools/adb'),['-s',serial,...args],{encoding:'utf8'}).trim(),back=()=>adb('shell','input','keyevent','KEYCODE_BACK');
 function preserve(label,envelope){const dir=path.join(output,label);fs.mkdirSync(dir);for(const f of envelope.files){assert.match(f.name,/^mandarin_groveSQLite[.]db(?:-wal|-shm)?$/);const b=Buffer.from(f.base64,'base64');assert.equal(crypto.createHash('sha256').update(b).digest('hex'),f.sha256);fs.writeFileSync(path.join(dir,f.name),b);}}
 (async()=>{

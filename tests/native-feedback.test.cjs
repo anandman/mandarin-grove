@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),{Readable}=require('node:stream'),{randomUUID}=require('node:crypto');
 let createNative;try{({createHandler:createNative}=require('../api/native-feedback.js'));}catch(error){if(error.code!=='MODULE_NOT_FOUND')throw error;}
-const app='io.github.anandman.mandaringrove',origins={ios:'capacitor://localhost',android:'https://localhost'},env={GH_FEEDBACK_TOKEN:'github_pat_synthetic_native_only'};
+const app='design.highgain.mandaringrove',origins={ios:'capacitor://localhost',android:'https://localhost'},env={GH_FEEDBACK_TOKEN:'github_pat_synthetic_native_only'};
 const report=(platform='ios')=>({id:'49bb5d96-6826-422c-8b2a-c15a63bebdd3',category:'sound',note:'Synthetic note',version:'native-test',time:'2026-11-02T12:00:00.000Z',app,platform,question:{character:'子',pinyin:'zǐ',meaning:'child',mode:'listen'},audio:{source:'msu',recording:'audio/msu-zi3-mv3-0123456789ab.mp3'}});
 const response=(status,data)=>({ok:status>=200&&status<300,status,json:async()=>data});
 function github(){const calls=[];return {calls,fetch:async(url,opts)=>{calls.push({url,...opts});if(url.endsWith('/mandarin-grove-feedback'))return response(200,{private:true});if(opts.method==='GET')return response(200,[]);return response(201,{number:48});}};}
@@ -84,4 +84,18 @@ test('real loopback HTTP exercises native CORS, streamed JSON and receipts with 
 });
 for(const field of ['id','category'])test('native '+field+' must be a string; coercible arrays cannot create receipts or evade coalescing',async()=>{
  const gh=github(),body=report();body[field]=[body[field]];const r=await request(handler({env,fetch:gh.fetch}),body);assert.equal(r.statusCode,400);assert.equal(gh.calls.length,0);
+});
+
+test('preserved prototype builds can still submit bounded reports on both native platforms',async()=>{
+ for(const platform of ['ios','android']){
+  const gh=github(),body={...report(platform),app:'io.github.anandman.mandaringrove'};
+  const r=await request(handler({env,fetch:gh.fetch}),body,{origin:origins[platform]});
+  assert.equal(r.statusCode,201);assert.equal(r.data.sent,true);
+ }
+});
+test('lookalike app identities cannot deliver a native report',async()=>{
+ for(const app of ['design.highgain.mandaringrove.other','design.highgain.mandarin-grove','io.github.anandman.mandaringrove.other','DESIGN.HIGHGAIN.MANDARINGROVE']){
+  const gh=github(),r=await request(handler({env,fetch:gh.fetch}),{...report(),app});
+  assert.equal(r.statusCode,400);assert.equal(gh.calls.length,0);
+ }
 });

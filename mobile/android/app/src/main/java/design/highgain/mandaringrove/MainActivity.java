@@ -1,4 +1,4 @@
-package io.github.anandman.mandaringrove;
+package design.highgain.mandaringrove;
 
 import com.getcapacitor.BridgeActivity;
 import android.os.Bundle;

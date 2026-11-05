@@ -18,7 +18,7 @@ test('native bootstrap precedes learner and preference code and cannot start the
  for(const file of ['offline.js','version-check.js'])assert.equal(scripts.includes(file),false,file+' must not execute in an installed app');
  assert.match(html,/data-grove-native="true"/);assert.match(html,/data-native-persistence="sqlite"/);
  assert.equal(fs.readFileSync(path.join(out,'native/bridge.js'),'utf8').includes('GroveNativeTest'),false,'Ordinary packages contain no internal transaction controls');
- const config=require('../mobile/capacitor.config.json');assert.equal(config.appId,'io.github.anandman.mandaringrove');assert.equal(config.webDir,'www');assert.equal(config.server?.url,undefined);assert.equal(config.server?.cleartext,undefined);
+ const config=require('../mobile/capacitor.config.json');assert.equal(config.appId,'design.highgain.mandaringrove');assert.equal(config.webDir,'www');assert.equal(config.server?.url,undefined);assert.equal(config.server?.cleartext,undefined);
 });
 test('native HTML without its bridge refuses readiness instead of opening browser storage',async()=>{
  const vm=require('node:vm'),context=vm.createContext({window:{},document:{documentElement:{dataset:{groveNative:'true'}}}});

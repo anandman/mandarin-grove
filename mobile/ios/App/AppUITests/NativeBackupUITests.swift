@@ -7,7 +7,7 @@ final class NativeBackupUITests: XCTestCase {
         continueAfterFailure = false
         let device = XCUIDevice.shared, original = XCUIDevice.shared.orientation
         defer { device.orientation = original == .unknown ? .portrait : original }
-        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
         device.orientation = .portrait
         app.launch()
         let web = app.webViews.firstMatch
@@ -30,7 +30,7 @@ final class NativeBackupUITests: XCTestCase {
         let allowed = ["9EFE4227-7925-437A-99B7-FBD467913AE2", "F8FF1550-0D71-4718-AB66-9A037F9D720F"]
         guard allowed.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else { throw XCTSkip("Dedicated synthetic simulators only") }
         continueAfterFailure = false
-        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
         app.launch()
         let report = app.webViews.buttons["Report a problem"].firstMatch
         XCTAssertTrue(report.waitForExistence(timeout: 20), app.debugDescription); report.tap()
@@ -81,7 +81,7 @@ final class NativeBackupUITests: XCTestCase {
             throw XCTSkip("This file-replacement test is restricted to the dedicated synthetic simulators")
         }
         continueAfterFailure = false
-        let app = XCUIApplication(bundleIdentifier: "io.github.anandman.mandaringrove")
+        let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
         app.launch()
         let gear = app.webViews.buttons["Grown-ups settings, press and hold or activate with keyboard"]
         XCTAssertTrue(gear.waitForExistence(timeout: 20), app.debugDescription)
