@@ -56,7 +56,8 @@ function showSummaryHelp(){
   }finally{Object.values(fields).forEach(input=>input.disabled=false);}
   if(!active())return;pendingDraft=null;
   for(const input of Object.values(fields))input.value='';
-  updateClear();status.textContent='Draft cleared on this device.';fields.mainIdea.focus();
+  updateClear();status.textContent='Draft cleared on this device.';if(typeof GroveViewport!=='undefined')GroveViewport.reveal(fields.mainIdea);fields.mainIdea.focus();
  };
  updateClear();
+ if(typeof GroveViewport!=='undefined')GroveViewport.summary(root);
 }

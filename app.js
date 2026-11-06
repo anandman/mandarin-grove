@@ -178,16 +178,17 @@ async function handleNativeBack(){
 }
 function hidePageBack(){const nav=$('page-navigation');if(nav)nav.hidden=true;const button=$('page-back');if(button)button.onclick=null;}
 function screen({scroll=true}={}){
+ if(typeof GroveViewport!=='undefined')GroveViewport.setScreen('content');
  viewNavigation={origin:document.activeElement};
  NAV++;detailRequest++;dclose();stopSpeech();feedbackQuestion=null;ACTIVE_REVIEW=null;document.body.dataset.screen='activity';$('home').style.display='inline-block';$('ttl').style.display='';$('grove-action-notice')?.setAttribute('hidden','');$('reward-notice')?.setAttribute('hidden','');$('progress-action-retry')?.remove();renderRewards();
  setPageBack(()=>SESS?.study?pauseStudy():home());
- const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation)window.scrollTo(0,0);});
+ const navigation=NAV;if(scroll)requestAnimationFrame(()=>{if(NAV===navigation){A.scrollTop=0;window.scrollTo(0,0);}});
 }
 function PF(){for(const card of batch()){if(!STROKES[card.c])SL(card.c,()=>{});}}
 async function home(){
  await archQ();screen();delete document.body.dataset.study;document.body.dataset.screen='home';SESS=null;CRAM=null;TH=[];TF=[];writer=null;lq=[];mq=[];window._lp=window._fp=window._ts=0;
  hidePageBack();
- $('home').style.display='none';A.innerHTML=groveHomeMarkup();hdr();await checkBadges();after(1200,PF);
+ $('home').style.display='none';A.innerHTML=groveHomeMarkup();if(typeof GroveViewport!=='undefined')GroveViewport.setScreen('home');hdr();await checkBadges();after(1200,PF);
 }
 function characterBrowserScope(){const el=$('progress-characters');return el?{grade:el.dataset.grade,unit:el.dataset.unit}:null;}
 function homeUnitKey(){const scope=characterBrowserScope();return [PR.cur||'_',scope?.grade||GR(),scope?.unit||''].join(':');}

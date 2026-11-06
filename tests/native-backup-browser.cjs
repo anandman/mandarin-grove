@@ -12,7 +12,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   const code='\ufeff\n'+Buffer.from(JSON.stringify(fixture)).toString('base64')+'\r\n';
   await page.evaluate(async({fixture,code})=>{
    await GROVE_STARTED;await GROVE_REPOSITORY.importBackup(GROVE_CODEC.encodeUtf8(JSON.stringify(fixture)));PR=await GROVE_REPOSITORY.readRegistry();await loadS({persist:false});await home();
-   window.nativeInput=code;window.nativeFileCalls=[];window.GrovePlatform={...GrovePlatform,platform:'android',files:{saveText(options){nativeFileCalls.push(options);return new Promise((resolve,reject)=>{window.releaseNativeSave=resolve;window.rejectNativeSave=reject;});},async openText(){return window.cancelNativeOpen?{cancelled:true}:{cancelled:false,text:window.nativeInput};}}};await grown();
+   window.nativeInput=code;window.nativeFileCalls=[];window.GrovePlatform={...GrovePlatform,platform:'android',files:{saveText(options){nativeFileCalls.push(options);return new Promise((resolve,reject)=>{window.releaseNativeSave=resolve;window.rejectNativeSave=reject;});},async openText(){return window.cancelNativeOpen?{cancelled:true}:{cancelled:false,text:window.nativeInput};}}};await grown('backup');
   },{fixture,code});
   const before=await page.evaluate(()=>backup());await page.getByRole('button',{name:'Download backup file',exact:true}).click();
   await page.waitForFunction(()=>typeof releaseNativeSave==='function');assert.equal(await page.evaluate(()=>nativeFileCalls[0].text),before);

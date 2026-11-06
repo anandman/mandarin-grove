@@ -3,6 +3,8 @@
   "adapters/persistence.js",
   "adapters/web-storage.js",
   "app.js",
+  "app-layout.css",
+  "app-layout.js",
   "audio-sources/LICENSE-MSU.txt",
   "audio-sources/LICENSE.txt",
   "audio-sources/MSU-VERIFICATION.json",

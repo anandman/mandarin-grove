@@ -17,6 +17,14 @@ const assert=require('node:assert/strict');
    state.homeworkHelp={other:{keep:'existing homework data'}};
    localStorage.setItem('zh_p_summary-a',JSON.stringify(state));(await loadS());(await home());
   });
+  async function fillStep(id,value){
+   const target=page.locator('#'+id);
+   if(!await target.isVisible()){
+    while(!await target.isVisible()&&!await page.locator('.compact-step-navigation button:first-child').isDisabled())await page.locator('.compact-step-navigation button:first-child').click();
+    while(!await target.isVisible())await page.getByRole('button',{name:/^Next:/}).click();
+   }
+   await target.fill(value);
+  }
   const state=()=>page.evaluate(()=>JSON.stringify(S));
   const learning=()=>page.evaluate(()=>{const {homeworkHelp,...progress}=S;return JSON.stringify(progress);});
   const open=async()=>{await page.getByRole('button',{name:'Help',exact:true}).click();const entry=page.getByRole('button',{name:/^Plan a summary(?:\s|$)/});assert.equal(await entry.count(),1,'Help must offer the local summary planning guide');await entry.click();};
@@ -36,9 +44,9 @@ const assert=require('node:assert/strict');
   const draft={reading:'小河旁有一棵树。\n<script>window.summaryInjected=true</script>',mainIdea:'孩子们一起照顾小树。',details:'他们每天浇水。\n后来小树长高了。',summary:'孩子们照顾小树，给它浇水。小树慢慢长高了。'};
   await page.locator('.summary-reading > summary').click();
   await page.getByLabel('Reading (optional)',{exact:true}).fill(draft.reading);
-  await page.getByLabel('Main idea',{exact:true}).fill(draft.mainIdea);
-  await page.getByLabel('Key details',{exact:true}).fill(draft.details);
-  await page.getByLabel('My summary',{exact:true}).fill(draft.summary);
+  await fillStep('summary-main-idea',draft.mainIdea);
+  await fillStep('summary-details',draft.details);
+  await fillStep('summary-draft',draft.summary);
   assert.deepEqual(await page.evaluate(()=>S.homeworkHelp.summary),draft);
   assert.equal(await learning(),progress,'Planning does not change score, mastery, learning evidence or rewards');
   assert.equal(await page.evaluate(()=>window.summaryInjected),undefined,'Pasted reading is never interpreted as HTML');
@@ -49,7 +57,7 @@ const assert=require('node:assert/strict');
    window.summarySetItem=Storage.prototype.setItem;
    Storage.prototype.setItem=function(key,value){if(key==='zh_p_summary-a')throw new DOMException('Synthetic storage full','QuotaExceededError');return summarySetItem.call(this,key,value);};
   });
-  await page.locator('#summary-main-idea').fill('New main idea that has not saved yet.');
+  await fillStep('summary-main-idea','New main idea that has not saved yet.');
   assert.match(await page.locator('#summary-save-status').innerText(),/could not save/i);
   assert.equal(await page.locator('#summary-main-idea').inputValue(),'New main idea that has not saved yet.');
   assert.equal(await page.evaluate(()=>S.homeworkHelp.summary.mainIdea),'New main idea that has not saved yet.');
@@ -64,7 +72,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>localStorage.getItem('zh_p_summary-a')),persisted);
   await page.evaluate(()=>{Storage.prototype.setItem=summarySetItem;delete window.summarySetItem;});
   dialogs.length=0;acceptClear=false;
-  await page.locator('#summary-main-idea').fill(draft.mainIdea);
+  await fillStep('summary-main-idea',draft.mainIdea);
   assert.equal(await state(),saved,'Typing again retries a failed save without losing the draft');
   assert.equal(await page.evaluate(()=>localStorage.getItem('zh_p_summary-a')),persisted);
   assert.match(await page.locator('#summary-save-status').innerText(),/draft saved/i);
@@ -88,7 +96,7 @@ const assert=require('node:assert/strict');
   await page.evaluate(()=>{oldSummaryInput.value='Detached child A event';oldSummaryInput.dispatchEvent(new Event('input',{bubbles:true}));oldSummaryClear.click();});
   assert.equal(await state(),otherBefore,'Detached controls cannot update a later screen');
   assert.equal(dialogs.length,0);
-  await page.locator('#summary-draft').fill('第二个孩子自己的摘要。');
+  await fillStep('summary-draft','第二个孩子自己的摘要。');
   const otherDraft=await state();
   await page.evaluate(async ()=>{PR.cur='summary-a';(await savePR());(await loadS());(await home());});await open();
   assert.deepEqual(await page.evaluate(()=>S.homeworkHelp.summary),draft);
@@ -97,7 +105,7 @@ const assert=require('node:assert/strict');
   const code=await page.evaluate(async ()=>(await backup())),decoded=JSON.parse(Buffer.from(code,'base64').toString('utf8'));
   assert.deepEqual(JSON.parse(decoded.data['summary-a']).homeworkHelp.summary,draft);
   assert.equal(JSON.parse(decoded.data['summary-b']).homeworkHelp.summary.summary,'第二个孩子自己的摘要。');
-  await page.evaluate(async ()=>{S.homeworkHelp.summary.summary='Changed after backup';(await save());(await grown());});
+  await page.evaluate(async ()=>{S.homeworkHelp.summary.summary='Changed after backup';(await save());(await grown('backup'));});
   await page.locator('#grest').click();await page.locator('#grt').fill(code);await page.locator('#grr').click();
   await page.locator('.pop').waitFor({state:'detached'});
   await open();assert.deepEqual(await page.evaluate(()=>S.homeworkHelp.summary),draft,'Normal backup restore retains the summary draft');
@@ -118,9 +126,9 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('#summary-clear').isDisabled(),true);
 
   // Restore text and inspect compact light/dark phone and tablet layouts.
-  await page.locator('#summary-main-idea').fill(draft.mainIdea);
-  await page.locator('#summary-details').fill(draft.details);
-  await page.locator('#summary-draft').fill(draft.summary);
+  await fillStep('summary-main-idea',draft.mainIdea);
+  await fillStep('summary-details',draft.details);
+  await fillStep('summary-draft',draft.summary);
   for(const [device,width,height]of [['small-phone',320,700],['phone',390,844],['ipad',820,1060]])for(const theme of ['light','dark']){
    await page.setViewportSize({width,height});await page.evaluate(async value=>(await setAppearance(value)),theme);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Summary fits '+device+' '+theme);

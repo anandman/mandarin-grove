@@ -210,5 +210,6 @@ async function showFeedback({category:initialCategory=null,note:initialNote='',c
   finally{setBusy(false);if(dialog.isConnected&&ownerValid())download.focus({preventScroll:true});}
  };
  dialog.onclose=()=>{dialog.remove();if(previous?.isConnected)previous.focus();else focusMain();};
+ if(typeof GroveViewport!=='undefined')GroveViewport.feedback(dialog);
  (categories.find(button=>button.dataset.category===category)||categories[0]).focus();
 }

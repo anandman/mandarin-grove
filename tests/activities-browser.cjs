@@ -48,12 +48,13 @@ const assert = require('node:assert/strict');
     assert.equal(await page.evaluate(()=>skillState(S,'猫','flip').correct),1);
     // Dictation reports each skill separately, including wrong pinyin corrected after reload.
     await page.evaluate(async ()=>{(await home());const c=ALL.find(c=>c.c==='狗');(await startStudyRound('review',{units:[],chars:['狗'],modes:['dictation'],limit:5},[c],[['dictation',c]]))});
-    await page.locator('#dchk').click();
+    if(!await page.locator('#dchk').isVisible())await page.getByRole('button',{name:'Next: Pinyin',exact:true}).click();await page.locator('#dchk').click();
     assert.equal(await page.evaluate(()=>studyAttemptInfo().pinyinMiss),true);
     await page.getByRole('button',{name:'Pause',exact:true}).click();await page.reload();
     await page.evaluate(async ()=>{window.say=()=>{};(await resumeStudy('review'));const original=recordStudyAnswer;recordStudyAnswer=function(review,outcome){window.activityEvidence=review.evidence;return original(review,outcome);}});
+    if(!await page.locator('[data-t="g"]').first().isVisible())await page.getByRole('button',{name:'Next: Pinyin',exact:true}).click();
     for(const letter of 'gou')await page.locator(`[data-t="${letter}"]`).first().click();
-    await page.locator('[data-tn="3"]').click();await page.locator('#dchk').click();await page.locator('#cy').click();
+    if(!await page.locator('[data-tn="3"]').isVisible())await page.getByRole('button',{name:'Next: Pinyin',exact:true}).click();await page.locator('[data-tn="3"]').click();if(!await page.locator('#dchk').isVisible())await page.getByRole('button',{name:'Next: Pinyin',exact:true}).click();await page.locator('#dchk').click();await page.locator('#cy').click();
     assert.deepEqual(await page.evaluate(()=>activityEvidence),[{skill:'pinyin',method:'checked',outcome:'miss'},{skill:'writing',method:'self-rated',outcome:'correct'}]);
     assert.equal(await page.evaluate(()=>S.studyHistory.at(-1).score.percent),0);
     // Homophone clues do not expose the answer; rendering itself does not mutate progress.

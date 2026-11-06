@@ -41,11 +41,18 @@ function showProgressRecovery(error,{imported=false}={}){
   fileStatus.textContent='Recovery copy prepared. Existing progress was kept.';
   }finally{download.disabled=false;}
  },error=>{fileStatus.textContent=error.code==='GROVE_EXPORT_SAVED'?'Recovery file saved. Its private temporary copy could not be removed. All existing files were kept.':'Could not export the recovery copy. '+error.message+' All existing files were kept.';});
- const reload=document.createElement('button');reload.className='btn gray';reload.textContent='Reload';reload.onclick=()=>location.reload();app.append(title,note,download,fileStatus,reload);
+ const reload=document.createElement('button');reload.className='btn gray';reload.textContent='Reload';reload.onclick=()=>location.reload();app.append(title,note,download,fileStatus,reload);if(typeof GroveViewport!=='undefined')GroveViewport.recovery(app);
 }
 // Compare durable progress without moving any caller's three-way merge baselines.
 function backupDeviceStamp(){return GROVE_REPOSITORY.deviceStamp();}
 function backupDeviceSummary(){return GROVE_REPOSITORY.backupSummary();}
+function backupPreviewMessage(preview,text,action){
+ const information=document.createElement('div');information.className='restore-information';
+ const message=document.createElement('p');message.setAttribute('role','alert');message.textContent=text;information.append(message);
+ preview.replaceChildren(information);
+ if(action){const actions=document.createElement('div');actions.className='restore-actions';actions.append(action);preview.append(actions);}
+ return message;
+}
 function openBackupRestore(overlay){
  const container=document.getElementById('grx');container.replaceChildren();
  const field=document.createElement('textarea');field.id='grt';field.setAttribute('aria-label','Paste the backup code');field.placeholder='Paste the backup code here';field.style.cssText='width:100%;box-sizing:border-box;height:90px;margin-top:10px;font-size:16px;padding:10px';
@@ -66,16 +73,18 @@ function openBackupRestore(overlay){
    if(request!==previewRequest||!field.isConnected||!replace.isConnected)return;
    let imported=false;replace.disabled=true;
    try{
-    if(device.stamp!==await backupDeviceStamp()){preview.replaceChildren();const warning=document.createElement('p');warning.setAttribute('role','alert');warning.textContent='Device progress changed after this preview. Nothing has been replaced. Refresh the comparison and review it before continuing.';const refresh=document.createElement('button');refresh.className='btn gray';refresh.textContent='Refresh comparison';refresh.onclick=()=>field.oninput(code);preview.append(warning,refresh);profileReveal(refresh);return;}
+    if(device.stamp!==await backupDeviceStamp()){const refresh=document.createElement('button');refresh.className='btn gray';refresh.textContent='Refresh comparison';refresh.onclick=()=>field.oninput(code);backupPreviewMessage(preview,'Device progress changed after this preview. Nothing has been replaced. Refresh the comparison and review it before continuing.',refresh);profileReveal(refresh);return;}
     const registry=await durableCommit(()=>GROVE_REPOSITORY.importBackup(code,{expectedStamp:device.stamp}));imported=true;PR=registry;GROVE_SAVED_REGISTRY=JSON.parse(JSON.stringify(PR));await loadS({persist:false});clearStorageFailure();await home();overlay.remove();pop('Restored ✓');}
    catch(error){
     if(imported){GROVE_PROGRESS_READY=false;NAV++;overlay.remove();showProgressRecovery(error,{imported:true});}
-    else{preview.replaceChildren();const failure=document.createElement('p');failure.setAttribute('role','alert');failure.textContent='Could not restore progress. '+error.message+' Your previous progress has been kept for recovery. You can try again by pasting the code.';preview.append(failure);profileReveal(failure);}
+    else{const failure=backupPreviewMessage(preview,'Could not restore progress. '+error.message+' Your previous progress has been kept for recovery. You can try again by pasting the code.');profileReveal(failure);}
    }finally{if(replace.isConnected)replace.disabled=false;}
   });
   incoming.append(label,list);comparison.append(current,incoming);
   const exportFirst=document.createElement('button');exportFirst.className='btn gray';exportFirst.textContent='Download current backup first';exportFirst.onclick=()=>runAction(async()=>{try{await downloadBackupFile();}catch(error){backupPreparationFailure(error);}});
-  preview.append(comparison,question,exportFirst,replace);
+  const information=document.createElement('div');information.className='restore-information';information.append(comparison,question);
+  const actions=document.createElement('div');actions.className='restore-actions';actions.append(exportFirst,replace);
+  preview.append(information,actions);
  };
 }
 function selectBackupCode(textarea){

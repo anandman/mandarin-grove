@@ -171,7 +171,7 @@ async function studyNextItem(){
  try{await saveStudyRound();}catch(error){if(SESS===session){SESS.i=previous.i;SESS.currentIndex=previous.currentIndex;SESS.round.cursor=previous.cursor;}throw error;}
  const [mode,c]=SESS.q[index];await ({listen,trace:()=>trace(practiceCards().indexOf(c)),flip,memory,dictation:dictQuestion,words:wordStudyQuestion})[mode](c);
  document.body.dataset.study=SESS.kind;
- if(mode==='dictation')A.querySelector('.grove-activity-heading').insertAdjacentHTML('afterend',studySessionBar());
+ if(mode==='dictation'){A.querySelector('.grove-activity-heading').insertAdjacentHTML('afterend',studySessionBar());if(typeof GroveViewport!=='undefined')GroveViewport.studyControls(A);}
 }
 function studySessionBar(){
  if(!SESS?.study)return '';

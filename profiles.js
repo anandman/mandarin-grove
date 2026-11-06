@@ -62,7 +62,7 @@ function setup(first=false){
  });start.disabled=true;
  const hint=profileElement('p','Pick a grade first',{id:'gh',class:'reading-note',role:'status'});view.append(hint);
  for(const value of ['K','1','2','3','4','5']){const button=profileElement('button',value==='K'?'Kinder':ORD(value),{type:'button','data-gr':value,'aria-pressed':false});button.onclick=()=>{grade=value;grades.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===button));start.disabled=false;hint.textContent='';};grades.append(button);}
- A.replaceChildren(view);input.focus();
+ A.replaceChildren(view);if(typeof GroveViewport!=='undefined')GroveViewport.onboarding(view);input.focus();
 }
 function who(){
  screen();profileStyles();const view=profileElement('section',undefined,{class:'profile-switcher'}),children=profileElement('div',undefined,{class:'profile-children'});view.append(profileElement('h1',"Who's practicing?"),children);
@@ -161,9 +161,10 @@ async function grown(sectionName='child'){
  const privacy=profileElement('p');privacy.append(profileElement('a','Privacy policy and support',{href:'privacy-support.txt',target:'_blank',rel:'noopener'}));credits.append(privacy);
  const navigation=profileElement('nav',undefined,{'aria-label':'Grown-ups sections',class:'parent-section-nav'});
  const destinations={child:'child-settings',device:'device-settings',kids:'gkids',backup:'backup-settings',maintenance:'maintenance-settings',about:'about-settings'};
- const jump=(key)=>{const section=dialog.querySelector('#'+destinations[key]);if(!section)return;section.tabIndex=-1;section.scrollIntoView({block:'start'});section.focus({preventScroll:true});};
- for(const [key,label]of [['child','Child'],['device','Device'],['kids','Kids'],['backup','Backup'],['maintenance','Fix & reset'],['about','About']])if(key!=='child'||child){const button=profileElement('button',label,{type:'button'});button.onclick=()=>jump(key);navigation.append(button);}
+ const jump=(key)=>{if(typeof GroveViewport!=='undefined'&&GroveViewport.settingsSection(dialog,key))return;const section=dialog.querySelector('#'+destinations[key]);if(!section)return;section.tabIndex=-1;section.scrollIntoView({block:'start'});section.focus({preventScroll:true});};
+ for(const [key,label]of [['child','Child'],['device','Device'],['kids','Kids'],['backup','Backup'],['maintenance','Fix & reset'],['about','About']])if(key!=='child'||child){const button=profileElement('button',label,{type:'button','data-settings-section':key});button.onclick=()=>jump(key);navigation.append(button);}
  dialog.querySelector('header').append(navigation);if(childId!==PR.cur||navigationToken!==NAV)return;document.body.append(dialog);dialog.showModal();bindVoiceSettings();dialog.querySelector('[aria-label="Close"]').focus();
- if(sectionName!=='child')jump(sectionName);
+ if(typeof GroveViewport!=='undefined')GroveViewport.settings(dialog,destinations,sectionName);
+ else if(sectionName!=='child')jump(sectionName);
  await consumeRestoredNativeFileResult();
 }

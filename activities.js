@@ -38,7 +38,8 @@ const ActivityUI = (() => {
   }
   function render(mode, content, session = true) {
     screen();
-    A.innerHTML = groveActivityHeading(mode) + (session ? sessBar() : '') + content;languages();
+    A.innerHTML = groveActivityHeading(mode) + (session ? sessBar() : '') + content;
+    if(typeof GroveViewport!=='undefined')GroveViewport.arrangeActivity(mode, A);languages();
     return { token: NAV, node: A.firstElementChild };
   }
   function loadStrokes(char) {
@@ -68,7 +69,7 @@ const ActivityUI = (() => {
       onLoadCharDataError: guard(token, box, () => {
         const message = find('m');
         if(message){message.textContent='Writing guide unavailable. Retry or skip this character.';
-          if(retry){const button=document.createElement('button');button.className='btn gray';button.textContent='Retry writing guide';button.onclick=guard(token,box,retry);message.append(button);}
+          if(retry){const button=document.createElement('button');button.className='btn gray';button.textContent='Retry writing guide';button.onclick=guard(token,box,retry);message.append(button);if(typeof GroveViewport!=='undefined')GroveViewport.feedbackAction(button,A);}
         }
       })
     });
@@ -322,7 +323,7 @@ async function dictItem() {
     const firstPinyin = right && !(round.session && SESS?.study && studyAttemptInfo()?.pinyinMiss);
     const picture = canvas.toDataURL();
     A.innerHTML = groveActivityHeading('dictation') + sessBar() + `<div class="pin">${ui.escape(c.p)} ${right ? '✅' : '❌'}</div><p class="reading-note" role="status">${right ? 'Pinyin matches.' : 'Pinyin does not match yet.'}</p><p class="mean">Your pinyin: <span lang="zh-Latn-pinyin">${ui.escape(letters ? pyMark(letters,tone) : '—')}</span></p><div class="dictation-workspace"><div class="dictation-paper"><img alt="Your handwriting" src="${picture}" style="width:100%;height:100%"></div><div><div class="big">${ui.escape(c.c)}</div><p class="mean">${ui.escape(c.m)}</p><p>Compare your writing with the character shown. Does it match?</p><p class="reading-note">The app has not checked your handwriting.</p>${ui.button('My writing matches', 'cy', 'g')}${ui.button('I need more practice', 'cn', 'r')}</div></div>`;
-    ui.languages();
+    if(typeof GroveViewport!=='undefined')GroveViewport.arrangeActivity('dictation', A);ui.languages();
     let rated = false;
     const rate = async chOk => {
       if (rated || NAV !== view.token || DQ !== round) return;
