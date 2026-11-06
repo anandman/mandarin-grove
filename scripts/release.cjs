@@ -64,7 +64,18 @@ function buildInfo(root,{env=process.env,requireCleanSource=false}={}){
   if(fs.realpathSync(top.stdout.trim())!==base)throw Error('Source identity must belong to this project root');
   const commit=git(['rev-parse','HEAD']),state=git(['status','--porcelain','--untracked-files=all']);
   if(commit.status!==0||state.status!==0||!/^[a-f0-9]{40}$/.test(commit.stdout.trim()))throw Error('Source commit identity is unavailable');
-  head=commit.stdout.trim();sourceDirty=!!state.stdout.trim();dirtyPaths=state.stdout.trim().split('\n').slice(0,8).map(line=>line.slice(0,160));
+  head=commit.stdout.trim();sourceDirty=!!state.stdout.trim();dirtyPaths=state.stdout.trimEnd().split('\n').slice(0,8).map(line=>line.slice(0,160));
+  // Vercel serializes deployment JSON before invoking the build. Permit only
+  // formatting/key-order changes, with the provider's exact Git identity.
+  // All source changes and every semantic configuration change still fail.
+  if(state.stdout===' M vercel.json\n'&&env.VERCEL==='1'&&env.VERCEL_GIT_COMMIT_SHA===head){
+   const original=git(['show',head+':vercel.json']);
+   if(original.status===0){
+    const before=JSON.parse(original.stdout),after=JSON.parse(read(base,'vercel.json')),same=require('node:util').isDeepStrictEqual;
+    if(same(before,after))sourceDirty=false;
+    else dirtyPaths.push('Deployment JSON changed keys: '+JSON.stringify([...new Set([...Object.keys(before),...Object.keys(after)])].filter(key=>!same(before[key],after[key]))));
+   }
+  }
  }
  const identities=head?[head]:[];
  for(const key of ['GROVE_SOURCE_COMMIT','VERCEL_GIT_COMMIT_SHA','GITHUB_SHA'])if(env[key]!==undefined&&env[key]!==''){

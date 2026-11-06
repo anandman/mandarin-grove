@@ -22,6 +22,15 @@ test('provider commit metadata must agree with actual Git and with each other',(
  const dir=fixture(),commit=git(dir,['rev-parse','HEAD']);assert.equal(api().buildInfo(dir,{env:{GITHUB_SHA:commit},requireCleanSource:true}).sourceCommit,commit);
  for(const env of [{GITHUB_SHA:'b'.repeat(40)},{VERCEL_GIT_COMMIT_SHA:'invalid'},{GITHUB_SHA:commit,VERCEL_GIT_COMMIT_SHA:'b'.repeat(40)}])assert.throws(()=>api().buildInfo(dir,{env,requireCleanSource:true}),/commit|identity|mismatch/i);
 });
+test('Vercel may reserialize only semantically identical deployment JSON',()=>{
+ const dir=fixture(),file=path.join(dir,'vercel.json'),config={buildCommand:'npm run build',outputDirectory:'dist',headers:[{source:'/',headers:[{key:'Cache-Control',value:'no-cache'}]}]};
+ fs.writeFileSync(file,JSON.stringify(config,null,2)+'\n');git(dir,['add','vercel.json']);git(dir,['commit','--quiet','-m','deployment config']);
+ const env={VERCEL:'1',VERCEL_GIT_COMMIT_SHA:git(dir,['rev-parse','HEAD'])};fs.writeFileSync(file,JSON.stringify(config));
+ assert.equal(api().buildInfo(dir,{env,requireCleanSource:true}).sourceDirty,false);
+ assert.throws(()=>api().buildInfo(dir,{env:{},requireCleanSource:true}),/dirty|uncommitted/);
+ fs.writeFileSync(file,JSON.stringify({...config,outputDirectory:'other'}));assert.throws(()=>api().buildInfo(dir,{env,requireCleanSource:true}),/dirty|uncommitted/);
+ fs.writeFileSync(file,JSON.stringify(config));fs.appendFileSync(path.join(dir,'app.js'),' changed');assert.throws(()=>api().buildInfo(dir,{env,requireCleanSource:true}),/dirty|uncommitted/);
+});
 test('a trusted provider archive needs a full source commit; missing identity fails closed',()=>{
  const dir=fixture(false);assert.throws(()=>api().buildInfo(dir,{env:{},requireCleanSource:true}),/source|commit|identity/i);
  assert.deepEqual(api().buildInfo(dir,{env:{VERCEL_GIT_COMMIT_SHA:'a'.repeat(40)},requireCleanSource:true}),{version:'1.0.100',build:100,sourceCommit:'a'.repeat(40),sourceDirty:false});
