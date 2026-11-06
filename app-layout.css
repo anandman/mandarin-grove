@@ -387,7 +387,7 @@ body.compact-input[data-activity="words"] .word-target, body.compact-input[data-
 .activity-help { flex: none; margin: 0; }
 .activity-help > summary { display: grid; place-items: center; inline-size: 44px; block-size: 44px; cursor: pointer; font-size: 24px; list-style: none; }
 .activity-help > summary::-webkit-details-marker { display: none; }
-.activity-help[open] > p { position: absolute; inset-inline-end: 0; inset-block-start: 44px; inline-size: min(360px, 100%); max-block-size: 140px; overflow: auto; z-index: 5; padding: 12px; border: 1px solid var(--ln); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+.activity-help[open] > p, .activity-help[open] > .activity-help-information { position: absolute; inset-inline-end: 0; inset-block-start: 44px; inline-size: min(360px, 100%); max-block-size: 140px; overflow: auto; z-index: 5; padding: 12px; border: 1px solid var(--ln); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
 @media (max-width: 680px) {
  .activity-frame:has(.study-sessionbar) .activity-frame-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -467,3 +467,10 @@ body[data-layout="recovery"] > #app { overflow: hidden; }
  #summary-help > .summary-footer p { max-block-size: 72px; overflow: auto; }
  #summary-help > .summary-steps { grid-column: 2; grid-row: 1 / -1; }
 }
+
+/* Memory's reading/meaning are the prompt, with secondary copy behind Info. */
+.activity-memory-cue { display: flex; flex: 1; align-items: center; justify-content: center; gap: 4px; min-inline-size: 0; }
+.activity-memory-cue > .pin { flex: 1 1 0; min-inline-size: 0; max-block-size: 1.2em; overflow: auto; overflow-wrap: anywhere; margin: 0 4px 0 0; }
+.activity-memory-cue > .mean { flex: 1 1 0; overflow-wrap: anywhere; min-inline-size: 0; max-block-size: 46px; overflow: auto; margin: 0; text-align: left; }
+
+.activity-frame[data-mode="memory"] .activity-frame-information { max-block-size: max(46px, 2.4em); }

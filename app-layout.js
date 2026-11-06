@@ -88,7 +88,17 @@ const GroveViewport = (() => {
    details.className = 'activity-help';toggle.textContent = 'ⓘ';toggle.setAttribute('aria-label', 'About watching strokes');
    details.append(toggle, help);
    for (const node of [...information.children]) if (node !== help) copy.append(node);
-   information.append(copy, details);
+   if (mode === 'memory') {
+    // The reading and meaning identify the question; instructions/examples
+    // belong in the existing help disclosure instead of clipping that cue.
+    const cue = region('activity-memory-cue'), explanation = region('activity-help-information');
+    for (const node of [...copy.children]) {
+     if (node.matches('.pin, .mean')) { node.tabIndex = 0; cue.append(node); }
+     else explanation.append(node);
+    }
+    explanation.append(help); details.append(explanation);
+    information.append(cue, details);
+   } else information.append(copy, details);
   }
   if (!information.children.length) information.hidden = true;
   else { information.tabIndex = 0; information.setAttribute('aria-label', 'Activity information'); }

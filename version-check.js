@@ -1,4 +1,4 @@
-const VER='20261106-safe-area-95';
+const VER='20261106-prompt-96';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
