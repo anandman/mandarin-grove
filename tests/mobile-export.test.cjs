@@ -3,6 +3,13 @@ const root=path.resolve(__dirname,'..'),script=path.join(root,'scripts/export-mo
 const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 function exporter(){assert.ok(fs.existsSync(script),'Native allowlisted exporter must exist');return require(script).exportMobile;}
 function destination(){return path.join(fs.mkdtempSync(path.join(os.tmpdir(),'grove-mobile-export-test-')),'www');}
+test('built native bridge and both web exports carry byte-identical release provenance',()=>{
+ const {exportStatic}=require('../scripts/export-static.cjs'),{buildInfo}=require('../scripts/release.cjs');
+ const sites=[exportStatic(root,destination()),exportStatic(root,destination(),{feedback:'local'}),exporter()(root,destination())];
+ const metadata=sites.map(site=>fs.readFileSync(path.join(site,'build-info.json'),'utf8'));
+ assert.equal(metadata[0],metadata[1]);assert.equal(metadata[0],metadata[2]);assert.deepEqual(JSON.parse(metadata[0]),buildInfo(root));
+ for(const site of sites)assert(JSON.parse(fs.readFileSync(path.join(site,'offline-assets.json'))).includes('build-info.json'));
+});
 test('mobile package contains every required sourced asset and excludes workspace/private data',()=>{
  const out=exporter()(root,destination()),catalog=JSON.parse(fs.readFileSync(path.join(root,'audio-sources/mainland.json')));
  for(const file of ['content/curriculum.js','vendor/cc-cedict/dictionary.json','strokes/府.json','vendor/hanzi-writer.js','audio-sources/LICENSE-MSU.txt','audio-sources/LICENSE.txt'])assert.equal(hash(path.join(out,file)),hash(path.join(root,file)),file);

@@ -1,5 +1,5 @@
 // Cache only the explicit public app shell. Never cache feedback, learner records or remote sources.
-const VERSION='1.0.100',BASE=new URL('./',self.location.href),ROOT=BASE.pathname,
+const VERSION='1.0.101',BASE=new URL('./',self.location.href),ROOT=BASE.pathname,
  SHELL_PREFIX='mandarin-grove-shell-'+(ROOT==='/'?'':encodeURIComponent(ROOT)+'-'),SHELL=SHELL_PREFIX+VERSION;
 let allowed=null;
 function mainlandFiles(manifest){

@@ -30,10 +30,10 @@ test('a release tag cannot qualify the same version with different source',()=>{
  const dir=fixture();git(dir,['tag','v1.0.100']);fs.appendFileSync(path.join(dir,'app.js'),' other code');git(dir,['add','app.js']);git(dir,['commit','--quiet','-m','different source']);
  assert.throws(()=>api().buildInfo(dir,{env:{},requireCleanSource:true}),/tag|different.*commit|already.*source/i);
 });
-test('web, Pages and native exports record identical source metadata and cache it offline',()=>{
- const {exportStatic}=require('../scripts/export-static.cjs'),{exportMobile}=require('../scripts/export-mobile.cjs'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'grove-common-exports-'));
- const sites=[exportStatic(root,path.join(temp,'web')),exportStatic(root,path.join(temp,'pages'),{feedback:'local'}),exportMobile(root,path.join(temp,'native'))],texts=sites.map(site=>fs.readFileSync(path.join(site,'build-info.json'),'utf8'));
- assert.equal(texts[0],texts[1]);assert.equal(texts[0],texts[2]);const info=JSON.parse(texts[0]);assert.equal(info.version,'1.0.100');assert.equal(info.build,100);assert.equal(info.sourceCommit,git(root,['rev-parse','HEAD']));assert.deepEqual(Object.keys(info).sort(),['build','sourceCommit','sourceDirty','version']);
+test('web and Pages exports record identical source metadata without native build prerequisites',()=>{
+ const {exportStatic}=require('../scripts/export-static.cjs'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'grove-common-exports-'));
+ const sites=[exportStatic(root,path.join(temp,'web')),exportStatic(root,path.join(temp,'pages'),{feedback:'local'})],texts=sites.map(site=>fs.readFileSync(path.join(site,'build-info.json'),'utf8'));
+ assert.equal(texts[0],texts[1]);const info=JSON.parse(texts[0]),release=api().readRelease(root);assert.equal(info.version,release.version);assert.equal(info.build,release.build);assert.equal(info.sourceCommit,git(root,['rev-parse','HEAD']));assert.deepEqual(Object.keys(info).sort(),['build','sourceCommit','sourceDirty','version']);
  for(const site of sites){assert(JSON.parse(fs.readFileSync(path.join(site,'offline-assets.json'))).includes('build-info.json'));for(const name of ['HANDOFF.md','docs','release.json','.git'])assert.equal(fs.existsSync(path.join(site,name)),false);}
 });
 test('a rejected native CLI build leaves the previous generated package in place',()=>{

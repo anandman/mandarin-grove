@@ -59,12 +59,12 @@ function setRelease(root,value){
 function buildInfo(root,{env=process.env,requireCleanSource=false}={}){
  const release=readRelease(root),base=fs.realpathSync(root);
  const git=args=>cp.spawnSync('git',['-C',base,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
- const top=git(['rev-parse','--show-toplevel']);let head=null,sourceDirty=false;
+ const top=git(['rev-parse','--show-toplevel']);let head=null,sourceDirty=false,dirtyPaths=[];
  if(top.status===0){
   if(fs.realpathSync(top.stdout.trim())!==base)throw Error('Source identity must belong to this project root');
   const commit=git(['rev-parse','HEAD']),state=git(['status','--porcelain','--untracked-files=all']);
   if(commit.status!==0||state.status!==0||!/^[a-f0-9]{40}$/.test(commit.stdout.trim()))throw Error('Source commit identity is unavailable');
-  head=commit.stdout.trim();sourceDirty=!!state.stdout.trim();
+  head=commit.stdout.trim();sourceDirty=!!state.stdout.trim();dirtyPaths=state.stdout.trim().split('\n').slice(0,8).map(line=>line.slice(0,160));
  }
  const identities=head?[head]:[];
  for(const key of ['GROVE_SOURCE_COMMIT','VERCEL_GIT_COMMIT_SHA','GITHUB_SHA'])if(env[key]!==undefined&&env[key]!==''){
@@ -73,7 +73,7 @@ function buildInfo(root,{env=process.env,requireCleanSource=false}={}){
  }
  if(!identities.length)throw Error('Known source commit identity is required');
  if(new Set(identities).size!==1)throw Error('Source commit metadata mismatch');
- if(requireCleanSource&&sourceDirty)throw Error('Cannot export a release from dirty or uncommitted source');
+ if(requireCleanSource&&sourceDirty)throw Error('Cannot export a release from dirty or uncommitted source: '+JSON.stringify(dirtyPaths));
  if(requireCleanSource&&head){
   const tag=git(['rev-parse','--verify','--quiet','refs/tags/v'+release.version+'^{commit}']);
   if(tag.status===0&&tag.stdout.trim()!==head)throw Error('Release tag already identifies a different source commit');

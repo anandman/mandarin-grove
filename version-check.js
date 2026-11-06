@@ -1,4 +1,4 @@
-const VER='1.0.100';
+const VER='1.0.101';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
