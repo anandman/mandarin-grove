@@ -1,4 +1,4 @@
-const VER='20261106-prompt-96';
+const VER='20261106-notices-97';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
