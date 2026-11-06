@@ -157,7 +157,7 @@ async function groveUndo(id){if(undoGroveUnlock(S,id))await groveRewardUpdate('U
 async function groveUnlock(id){
 
  const before=Object.keys(groveWallet(S).collections||{}).length;
- if(redeemGroveReward(S,id)){const stamp=Object.keys(groveWallet(S).collections||{}).length>before;await groveRewardUpdate(stamp?'Unlocked! You earned a collection stamp!':'Unlocked and in your grove! You can undo it below.');}
+ if(redeemGroveReward(S,id)){const stamp=Object.keys(groveWallet(S).collections||{}).length>before;await groveRewardUpdate(stamp?'Unlocked! You earned a collection stamp!':'Unlocked and in your grove! Use Undo to get your oranges back.');}
  else showGroveRewards('Keep practicing for more oranges.');
 }
 async function groveChoose(id){if(selectGroveDecoration(S,id)){if(id===null)for(const project of Object.values(groveWallet(S).projects||{}))project.visible=false;await groveRewardUpdate('Your grove is ready.');}}

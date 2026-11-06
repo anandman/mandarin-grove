@@ -27,9 +27,11 @@ const GroveViewport = (() => {
    for (const [name, value] of Object.entries(values)) {
     if (document.documentElement.style.getPropertyValue(name) !== value) document.documentElement.style.setProperty(name, value);
    }
-   const header = document.querySelector('body > header');
-   const shell = [header, find('reward-strip'), find('speech-status')].reduce((sum, node) => sum + (node?.getBoundingClientRect().height || 0), 0);
-   document.documentElement.style.setProperty('--app-navigation-top', shell + 'px');
+   const main = find('app'), body = document.body;
+   // Notices can be inserted between the shell and the current activity.
+   // Follow the actual main edge, including their margins and safe-area padding.
+   const navigationTop = main ? main.getBoundingClientRect().top - body.getBoundingClientRect().top - (parseFloat(getComputedStyle(body).paddingTop) || 0) : 0;
+   document.documentElement.style.setProperty('--app-navigation-top', Math.max(0, navigationTop) + 'px');
    for (const stepper of steppers) {
     if (!stepper.root.isConnected) steppers.delete(stepper);
     else stepper.update();
@@ -239,7 +241,7 @@ const GroveViewport = (() => {
   document.addEventListener('focusout', schedule);
   if (typeof ResizeObserver !== 'undefined') {
    const observer = new ResizeObserver(schedule);
-   for (const node of [document.querySelector('body > header'), find('reward-strip'), find('page-navigation'), find('speech-status'), document.querySelector('body > footer')]) if (node) observer.observe(node);
+   for (const node of [document.querySelector('body > header'), find('reward-strip'), find('page-navigation'), find('speech-status'), main, document.querySelector('body > footer')]) if (node) observer.observe(node);
   }
   schedule();
  }
