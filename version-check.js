@@ -1,4 +1,4 @@
-const VER='20261106-lookup-98';
+const VER='20261106-focus-99';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){
