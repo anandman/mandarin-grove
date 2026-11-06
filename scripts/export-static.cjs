@@ -2,15 +2,16 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const publicFiles=require('./static-files.json');
-const {checkRelease}=require('./release.cjs');
+const {checkRelease,buildInfo}=require('./release.cjs');
 function validateRelease(root){
  checkRelease(root);
 }
-function exportStatic(root,output,{feedback='server'}={}){
+function exportStatic(root,output,{feedback='server',requireCleanSource=false}={}){
  if(!['server','local'].includes(feedback))throw Error('Unknown feedback capability');
  const out=path.resolve(output),base=path.resolve(root);
  if(out===base||base.startsWith(out+path.sep))throw Error('Output cannot contain the source workspace');
  validateRelease(base);
+ const provenance=buildInfo(base,{requireCleanSource});
  // Only the conventional generated dist folder may be replaced on repeat builds.
  if(fs.existsSync(out)){
   if(out!==path.join(base,'dist')||fs.lstatSync(out).isSymbolicLink())throw Error('Refusing to replace a non-generated output directory');
@@ -33,10 +34,14 @@ function exportStatic(root,output,{feedback='server'}={}){
   if(!html.includes('data-feedback="server"'))throw Error('Missing feedback capability');
   fs.writeFileSync(index,html.replace('data-feedback="server"','data-feedback="local"'));
  }
+ fs.writeFileSync(path.join(out,'build-info.json'),JSON.stringify(provenance,null,2)+'\n');
+ const manifest=path.join(out,'offline-assets.json'),assets=JSON.parse(fs.readFileSync(manifest,'utf8'));
+ if(!Array.isArray(assets))throw Error('Invalid offline assets manifest');
+ fs.writeFileSync(manifest,JSON.stringify([...new Set([...assets,'build-info.json'])],null,2)+'\n');
  fs.writeFileSync(path.join(out,'.nojekyll'),'');
  return out;
 }
 if(require.main===module){
- const root=path.resolve(__dirname,'..');console.log('Static app exported to '+exportStatic(root,process.argv[2]||path.join(root,'dist'),{feedback:process.argv.includes('--pages')?'local':'server'}));
+ const root=path.resolve(__dirname,'..');console.log('Static app exported to '+exportStatic(root,process.argv[2]||path.join(root,'dist'),{feedback:process.argv.includes('--pages')?'local':'server',requireCleanSource:true}));
 }
 module.exports={exportStatic};

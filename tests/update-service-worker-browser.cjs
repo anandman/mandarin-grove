@@ -12,7 +12,8 @@ async function run(){
  // A cached release must contain its complete original app, not old HTML
  // loading today's incompatible storage API. Never reset the working tree.
  const legacySource=path.join(temp,'legacy-source');fs.mkdirSync(legacySource);
- execFileSync('tar',['-xf','-','-C',legacySource],{input:execFileSync('git',['archive','487b737339eadd8464fe8ac3f85c559e184894f5'],{cwd:root,maxBuffer:128*1024*1024})});
+ const legacyRef=process.env.UPDATE_LEGACY_REF||'487b737339eadd8464fe8ac3f85c559e184894f5';assert.match(legacyRef,/^[a-f0-9]{40}$/);
+ execFileSync('tar',['-xf','-','-C',legacySource],{input:execFileSync('git',['archive',legacyRef],{cwd:root,maxBuffer:128*1024*1024})});
  sites.legacy=require(path.join(legacySource,'scripts/export-static.cjs')).exportStatic(fs.realpathSync(legacySource),path.join(temp,'legacy'));
  const intermediateVersion='20261031-update-test-805',nextVersion='20261031-update-test-81',retryVersion='20261031-update-test-82';
  for(const [name,release]of [['intermediate',intermediateVersion],['slow',nextVersion],['retry',retryVersion]])for(const file of ['index.html','version.txt','sw.js','version-check.js']){
@@ -40,7 +41,7 @@ async function run(){
    const context=await browser.newContext(),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    try{
     await page.goto(origin+scope);await page.waitForFunction(()=>OFFLINE_STATUS==='ready'&&navigator.serviceWorker.controller,{},{timeout:60000});
-    assert.equal(await page.evaluate(()=>VER),'20261030-feedback-78','Reproduce the actual old release identity bug');
+    assert.equal(await page.evaluate(()=>VER),process.env.UPDATE_LEGACY_VERSION||'20261030-feedback-78','Require the actual preserved prior release identity');
     await page.evaluate(async()=>{
      PR={cur:'update',list:[{id:'update',name:'Learner',gr:'2',av:'🐼'}]};await savePR();S=blank();S.stars=149;S.pts={学:7};S.cfg.set=['学'];S.cfg.rs={q:[['listen','学'],['trace','学']],i:1,p:['学'],t:''};S.future={opaque:'preserved'};localStorage.setItem('zh_p_update',JSON.stringify(S));await loadS();await home();
      const readings=await caches.open('mandarin-grove-public-readings-v1');await readings.put('/synthetic-reading',new Response('saved reading'));
@@ -55,7 +56,7 @@ async function run(){
     async function notice(){await page.evaluate(()=>chkVer());await page.locator('#upd[open]').waitFor({timeout:5000});}
     async function loaded(expected){await page.waitForFunction(expected=>typeof VER!=='undefined'&&VER===expected,expected,{timeout:60000});await page.evaluate(()=>chkVer());assert.equal(await page.locator('#upd[open]').count(),0,'Updated release must not prompt again');await unchanged();}
     fixture='current';await notice();await Promise.all([page.waitForNavigation({timeout:60000}),page.locator('#update-now').click()]);await loaded(version);
-    await page.evaluate(()=>grown());assert.match(await page.locator('#gov').innerText(),new RegExp('App version: '+version));await page.keyboard.press('Escape');
+    await page.evaluate(()=>grown('about'));assert.match(await page.locator('#gov').innerText(),new RegExp('App version: '+version.replaceAll('.','\\.')));await page.keyboard.press('Escape');
     console.log('PASS',engine,scope,'actual legacy79 update reaches current release once, with version shown in Grown-ups');
     await page.waitForFunction(()=>OFFLINE_STATUS==='ready'&&navigator.serviceWorker.controller,{},{timeout:60000});
     fixture='intermediate';await page.evaluate(async()=>{window.testUpdateRegistration=await navigator.serviceWorker.getRegistration();await testUpdateRegistration.update();});

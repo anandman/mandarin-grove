@@ -43,7 +43,7 @@ self.addEventListener('fetch',event=>{
  if(path==='version.txt'||path.startsWith('api/'))return;
  event.respondWith((async()=>{
   const requested=url.searchParams.get('v');
-  if(path!=='index.html'&&requested&&/^\d{8}-[a-z0-9-]+$/.test(requested)&&requested!==VERSION){
+  if(path!=='index.html'&&requested&&/^(?:\d{8}-[a-z0-9-]+|\d+\.\d+\.\d+)$/.test(requested)&&requested!==VERSION){
    // Another tab may still be loading an older document when this worker activates.
    // Static hosting ignores ?v=, so a network fallback could silently return the wrong code.
    const oldName=SHELL_PREFIX+requested;

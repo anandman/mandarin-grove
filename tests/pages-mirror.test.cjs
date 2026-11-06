@@ -7,6 +7,7 @@ function worker(scope='/mandarin-grove/'){
  const manifest=JSON.stringify(['index.html','app.js','offline-assets.json']);
  banks.set(prefix+version,new Map([['offline-assets.json',manifest],['index.html','CACHED HTML'],['app.js','CURRENT SCRIPT']]));
  banks.set(prefix+'20261025-supported-70',new Map([['offline-assets.json',manifest],['app.js','OLD SCRIPT']]));
+ banks.set(prefix+'1.0.99',new Map([['offline-assets.json',manifest],['app.js','OLD SEMANTIC SCRIPT']]));
  const context=vm.createContext({URL,Request,Response,Set,caches:{has:async k=>banks.has(k),open:async k=>({match:async p=>banks.get(k)?.has(p)?new Response(banks.get(k).get(p)):undefined})},fetch:async r=>{network.push(r);return new Response('NETWORK');},self:{location:{origin,href:origin+scope+'sw.js'},registration:{scope:origin+scope},addEventListener:(n,f)=>handlers[n]=f}});vm.runInContext(source,context);
  return {version,network,request:async p=>{let promise;handlers.fetch({request:new Request(origin+p),respondWith:p=>promise=p});return promise;}};
 }
@@ -21,6 +22,9 @@ test('worker leaves version checks, API and other project paths to the network',
 });
 test('root deployment keeps its existing offline cache and script version behavior',async()=>{
  const w=worker('/');assert.equal(await(await w.request('/')).text(),'CACHED HTML');assert.equal(await(await w.request('/app.js?v=20261025-supported-70')).text(),'OLD SCRIPT');
+});
+test('semantic release assets stay isolated on root and Pages, alongside dated releases',async()=>{
+ for(const scope of ['/','/mandarin-grove/']){const w=worker(scope);assert.equal(await(await w.request(scope+'app.js?v=1.0.99')).text(),'OLD SEMANTIC SCRIPT');assert.equal((await w.request(scope+'app.js?v=1.0.98')).status,409);assert.equal(w.network.length,0);}
 });
 test('maintenance removes only this deployment shell and worker, preserving readings and other apps',async()=>{
  const removed=[],unregistered=[],keys=['math-tutor-v1','mandarin-grove-public-readings-v1','mandarin-grove-shell-20261025-compact-74','mandarin-grove-shell-%2Fmandarin-grove%2F-20261025-compact-74','mandarin-grove-shell-%2Fother%2F-old'];

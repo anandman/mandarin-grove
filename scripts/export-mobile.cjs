@@ -2,13 +2,14 @@
 const fs=require('node:fs'),path=require('node:path');
 const {exportStatic}=require('./export-static.cjs');
 const {scaleNativeTextStyles}=require('./native-text-style.cjs');
-function exportMobile(root,output,{internalTests=false}={}){
+const {checkRelease,buildInfo}=require('./release.cjs');
+function exportMobile(root,output,{internalTests=false,requireCleanSource=false}={}){
  const base=fs.realpathSync(root),out=path.resolve(output);
  if(out===base||base.startsWith(out+path.sep))throw Error('Output cannot contain the source workspace');
  if(fs.existsSync(out))throw Error('Refusing to replace an existing output');
  const bridge=path.join(base,'mobile/dist',internalTests?'bridge-testing.js':'bridge.js');
  if(!fs.existsSync(bridge)||fs.lstatSync(bridge).isSymbolicLink()||!fs.realpathSync(bridge).startsWith(base+path.sep))throw Error('Build the native bridge first');
- exportStatic(base,out,{feedback:'local'});
+ exportStatic(base,out,{feedback:'local',requireCleanSource});
  // Only authored app declarations; vendor/content payloads are never rewritten.
  for(const file of require('./static-files.json').filter(file=>!file.includes('/')&&/\.(css|js|html)$/.test(file))){
   const target=path.join(out,file);fs.writeFileSync(target,scaleNativeTextStyles(fs.readFileSync(target,'utf8')));
@@ -32,11 +33,14 @@ function exportMobile(root,output,{internalTests=false}={}){
 }
 if(require.main===module){
  const root=path.resolve(__dirname,'..'),out=path.join(root,'mobile/www');
+ const internalTests=process.argv.includes('--internal-tests');
+ // Reject an unqualified release before even moving the previous generated app.
+ buildInfo(root,{requireCleanSource:!internalTests});checkRelease(root);
  // Keep previous generated packages for recovery instead of deleting them on rebuild.
  if(fs.existsSync(out)){
   if(fs.lstatSync(out).isSymbolicLink()||!fs.statSync(out).isDirectory())throw Error('Unsafe generated mobile output');
   const history=path.join(root,'mobile/.build-history');fs.mkdirSync(history,{recursive:true});fs.renameSync(out,path.join(history,'www-'+Date.now()+'-'+process.pid));
  }
- console.log('Native public assets exported to '+exportMobile(root,out,{internalTests:process.argv.includes('--internal-tests')}));
+ console.log('Native public assets exported to '+exportMobile(root,out,{internalTests,requireCleanSource:!internalTests}));
 }
 module.exports={exportMobile};

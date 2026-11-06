@@ -48,3 +48,11 @@ test('ambiguous source markers fail before any release file is written',()=>{
 for(const [file,marker]of [['mobile/android/app/build.gradle','versionCode 100'],['mobile/ios/App/App.xcodeproj/project.pbxproj','CURRENT_PROJECT_VERSION = 100']])test('native build counter drift is rejected in '+file,()=>{
  const root=fixture(),p=path.join(root,file);fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace(marker,marker.replace('100','99')));assert.throws(()=>api().checkRelease(root),/mismatch/i);
 });
+for(const url of ['styles.css','styles.css?v=1.0.100&v=1.0.99'])test('missing or duplicate asset version fails before writes '+url,()=>{
+ const root=fixture();fs.writeFileSync(path.join(root,'index.html'),'<script src="app.js?v=1.0.100"></script><link href="'+url+'">');const before=bytes(root);
+ assert.throws(()=>api().setRelease(root,{version:'1.0.101',build:101}),/marker|ambiguous/i);assert.deepEqual(bytes(root),before);
+});
+for(const missing of ['package.json','mobile/package.json'])test('missing required manifest cannot partially advance release '+missing,()=>{
+ const root=fixture(),before=bytes(root);delete before[missing];fs.unlinkSync(path.join(root,missing));
+ assert.throws(()=>api().setRelease(root,{version:'1.0.101',build:101}));assert.deepEqual(Object.fromEntries(Object.keys(before).map(n=>[n,fs.readFileSync(path.join(root,n),'utf8')])),before);assert.equal(fs.existsSync(path.join(root,missing)),false);
+});
