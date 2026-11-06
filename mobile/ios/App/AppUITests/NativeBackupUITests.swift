@@ -2,6 +2,32 @@ import XCTest
 import UIKit
 
 final class NativeBackupUITests: XCTestCase {
+    @MainActor func testNativeLookupReportsBundledOfflineAvailability() throws {
+        let owned = ["BC062C51-505F-4C31-967F-28FED4039C62", "D8BDD534-DAAF-4370-96CA-920D1F871524"]
+        guard ProcessInfo.processInfo.environment["GROVE_LOOKUP_NATIVE_CHECK"] == "1",
+              owned.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else {
+            throw XCTSkip("Explicit check flag and owned synthetic simulator required")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
+        app.launch()
+        guard requireGroveContent(app, context: "before bundled lookup check") else { return }
+        // Multi-learner installations open their existing picker on launch.
+        let demo = app.webViews.buttons["🐼 Mei K, Kindergarten"]
+        if demo.waitForExistence(timeout: 1) { demo.tap() }
+        let help = app.webViews.buttons["Help"]
+        XCTAssertTrue(help.waitForExistence(timeout: 10)); help.tap()
+        let find = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Find a character or word")).firstMatch
+        XCTAssertTrue(find.waitForExistence(timeout: 10)); find.tap()
+        let status = app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Dictionary and reading tools are included for offline use.")).firstMatch
+        XCTAssertTrue(status.waitForExistence(timeout: 10))
+        XCTAssertTrue(status.isHittable)
+        XCTAssertFalse(app.webViews.buttons["Try offline setup again"].isHittable)
+        app.webViews.buttons["Back to Help"].tap()
+        app.webViews.buttons["Back to Home"].tap()
+        XCTAssertTrue(app.webViews.buttons["Practice"].waitForExistence(timeout: 10))
+    }
+
     @MainActor func testCaptureNativeStoreScreenshots() throws {
         let owned = ["BC062C51-505F-4C31-967F-28FED4039C62", "D8BDD534-DAAF-4370-96CA-920D1F871524"]
         guard ProcessInfo.processInfo.environment["GROVE_STORE_CAPTURE"] == "1",
