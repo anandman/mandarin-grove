@@ -13,8 +13,18 @@ const GroveViewport = (() => {
    const height = unzoomed && viewport ? Math.min(innerHeight, viewport.height) : innerHeight;
    const editing = document.activeElement?.matches('input:not([type="checkbox"]):not([type="radio"]), textarea, [contenteditable="true"]');
    document.body.classList.toggle('compact-input', !!editing && height < 550);
+   const practice = document.body.dataset.layout === 'task' && document.body.dataset.activity !== 'onboarding';
+   const bodyStyle = getComputedStyle(document.body), textSize = parseFloat(bodyStyle.fontSize) || 16;
+   const largeText = textSize >= 20;
+   const usableHeight = height - (parseFloat(bodyStyle.paddingTop) || 0) - (parseFloat(bodyStyle.paddingBottom) || 0);
+   const textHeight = usableHeight / Math.max(1, textSize / 24);
+   const constrained = textHeight <= 650 && (innerWidth < 700 || textHeight < 500);
+   const focused = practice && largeText && constrained;
+   document.body.classList.toggle('constrained-layout', largeText && constrained);
+   document.body.classList.toggle('focused-task', focused);
+   for (const note of document.querySelectorAll('#word-pace, .word-seed-information, .word-practice-extra, #word-status, #summary-help > .reading-note, #summary-save-status, .study-home-hero')) note.tabIndex = focused || note.scrollHeight > note.clientHeight + 1 ? 0 : -1;
    const report = find('report-problem'), footer = document.querySelector('body > footer'), reportHeader = document.querySelector('body > header');
-   const reportInHeader = height < 500 && innerWidth >= 700;
+   const reportInHeader = height < 500 && innerWidth >= 500;
    const reportHost = reportInHeader ? reportHeader : footer;
    if (report && reportHost && report.parentElement !== reportHost) reportHost.append(report);
    if (report) { report.classList.toggle('compact-report', reportInHeader); report.textContent = reportInHeader ? '?' : 'Report a problem';report.setAttribute('aria-label', 'Report a problem'); }
@@ -22,7 +32,8 @@ const GroveViewport = (() => {
    const values = {
     '--app-viewport-height': height + 'px',
     '--app-viewport-top': top + 'px',
-    '--app-viewport-bottom': Math.max(0, innerHeight - top - height) + 'px'
+    '--app-viewport-bottom': Math.max(0, innerHeight - top - height) + 'px',
+    '--app-back-space': (Math.ceil(find('page-back')?.getBoundingClientRect().width || 76) + 8) + 'px'
    };
    for (const [name, value] of Object.entries(values)) {
     if (document.documentElement.style.getPropertyValue(name) !== value) document.documentElement.style.setProperty(name, value);
@@ -106,6 +117,8 @@ const GroveViewport = (() => {
   else { information.tabIndex = 0; information.setAttribute('aria-label', 'Activity information'); }
   if (!feedback.children.length) feedback.hidden = true;
   if (!actions.children.length) actions.hidden = true;
+  const ratingNote = actions.querySelector('#flip-rating > p');
+  if (ratingNote) ratingNote.tabIndex = 0;
   frame.append(heading, information, workspace, feedback, actions);
   root.append(frame);
   const dictation = workspace.querySelector('.dictation-workspace:has(#dc)');
@@ -134,7 +147,10 @@ const GroveViewport = (() => {
    navigation.hidden = !compact;
    back.disabled = index === 0;
    next.hidden = index === panes.length - 1;
-   next.textContent = 'Next: ' + labels[index + 1];
+   const nextLabel = 'Next: ' + labels[index + 1];
+   next.setAttribute('aria-label', nextLabel);
+   const shortFocus = document.body.classList.contains('focused-task') && parseFloat(document.documentElement.style.getPropertyValue('--app-viewport-height')) < 500;
+   next.textContent = shortFocus ? 'Next' : nextLabel;
    status.textContent = `${index + 1} of ${panes.length} · ${labels[index]}`;
   };
   const move = change => {
@@ -157,7 +173,37 @@ const GroveViewport = (() => {
   schedule();
  }
  function words(root, study) {
-  if (study) {setScreen('task', 'words');studyControls(root);}
+   setScreen('task', 'words');
+   const seed = root.querySelector('.word-seed'), information = region('word-seed-information'), extra = region('word-practice-extra');
+   information.setAttribute('aria-label', 'Word instructions and details');
+   for (const node of seed.querySelectorAll(':scope > .word-input-help, :scope > #word-dont-know-help, :scope > #word-result')) information.append(node);
+   seed.insertBefore(information, seed.querySelector('#word-form'));
+   extra.setAttribute('aria-label', 'Word collection and practice help');
+   for (const node of root.querySelectorAll(':scope > .word-collection, :scope > details')) extra.append(node);
+   root.append(extra);if (study) studyControls(root);else schedule();
+ }
+ function studyFinish(root) {
+  setScreen('task', 'study-finish');
+  const information = region('study-finish-information'), actions = region('study-finish-actions');
+  information.tabIndex = 0;information.setAttribute('aria-label', 'Round results');
+  for (const node of [...root.children]) {
+   if (node.matches('button')) actions.append(node);
+   else if (!node.matches('h1')) information.append(node);
+  }
+  root.append(information, actions);schedule();
+ }
+ function writingResult(root) {
+  const seed = root.querySelector('.writing-seed');if (!seed) return;
+  const information = region('writing-seed-information'), actions = region('writing-seed-actions');
+  const confirming = !!seed.querySelector('.writing-confirm');
+  information.tabIndex = 0;information.setAttribute('aria-label', 'Writing idea and instructions');
+  for (const node of [...seed.children]) {
+   if (node.matches('#writing-another')) actions.append(node);
+   else if (node.matches('.writing-finish')) {
+    for (const child of [...node.children]) (child.matches('.writing-confirm') || child.matches('button') && (!child.disabled || confirming) ? actions : information).append(child);
+   } else information.append(node);
+  }
+  seed.append(information, actions);schedule();
  }
  function onboarding(root) {
   setScreen('task', 'onboarding');
@@ -247,5 +293,5 @@ const GroveViewport = (() => {
  }
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once: true});
  else start();
- return {setScreen, arrangeActivity, summary, onboarding, settings, settingsSection, studyControls, words, reveal, feedbackAction, recovery, feedback, scrollToTop};
+ return {setScreen, arrangeActivity, summary, onboarding, settings, settingsSection, studyControls, words, studyFinish, writingResult, reveal, feedbackAction, recovery, feedback, scrollToTop};
 })();

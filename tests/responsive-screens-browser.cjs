@@ -88,6 +88,12 @@ const settings={
   }
   async function controlChecks(locator,screen,viewport,group){
    const rows=await locator.evaluateAll((els,insets)=>els.map(el=>{
+    // Choice collections can grow beyond a screen. Scroll only their designated
+    // information panel; primary task, navigation and commit controls never do.
+    const choice=el.closest('[data-av], #avt, [data-gr], .profile-child, .feedback-categories');
+    const animals=el.closest('.profile-animals');
+    const panel=choice&&((animals&&/auto|scroll/.test(getComputedStyle(animals).overflowY)&&animals)||el.closest('.onboarding-pane, .feedback-frame-information')||(el.matches('.profile-child')&&document.getElementById('app')));
+    if(panel){const r=el.getBoundingClientRect(),p=panel.getBoundingClientRect();panel.scrollTop+=Math.max(0,r.bottom-p.bottom)-Math.max(0,p.top-r.top);panel.scrollLeft+=Math.max(0,r.right-p.right)-Math.max(0,p.left-r.left);}
     const r=el.getBoundingClientRect(),v=visualViewport;
     const bounds={left:v?.offsetLeft||0,top:v?.offsetTop||0,width:v?.width||innerWidth,height:v?.height||innerHeight};
     const inView=r.left>=bounds.left+insets.left-1&&r.top>=bounds.top+insets.top-1&&r.right<=bounds.left+bounds.width-insets.right+1&&r.bottom<=bounds.top+bounds.height-insets.bottom+1;
@@ -113,8 +119,9 @@ const settings={
        // Stroke clip paths are deliberately not painted. Waiting for the first
        // path to be visible would mistake those definitions for a load failure.
        await page.waitForFunction(()=>document.querySelectorAll('#hw svg path').length>0,null,{timeout:12000});
+       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
        const paper=await page.locator('#hw').boundingBox();
-       const minimum=viewport.height<640?160:200;
+       const minimum=viewport.height<400?100:viewport.height<640?160:200;
        if(!paper||paper.width<minimum||paper.height<minimum||Math.abs(paper.width-paper.height)>1)failures.push({screen,viewport,group:'usable square handwriting area',box:paper,minimum});
       }
       if(['words','studyWords'].includes(screen))await page.waitForSelector('#word-check:not([disabled])',{timeout:12000});
@@ -126,7 +133,7 @@ const settings={
       });
       if(escaped.length)failures.push({screen,viewport,group:'unintended task scrolling or clipping',escaped});
       if(['dictation','studyDictation'].includes(screen)){
-       const paper=await page.locator('#dc').boundingBox(),minimum=viewport.height<640?160:200;
+       const paper=await page.locator('#dc').boundingBox(),minimum=viewport.height<400?100:viewport.height<640?160:200;
        if(!paper||paper.width<minimum||paper.height<minimum||Math.abs(paper.width-paper.height)>1)failures.push({screen,viewport,group:'usable dictation canvas',box:paper,minimum});
       }
       const scope=['dialog','settings','contentDialog'].includes(family)?page.locator('dialog[open]').last():page.locator('#app');

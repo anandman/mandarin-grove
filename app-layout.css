@@ -35,6 +35,10 @@ body > footer { min-block-size: 44px; padding: 0 8px; display: flex; align-items
 body > footer .progress-link { min-block-size: 44px; margin: 0; }
 #totop { inset-block-end: calc(var(--app-viewport-bottom, 0px) + var(--grove-safe-bottom)); inset-inline-end: calc(var(--grove-safe-right) + 8px); }
 body[data-layout="task"] > #app { overflow: hidden; }
+/* In a constrained large-text task, Back and the task's own actions stay put.
+   The repeated navigation returns on Home and in ordinary-size views. */
+body.focused-task > header, body.focused-task > #reward-strip, body.focused-task > footer { display: none; }
+body.focused-task .activity-frame-information:has(.listen-prompt) { max-block-size: none; }
 
 /* Activities share a bounded work area; resize never reconstructs the writer. */
 .activity-frame {
@@ -177,11 +181,12 @@ body[data-layout="home"] .study-help-entry b { font-size: 18px; }
 .activity-frame-information #drp { min-block-size: 44px; margin: 0; padding: 4px 8px; font-size: 16px; }
 
 #summary-help { block-size: 100%; min-block-size: 0; display: flex; flex-direction: column; gap: 4px; }
-#summary-help > .writing-heading { padding-inline-start: 76px; min-block-size: 44px; margin: 0; gap: 4px; }
+#summary-help > .writing-heading { padding-inline-start: var(--app-back-space, 76px); min-block-size: 44px; margin: 0; gap: 4px; }
 #summary-help .writing-tree { display: none; }
 #summary-help h1 { font-size: 24px; margin: 0; }
 #summary-help .writing-heading p { display: none; }
 #summary-help > .reading-note { font-size: 14px; line-height: 1.3; margin: 0; }
+#summary-help > .reading-note { max-block-size: 2.6em; overflow: auto; flex: none; }
 #summary-help .summary-reading { margin: 0; flex: none; max-block-size: 30%; overflow: auto; }
 #summary-help .summary-reading summary { min-block-size: 44px; padding: 8px; }
 #summary-help .summary-steps { min-block-size: 0; flex: 1 1 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -192,6 +197,7 @@ body[data-layout="home"] .study-help-entry b { font-size: 18px; }
 #summary-help .summary-step-label { display: none; }
 #summary-help .summary-footer { margin: 0; display: flex; gap: 4px; align-items: center; }
 #summary-help .summary-footer p { font-size: 12px; line-height: 1.3; margin: 0; }
+#summary-help .summary-footer p { max-block-size: 3.9em; overflow: auto; min-inline-size: 0; }
 #summary-help .summary-footer button { min-block-size: 44px; flex: none; margin: 0; padding: 4px 8px; }
 
 /* Choice dialogs are forms, with deliberately scrollable configuration details. */
@@ -353,7 +359,7 @@ body > header .compact-report { inline-size: 44px; min-block-size: 44px; flex: n
 .dictation-comparison-information .big { font-size: 64px; line-height: 1.1; }
 .dictation-comparison-information p { margin: 4px 0; font-size: 16px; line-height: 1.3; }
 body[data-activity="words"] #word-practice { display: flex; flex-direction: column; block-size: 100%; min-block-size: 0; gap: 4px; }
-body[data-activity="words"] #word-practice > .writing-heading { padding-inline-start: 76px; min-block-size: 44px; }
+body[data-activity="words"] #word-practice > .writing-heading { padding-inline-start: var(--app-back-space, 76px); min-block-size: 44px; }
 body[data-activity="words"] #word-practice > .writing-heading p { display: none; }
 body[data-activity="words"] #word-practice > .word-instructions { max-block-size: 38px; overflow: auto; flex: none; font-size: 14px; line-height: 1.3; margin: 0; }
 body[data-activity="words"] #word-practice .study-sessionbar { flex: none; margin: 0; }
@@ -474,3 +480,216 @@ body[data-layout="recovery"] > #app { overflow: hidden; }
 .activity-memory-cue > .mean { flex: 1 1 0; overflow-wrap: anywhere; min-inline-size: 0; max-block-size: 46px; overflow: auto; margin: 0; text-align: left; }
 
 .activity-frame[data-mode="memory"] .activity-frame-information { max-block-size: max(46px, 2.4em); }
+.activity-frame-information:has(.listen-prompt) { max-block-size: none; }
+.activity-frame-information .listen-prompt { flex-direction: row; flex-wrap: nowrap; }
+.activity-frame-information .listen-prompt h2 { flex: 1 1 0; min-inline-size: 0; }
+
+/* Word explanations/collections can grow; the input and Next remain actions. */
+.word-seed-information, .word-practice-extra { display: contents; }
+body[data-activity="words"] .word-practice-extra > details { max-block-size: 72px; overflow: auto; margin: 0; }
+body.focused-task[data-activity="words"] #word-practice .writing-heading { padding-inline-start: var(--app-back-space, 100px); }
+body.focused-task[data-activity="words"] #word-practice .writing-heading h1 { font-size: 18px; line-height: 1.15; }
+body.focused-task[data-activity="words"] #word-practice .word-seed { padding: 4px; }
+body.focused-task[data-activity="words"] .word-seed-information { display: block; flex: 1 1 0; min-block-size: 28px; overflow: auto; }
+body.focused-task[data-activity="words"] .word-seed-information > * { margin: 0 0 4px; }
+body.focused-task[data-activity="words"] #word-practice #word-result { overflow: visible; }
+body.focused-task[data-activity="words"] #word-practice #word-status { max-block-size: 56px; overflow: auto; }
+body.focused-task[data-activity="words"] .word-practice-extra { display: block; flex: 0 1 auto; min-block-size: 44px; max-block-size: 44px; overflow: auto; }
+body.focused-task[data-activity="words"] #word-practice .word-practice-extra > details, body.focused-task[data-activity="words"] #word-practice .word-practice-extra > .word-collection { max-block-size: none; overflow: visible; }
+body.focused-task[data-activity="words"] .word-practice-extra h2 { margin-block: 0 4px; }
+
+@media (max-height: 650px) {
+ body[data-activity="words"] #word-practice .word-seed-information { display: block; flex: 1 1 0; min-block-size: 28px; overflow: auto; }
+ body[data-activity="words"] #word-practice #word-result { overflow: visible; }
+ body[data-activity="words"] #word-practice .word-practice-extra { display: block; flex: 0 1 auto; min-block-size: 44px; max-block-size: 44px; overflow: auto; }
+ body[data-activity="words"] #word-practice .word-practice-extra > details, body[data-activity="words"] #word-practice .word-practice-extra > .word-collection { max-block-size: none; overflow: visible; }
+ body[data-activity="words"] #word-practice .word-practice-extra h2 { margin-block: 0 4px; }
+}
+
+#app .study-finish { block-size: 100%; min-block-size: 0; display: flex; flex-direction: column; gap: 4px; padding: 4px; }
+.study-finish > h1 { flex: none; margin: 0; min-block-size: 44px; padding-inline-start: var(--app-back-space, 100px); font-size: 24px; line-height: 1.2; }
+.study-finish-information { flex: 1 1 0; min-block-size: 0; overflow: auto; }
+.study-finish-information > p { margin-block: 8px; }
+.study-finish-actions { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.study-finish-actions button { min-inline-size: 44px; min-block-size: 44px; margin: 0; padding: 4px; font-size: 16px; line-height: 1.2; }
+
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task > #app { padding-inline-start: 8px; }
+ body.focused-task .activity-frame { grid-template-columns: minmax(260px, .9fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; }
+ body.focused-task .activity-frame-heading { display: contents; }
+ body.focused-task .activity-frame-heading .grove-activity-heading { grid-column: 2; grid-row: 1; padding-inline-start: 0; min-block-size: 44px; }
+ body.focused-task .activity-frame-heading .study-sessionbar { grid-column: 1 / -1; grid-row: 5; }
+ body.focused-task .activity-frame-workspace { grid-column: 1; grid-row: 2 / 4; }
+ body.focused-task .activity-frame-information { grid-column: 2; grid-row: 2; max-block-size: none; }
+ body.focused-task .activity-frame-feedback { grid-column: 2; grid-row: 3; }
+ body.focused-task .activity-frame .activity-frame-actions { grid-column: 1 / -1; grid-row: 4; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-columns: none; }
+ body.focused-task .activity-frame-actions > .btn, body.focused-task .activity-frame-actions > #flip-rating { grid-column: auto; min-inline-size: 0; max-inline-size: none; }
+ body.focused-task .activity-frame-actions #flip-rating:not([hidden]) { display: contents; }
+ body.focused-task .activity-frame-workspace .dictation-writing { display: grid; grid-template-columns: minmax(0, 1fr) 70px; align-items: center; }
+ body.focused-task .dictation-writing .dictation-paper { inline-size: min(100%, 100cqh); }
+ body.focused-task .dictation-writing #dclr { inline-size: 70px; min-inline-size: 44px; padding: 4px; margin: 0; }
+ body.focused-task[data-activity="words"] #word-practice { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto; }
+ body.focused-task[data-activity="words"] #word-practice > .writing-heading { grid-column: 1; grid-row: 1; }
+ body.focused-task[data-activity="words"] #word-practice > .study-sessionbar { grid-column: 1 / -1; grid-row: 4; }
+ body.focused-task[data-activity="words"] #word-practice > .word-instructions { grid-column: 1; grid-row: 2; max-block-size: none; min-block-size: 0; overflow: auto; }
+ body.focused-task[data-activity="words"] #word-practice > .word-practice-extra { grid-column: 1; grid-row: 3; min-block-size: 0; max-block-size: none; }
+ body.focused-task[data-activity="words"] #word-practice > .word-seed { grid-column: 2; grid-row: 1 / 4; }
+ body.focused-task[data-activity="words"] #word-target { display: none; }
+ body.focused-task #summary-help { display: grid; grid-template-columns: minmax(180px, .75fr) minmax(0, 1.25fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 4px 12px; }
+ body.focused-task #summary-help > .writing-heading { grid-column: 1 / -1; grid-row: 1; padding-inline-start: var(--app-back-space, 100px); }
+ body.focused-task #summary-help > .reading-note { grid-column: 1; grid-row: 2; min-block-size: 0; overflow: auto; }
+ body.focused-task #summary-help > .summary-reading { grid-column: 1; grid-row: 3; max-block-size: 80px; }
+ body.focused-task #summary-help > .summary-footer { grid-column: 1; grid-row: 4; }
+ body.focused-task #summary-help > .summary-footer p { max-block-size: 72px; overflow: auto; }
+ body.focused-task #summary-help > .summary-steps { grid-column: 2; grid-row: 2 / -1; }
+ /* Pinyin uses both columns while the existing writing pane stays mounted. */
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .grove-activity-heading { display: none; }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .activity-frame-information { grid-column: 1 / -1; grid-row: 1; padding-inline-start: var(--app-back-space, 100px); }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .dictation-prompt h2 { display: none; }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .dictation-prompt { margin: 0; flex-wrap: nowrap; }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .dictation-prompt > div { max-block-size: 44px; }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) #drp { font-size: 14px; }
+ body.focused-task .activity-frame[data-mode="dictation"]:has(.dictation-pinyin:not([hidden])) .activity-frame-workspace { grid-column: 1 / -1; }
+ body.focused-task .dictation-workspace:has(.dictation-pinyin:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)) repeat(2, minmax(0, 1.1fr)); grid-template-rows: auto auto auto; align-content: center; gap: 3px; }
+ body.focused-task .dictation-pinyin:not([hidden]) { display: contents; }
+ body.focused-task .dictation-pinyin-heading { grid-column: 1 / 3; grid-row: 1; }
+ body.focused-task .dictation-pinyin-heading h2 { display: none; }
+ body.focused-task .dictation-pinyin #tiles { grid-column: 3 / 5; grid-row: 1 / 3; display: grid; grid-template-columns: repeat(5, minmax(44px, 1fr)); gap: 3px; align-content: center; }
+ body.focused-task .dictation-pinyin .dictation-tones { grid-column: 1 / 3; grid-row: 2; }
+ body.focused-task .dictation-pinyin .dictation-tones button { font-size: 14px; overflow-wrap: anywhere; margin: 0; line-height: 1.2; }
+ body.focused-task .dictation-pinyin #py-delete { grid-column: 1; grid-row: 3; font-size: 14px; }
+ body.focused-task .dictation-pinyin #dchk { grid-column: 2; grid-row: 3; font-size: 14px; min-inline-size: 44px; inline-size: 100%; }
+ body.focused-task .dictation-workspace:has(.dictation-pinyin:not([hidden])) .compact-step-navigation { grid-column: 3 / 5; grid-row: 3; }
+}
+
+/* Large-text navigation keeps its actions; welcome copy and lists may scroll. */
+body.constrained-layout[data-layout="home"] .study-home-hero { display: block; block-size: 76px; max-block-size: 76px; overflow: auto; }
+body.constrained-layout[data-layout="home"] .study-home-hero .grove-hero-art { display: none; }
+body.constrained-layout[data-layout="home"] .study-home-hero .grove-hero-copy { display: block; }
+body.constrained-layout[data-layout="home"] .study-home-hero .grove-hero-copy > p { max-inline-size: none; }
+body.constrained-layout[data-layout="home"] .study-home-entries > button { padding: 6px; }
+body.constrained-layout .profile-switcher > h1 { margin: 0 0 8px; font-size: 24px; }
+body.constrained-layout .profile-children { gap: 6px; }
+body.constrained-layout .profile-child { grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: 4px; min-block-size: 100px; padding: 6px; font-size: 16px; }
+body.constrained-layout .profile-child > span:first-child { grid-column: 1; grid-row: 1 / 3; font-size: 28px; align-self: center; }
+body.constrained-layout .profile-child > b, body.constrained-layout .profile-child > small { grid-column: 2; }
+body.constrained-layout .profile-child > b { max-block-size: 3em; overflow: auto; }
+body.constrained-layout[data-activity="onboarding"] .profile-setup > h1 { padding-inline-start: var(--app-back-space, 76px); }
+body.constrained-layout .onboarding-pane:nth-child(2) { display: flex; flex-direction: column; gap: 4px; }
+body.constrained-layout .onboarding-pane:nth-child(2) .profile-grade { overflow: auto; min-block-size: 0; flex: 1 1 0; inline-size: 100%; }
+body.constrained-layout .onboarding-pane:nth-child(2) > .profile-action { flex: none; }
+body.constrained-layout .onboarding-pane:nth-child(2) > #gh:empty { display: none; }
+body.constrained-layout dialog.settings-frame:has(#grt) > header { grid-template-columns: minmax(0, 1fr) 44px; }
+body.constrained-layout dialog.settings-frame:has(#grt) > header > h2 { display: none; }
+body.constrained-layout dialog.settings-frame:has(#grt) .parent-section-nav { grid-column: 1; grid-row: 1; }
+body.constrained-layout #backup-settings:has(#grt) #grt { block-size: 44px !important; }
+body.constrained-layout .restore-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+body.constrained-layout .restore-actions .btn { font-size: 14px; line-height: 1.2; }
+@media (min-width: 500px) and (max-height: 500px) {
+ body.constrained-layout[data-layout="home"] .study-home-hero { display: none; }
+ body.constrained-layout[data-layout="home"] .study-home-entries > button { min-block-size: 44px; }
+ body.constrained-layout[data-layout="home"] .study-home-entries > button small, body.constrained-layout[data-layout="home"] .study-home-entries > button span { display: none; }
+ body.constrained-layout[data-layout="home"] .study-help-entry, body.constrained-layout[data-layout="home"] .home-progress-link button { block-size: 44px; min-block-size: 44px; }
+ body.constrained-layout .profile-switcher > h1 { font-size: 20px; }
+ body.constrained-layout .profile-child { min-block-size: 72px; }
+ body.constrained-layout .onboarding-steps.compact-steps > .onboarding-pane:first-child { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); grid-template-rows: auto minmax(0, 1fr); gap: 4px 12px; }
+ body.constrained-layout .onboarding-pane:first-child > .profile-label { grid-column: 1; grid-row: 1; }
+ body.constrained-layout .onboarding-pane:first-child > p { grid-column: 2; grid-row: 1; margin: 0; }
+ body.constrained-layout .onboarding-pane:first-child > .profile-animals { grid-column: 2; grid-row: 2; overflow: auto; min-block-size: 0; }
+ body.constrained-layout .onboarding-pane:first-child > #avt { grid-column: 1; grid-row: 2; align-self: start; }
+ body.constrained-layout[data-activity="onboarding"] .profile-setup > p { display: none; }
+ body.constrained-layout .restore-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.activity-frame-workspace .choices button { line-height: 1.1; }
+body[data-activity="words"] #word-practice > .word-tools { flex: none; }
+body[data-activity="words"] #word-practice > .reading-note { max-block-size: 1.3em; overflow: auto; flex: none; margin: 0; }
+body[data-activity="words"] #word-practice .word-tools select { min-block-size: 44px; }
+body[data-activity="words"] #word-practice .word-tools .btn { font-size: 14px; line-height: 1.2; }
+body[data-activity="writing"] .writing-ideas { display: flex; flex-direction: column; block-size: 100%; min-block-size: 0; gap: 4px; }
+body[data-activity="writing"] .writing-heading { min-block-size: 44px; flex: none; margin: 0; padding-inline-start: var(--app-back-space, 76px); }
+body[data-activity="writing"] .writing-heading h1 { margin: 0; font-size: 24px; }
+body[data-activity="writing"] .writing-heading p, body[data-activity="writing"] .writing-tree { display: none; }
+body[data-activity="writing"] .writing-input-panel { flex: none; margin: 0; padding: 4px; }
+body[data-activity="writing"] .writing-input-row { margin: 0; }
+body[data-activity="writing"] .writing-input-row input, body[data-activity="writing"] .writing-input-row .btn { min-block-size: 44px; margin: 0; padding: 4px 8px; }
+body[data-activity="writing"] #writing-input-help, body[data-activity="writing"] #writing-status { max-block-size: 2.6em; overflow: auto; margin: 0; font-size: 13px; line-height: 1.3; }
+body[data-activity="writing"] #writing-result { min-block-size: 0; flex: 1 1 0; overflow: auto; }
+body[data-activity="writing"] .writing-browse { flex: none; max-block-size: 40%; overflow: auto; margin: 0; }
+body[data-activity="writing"] .writing-attribution { max-block-size: 1.3em; overflow: auto; flex: none; margin: 0; font-size: 12px; line-height: 1.3; }
+body.constrained-layout dialog.settings-frame:has(#grt) > header > h2 { display: block; }
+body.constrained-layout dialog.settings-frame:has(#grt) .parent-section-nav { display: none; }
+body.constrained-layout .onboarding-pane:nth-child(2) .profile-grade { flex: 0 1 auto; }
+body.constrained-layout .onboarding-pane:nth-child(2) > .profile-action { margin-block: 0; }
+#recent-mistakes { display: flex; flex-direction: column; block-size: min(720px, calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px)); min-block-size: 0; overflow: hidden; gap: 4px; padding: 8px; }
+#recent-mistakes .recent-mistakes-heading { position: static; flex: none; padding: 0; min-block-size: 44px; }
+#recent-mistakes .recent-mistakes-heading h2 { font-size: 24px; }
+#recent-mistakes #recent-mistakes-note { flex: none; max-block-size: 2.6em; overflow: auto; font-size: 13px; line-height: 1.3; margin: 0; }
+#recent-mistakes #recent-mistakes-filters { flex: none; max-block-size: 35%; overflow: auto; margin: 0; }
+#recent-mistakes #recent-mistakes-results { flex: 1 1 0; min-block-size: 0; overflow: auto; }
+#recent-mistakes .recent-mistakes-actions { flex: none; padding: 0; margin: 0; }
+#recent-mistakes .recent-mistakes-actions > .btn { min-block-size: 44px; font-size: 16px; padding: 4px; }
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-tools { grid-column: 1; grid-row: 2; display: flex; flex-wrap: wrap; margin: 0; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-tools label { display: flex; align-items: center; min-inline-size: 0; gap: 4px; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-tools label select { min-inline-size: 0; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-instructions { grid-row: 3; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .reading-note { grid-column: 1; grid-row: 4; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-practice-extra { grid-column: 1; grid-row: 5; max-block-size: 44px; }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) { grid-template-rows: auto auto minmax(0,1fr) auto minmax(0,1fr); }
+ body.focused-task[data-activity="words"] #word-practice:has(.word-tools) > .word-seed { grid-row: 1 / -1; }
+ body.focused-task[data-activity="writing"] .writing-input-row { display: flex; }
+ body.focused-task[data-activity="writing"] .writing-input-row input { min-inline-size: 0; flex: 1 1 0; }
+ body.focused-task[data-activity="writing"] .writing-input-row .btn { font-size: 14px; line-height: 1.2; }
+}
+@media (min-width: 500px) and (max-height: 500px) {
+ body.constrained-layout:has(.profile-switcher) > #page-navigation { position: absolute; inset-block-start: calc(var(--grove-safe-top) + var(--app-navigation-top, 100px)); inset-inline-start: var(--grove-safe-left); inline-size: var(--app-back-space, 100px); z-index: 2; }
+ body.constrained-layout .profile-switcher > h1 { min-block-size: 44px; padding-inline-start: var(--app-back-space, 100px); }
+ body.constrained-layout .profile-child { line-height: 1.2; }
+ body.constrained-layout[data-activity="onboarding"] .onboarding-pane:nth-child(2) > p { margin: 0; }
+ body.constrained-layout .onboarding-pane:nth-child(2) .profile-grade { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+ body.constrained-layout .onboarding-pane:nth-child(2) .profile-grade button { padding: 4px; min-inline-size: 0; font-size: 14px; }
+}
+@media (min-width: 500px) and (max-height: 500px) {
+ body.constrained-layout .onboarding-pane:first-child > .profile-label { grid-row: 1 / -1; align-self: start; line-height: 1.2; margin: 0; }
+ body.constrained-layout .onboarding-pane:first-child > #avt { align-self: end; margin: 0; }
+ body.constrained-layout .onboarding-pane:first-child > .profile-animals { align-self: stretch; align-content: start; margin: 0; }
+ body.constrained-layout .onboarding-pane:nth-child(2) > p { display: none; }
+}
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task .activity-frame-workspace .choices button { padding-block: 0; }
+}
+
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task .activity-frame-workspace .choices button { font-size: clamp(40px, 20cqh, 80px); }
+}
+/* Generated writing keeps its existing claim handlers and separates reading/actions. */
+body[data-activity="writing"] #writing-result { overflow: hidden; }
+body[data-activity="writing"] .writing-seed { display: flex; flex-direction: column; min-block-size: 0; block-size: 100%; margin: 0; padding: 4px; gap: 4px; }
+.writing-seed-information { min-block-size: 44px; flex: 1 1 0; overflow: auto; }
+.writing-seed-information > p { margin-block: 4px; }
+.writing-seed-information .writing-prompt { font-size: 18px; line-height: 1.3; }
+.writing-seed-actions { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.writing-seed-actions > .btn, .writing-seed-actions .writing-confirm > .btn { min-inline-size: 0; min-block-size: 44px; margin: 0; padding: 4px; font-size: 14px; line-height: 1.2; }
+.writing-seed-actions .writing-confirm { display: contents; }
+.writing-seed-actions:has(.writing-confirm) > #writing-another, .writing-seed-actions:has(.writing-confirm) > #writing-finish { display: none; }
+.writing-seed-actions .writing-confirm > p { grid-column: 1 / -1; margin: 0; max-block-size: 2.6em; overflow: auto; font-size: 14px; line-height: 1.3; }
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 4px 12px; }
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > .writing-heading { grid-column: 1 / -1; grid-row: 1; }
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > .writing-input-panel { grid-column: 1; grid-row: 2; min-block-size: 0; overflow: auto; }
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > #writing-result { grid-column: 2; grid-row: 2 / -1; }
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > .writing-browse { grid-column: 1; grid-row: 3; max-block-size: 60px; }
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > .writing-attribution { grid-column: 1; grid-row: 4; }
+}
+body[data-activity="writing"] .writing-input-row { display: flex; flex-direction: row; }
+body[data-activity="writing"] .writing-input-row input { min-inline-size: 0; flex: 1 1 0; }
+body[data-activity="writing"] .writing-input-row .btn { min-inline-size: 0; max-inline-size: 55%; }
+.writing-seed-actions > #writing-another:only-child { grid-column: 1 / -1; }
+.writing-seed-information > #writing-finish:disabled { margin: 4px 0; font-size: 14px; line-height: 1.3; }
+body[data-activity="writing"] .writing-ideas:has(.writing-seed) #writing-input-help { display: none; }
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) > .writing-attribution { display: none; }
+}
+@media (min-width: 500px) and (max-height: 500px) {
+ body.focused-task[data-activity="writing"] .writing-ideas:has(.writing-seed) .writing-input-panel > label { display: none; }
+}
