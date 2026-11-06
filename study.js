@@ -75,6 +75,14 @@ function showStudySetup(kind='practice',pool,restoredDraft=null){
  <section><h3>Activities</h3><div class="study-activities">${studyActivities().map(([m,label])=>`<label><input type="checkbox" data-study-mode="${m}" ${config.modes.includes(m)?'checked':''}>${label}</label>`).join('')}</div></section></div>
  <div class="study-question-limit"><label>Questions <select id="study-limit">${[5,10,20,30].map(n=>`<option ${config.limit===n?'selected':''}>${n}</option>`).join('')}</select></label><p class="reading-note">Goal: 90% of scored first attempts, including your own checks. Build words answers outside the word bank stay ungraded.</p></div></details>
  <div id="study-replace" hidden role="group" aria-label="Replace paused round"><p>A ${kind==='review'?'Review':'Practice'} round is paused. A new round replaces only that paused round. Finished history and earned progress stay saved.</p><button class="btn" id="study-confirm-replace">Replace paused round</button><button class="btn gray" id="study-keep">Keep paused round</button></div>`;
+ // Keep the existing controls outside the deliberately scrolling choices.
+ const information=document.createElement('div'),actions=document.createElement('div');
+ information.className='study-setup-information';actions.className='study-setup-actions';
+ for(const child of [...dialog.children])if(!child.matches('.study-setup-title,#study-replace'))information.append(child);
+ for(const id of ['study-continue','study-start','study-reading','study-recent-mistakes']){
+  const button=information.querySelector('#'+id);if(button)actions.append(button);
+ }
+ dialog.classList.add('study-setup-frame');dialog.insertBefore(information,dialog.querySelector('#study-replace'));dialog.insertBefore(actions,dialog.querySelector('#study-replace'));
  document.body.append(dialog);dialog.showModal();
  dialog.querySelector('.study-close').onclick=closeStudySetup;
  dialog.onclose=()=>{dialog.remove();if(STUDY_DRAFT===draft)STUDY_DRAFT=null;if(previous?.isConnected)previous.focus({preventScroll:true});};

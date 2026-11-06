@@ -15,6 +15,6 @@
     "content:audit": "node scripts/audit-vocabulary.cjs",
     "content:probe": "node scripts/probe-online-content.cjs --live",
     "test:native": "node --test tests/native-storage.test.cjs tests/native-journal.test.cjs tests/native-runtime.test.cjs tests/native-back.test.cjs tests/native-notices.test.cjs tests/native-speech.test.cjs tests/native-speech-ui.test.cjs tests/native-feedback-transport.test.cjs tests/native-wallet.test.cjs tests/sync-wallet.test.cjs tests/native-text-size.test.cjs tests/native-text-style.test.cjs tests/mobile-export.test.cjs",
-    "test:layout": "node tests/responsive-screens-browser.cjs && node tests/responsive-state-browser.cjs && node tests/responsive-settings-browser.cjs && node tests/responsive-failures-browser.cjs"
+    "test:layout": "node tests/responsive-screens-browser.cjs && node tests/responsive-state-browser.cjs && node tests/responsive-settings-browser.cjs && node tests/responsive-failures-browser.cjs && node tests/responsive-safe-area-browser.cjs"
   }
 }

@@ -1,10 +1,17 @@
 /* Shared app frame. Only designated content areas scroll; controls keep their size. */
 html { block-size: 100%; overflow: hidden; }
+:root {
+ --grove-safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+ --grove-safe-right: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+ --grove-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+ --grove-safe-left: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+}
 body {
  position: fixed; inset-inline: 0; inset-block-start: var(--app-viewport-top, 0px);
  block-size: var(--app-viewport-height, 100dvh); min-block-size: 0;
  display: flex; flex-direction: column; overflow: hidden;
- padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+ padding-block: var(--grove-safe-top) var(--grove-safe-bottom);
+ padding-inline: var(--grove-safe-left) var(--grove-safe-right);
 }
 body > header, body > #reward-strip, body > #speech-status, body > #page-navigation, body > footer { flex: none; }
 body > header { min-block-size: 56px; padding: 4px max(8px, calc((100vw - 1120px) / 2)); gap: 8px; }
@@ -26,7 +33,7 @@ body > #app {
 }
 body > footer { min-block-size: 44px; padding: 0 8px; display: flex; align-items: center; justify-content: center; }
 body > footer .progress-link { min-block-size: 44px; margin: 0; }
-#totop { inset-block-end: calc(var(--app-viewport-bottom, 0px) + env(safe-area-inset-bottom, 0px)); inset-inline-end: 8px; }
+#totop { inset-block-end: calc(var(--app-viewport-bottom, 0px) + var(--grove-safe-bottom)); inset-inline-end: calc(var(--grove-safe-right) + 8px); }
 body[data-layout="task"] > #app { overflow: hidden; }
 
 /* Activities share a bounded work area; resize never reconstructs the writer. */
@@ -91,8 +98,10 @@ body[data-layout="home"] .grove-legacy-link { font-size: 12px; line-height: 1.3;
 
 /* Bound dialogs to the visible viewport, including when a keyboard is shown. */
 dialog:not(.bdg):not(.medal) {
- max-inline-size: calc(100% - 16px); max-block-size: calc(var(--app-viewport-height, 100dvh) - 16px);
- inset-block-start: calc(var(--app-viewport-top, 0px) + var(--app-viewport-height, 100dvh) / 2);
+ max-inline-size: calc(100% - var(--grove-safe-left) - var(--grove-safe-right) - 16px);
+ max-block-size: calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px);
+ inset-inline: var(--grove-safe-left) var(--grove-safe-right); margin-inline: auto;
+ inset-block-start: calc(var(--app-viewport-top, 0px) + var(--grove-safe-top) + (var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom)) / 2);
  inset-block-end: auto; margin-block: 0; transform: translateY(-50%);
 }
 dialog.profile-panel > header { min-block-size: 44px; padding: 4px; position: sticky; inset-block-start: 0; z-index: 2; background: var(--surface); }
@@ -113,7 +122,7 @@ dialog.profile-panel > header button, .study-close { min-inline-size: 44px; min-
  body[data-layout="home"] .study-home-hero .grove-hero-copy > p { max-inline-size: 70%; }
 }
 @media (min-width: 700px) and (max-height: 700px) {
- body:has(#page-navigation:not([hidden])) > #page-navigation { position: absolute; inset-block-start: calc(env(safe-area-inset-top, 0px) + var(--app-navigation-top, 100px)); inset-inline-start: 8px; inline-size: 96px; z-index: 2; }
+ body:has(#page-navigation:not([hidden])) > #page-navigation { position: absolute; inset-block-start: calc(var(--grove-safe-top) + var(--app-navigation-top, 100px)); inset-inline-start: calc(var(--grove-safe-left) + 8px); inline-size: 96px; z-index: 2; }
  body:has(#page-navigation:not([hidden])) > #app { padding-inline-start: 112px; }
  .activity-frame { grid-template-columns: minmax(180px, .8fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; }
  .activity-frame-workspace { grid-column: 1; grid-row: 1 / -1; }
@@ -127,7 +136,7 @@ dialog.profile-panel > header button, .study-close { min-inline-size: 44px; min-
 
 /* A task's Back button shares its title row instead of taking a second row. */
 body > footer { margin: 0; border: 0; }
-body[data-layout="task"] > #page-navigation { position: absolute; inset-block-start: calc(env(safe-area-inset-top, 0px) + var(--app-navigation-top, 100px)); inset-inline-start: 0; inline-size: 76px; z-index: 2; }
+body[data-layout="task"] > #page-navigation { position: absolute; inset-block-start: calc(var(--grove-safe-top) + var(--app-navigation-top, 100px)); inset-inline-start: var(--grove-safe-left); inline-size: 76px; z-index: 2; }
 body[data-layout="task"] .activity-frame-heading { padding-inline-start: 76px; min-block-size: 44px; }
 .activity-frame-heading .grove-activity-heading > p, .activity-frame-heading .grove-activity-heading .grove-eyebrow { display: none; }
 .activity-frame-information { max-block-size: 54px; }
@@ -255,7 +264,7 @@ body[data-activity="onboarding"] .profile-setup > p { font-size: 16px; margin: 0
 .profile-setup .onboarding-pane .mean { margin: 4px 0; font-size: 16px; }
 .profile-setup .onboarding-pane .profile-input { min-block-size: 44px; padding: 4px 8px; }
 .profile-setup .onboarding-pane .profile-grade { margin: 4px auto; gap: 4px; }
-dialog.profile-panel.settings-frame { block-size: calc(var(--app-viewport-height, 100dvh) - 16px); max-block-size: calc(var(--app-viewport-height, 100dvh) - 16px); display: flex; flex-direction: column; padding: 8px; overflow: hidden; border-radius: 20px; }
+dialog.profile-panel.settings-frame { block-size: calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px); max-block-size: calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px); display: flex; flex-direction: column; padding: 8px; overflow: hidden; border-radius: 20px; }
 dialog.profile-panel.settings-frame > header { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 4px; }
 dialog.profile-panel.settings-frame .parent-section-nav { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 0; margin: 0; }
 dialog.profile-panel.settings-frame .parent-section-nav button { inline-size: auto; block-size: auto; min-block-size: 44px; margin: 0; padding: 4px; font-size: 14px; border-radius: 10px; }
@@ -288,7 +297,7 @@ body > header .compact-report { inline-size: 44px; min-block-size: 44px; flex: n
 @media (min-width: 700px) and (max-height: 500px) {
  body > header .tn { display: none; }
  body > header .ttl img { margin-inline-end: 0 !important; }
- .activity-frame[data-mode="dictation"] { grid-template-columns: minmax(380px, 1.2fr) minmax(0, 1fr); }
+ .activity-frame[data-mode="dictation"] { grid-template-columns: minmax(240px, 1.1fr) minmax(0, 1fr); }
  .onboarding-steps.compact-steps > .onboarding-pane:first-child { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(240px, 1fr); grid-template-rows: auto auto auto; align-content: start; gap: 4px 12px; }
  .onboarding-pane:first-child > .profile-label { grid-column: 1; grid-row: 1 / 3; }
  .onboarding-pane:first-child > p { grid-column: 2; grid-row: 1; }
@@ -426,3 +435,33 @@ body[data-layout="recovery"] > #app { overflow: hidden; }
 .activity-frame-workspace.activity-result { flex-direction: column; gap: 6px; overflow: auto; }
 .activity-result > * { max-inline-size: 100%; flex: none; margin: 0; }
 .activity-result > h1 { font-size: clamp(24px, 4vh, 40px); }
+
+/* Choices may scroll; starting/resuming a round never requires that scroll. */
+#study-setup.study-setup-frame {
+ display: flex; flex-direction: column; gap: 4px; overflow: hidden;
+ block-size: min(780px, calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px));
+ max-block-size: calc(var(--app-viewport-height, 100dvh) - var(--grove-safe-top) - var(--grove-safe-bottom) - 16px);
+}
+#study-setup .study-setup-title { flex: none; padding: 0; }
+.study-setup-information { flex: 1 1 0; min-block-size: 0; overflow: auto; }
+#study-setup .study-setup-actions { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+#study-setup .study-setup-actions > button { inline-size: 100%; min-block-size: 44px; min-inline-size: 44px; margin: 0; padding: 4px; font-size: 16px; }
+#study-setup .study-setup-actions > .study-resume { grid-column: 1 / -1; }
+#study-setup #study-replace { flex: none; }
+#study-setup #study-replace p { max-block-size: 64px; overflow: auto; margin: 0 0 4px; }
+#study-setup #study-replace .btn { min-block-size: 44px; margin: 0; padding: 4px; font-size: 16px; }
+#study-setup:has(#study-replace:not([hidden])) .study-setup-actions { display: none; }
+@media (min-width: 700px) and (max-height: 500px) {
+ body[data-layout="task"] .activity-frame-heading, #summary-help > .writing-heading { padding-inline-start: 0; }
+ /* Clear stays beside the same canvas, leaving its height for handwriting. */
+ .activity-frame-workspace .dictation-writing { display: grid; grid-template-columns: minmax(0, 1fr) 70px; align-items: center; }
+ .activity-frame-workspace .dictation-writing .dictation-paper { inline-size: min(100%, 100cqh); }
+ .activity-frame-workspace .dictation-writing #dclr { inline-size: 70px; min-inline-size: 44px; padding: 4px; margin: 0; }
+ #summary-help { display: grid; grid-template-columns: minmax(180px, .75fr) minmax(0, 1.25fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 4px 12px; }
+ #summary-help > .writing-heading { grid-column: 1; grid-row: 1; }
+ #summary-help > .reading-note { grid-column: 1; grid-row: 2; min-block-size: 0; overflow: auto; }
+ #summary-help > .summary-reading { grid-column: 1; grid-row: 3; max-block-size: 80px; }
+ #summary-help > .summary-footer { grid-column: 1; grid-row: 4; }
+ #summary-help > .summary-footer p { max-block-size: 72px; overflow: auto; }
+ #summary-help > .summary-steps { grid-column: 2; grid-row: 1 / -1; }
+}

@@ -1,4 +1,4 @@
-const VER='20261105-layout-94';
+const VER='20261106-safe-area-95';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

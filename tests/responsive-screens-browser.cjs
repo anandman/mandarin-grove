@@ -4,8 +4,13 @@ const fs=require('node:fs');
 const viewports=process.env.GROVE_LAYOUT_VIEWPORTS?JSON.parse(process.env.GROVE_LAYOUT_VIEWPORTS):[
  {width:320,height:568},{width:360,height:640},{width:390,height:844},
  {width:412,height:800},{width:820,height:1180},{width:1180,height:820},
- {width:1365,height:768},{width:1440,height:900},{width:844,height:390}
+ {width:1365,height:768},{width:1440,height:900},{width:844,height:390},
+ {width:360,height:720,insets:{top:48,right:0,bottom:24,left:0}},
+ {width:844,height:390,insets:{top:0,right:59,bottom:21,left:59}},
+ {width:820,height:1180,insets:{top:32,right:0,bottom:20,left:0}}
 ];
+// Literal platform inputs exercise the same layout with native system bars/cutouts.
+const defaultInsets=process.env.GROVE_LAYOUT_INSETS?JSON.parse(process.env.GROVE_LAYOUT_INSETS):{top:0,right:0,bottom:0,left:0};
 const tasks={
  onboarding:async()=>setup(false),
  profiles:async()=>who(),
@@ -82,20 +87,21 @@ const settings={
    await page.evaluate(scale=>document.documentElement.style.setProperty('--grove-text-scale',scale),process.env.GROVE_LAYOUT_TEXT_SCALE);
   }
   async function controlChecks(locator,screen,viewport,group){
-   const rows=await locator.evaluateAll(els=>els.map(el=>{
+   const rows=await locator.evaluateAll((els,insets)=>els.map(el=>{
     const r=el.getBoundingClientRect(),v=visualViewport;
     const bounds={left:v?.offsetLeft||0,top:v?.offsetTop||0,width:v?.width||innerWidth,height:v?.height||innerHeight};
-    const inView=r.left>=bounds.left-1&&r.top>=bounds.top-1&&r.right<=bounds.left+bounds.width+1&&r.bottom<=bounds.top+bounds.height+1;
+    const inView=r.left>=bounds.left+insets.left-1&&r.top>=bounds.top+insets.top-1&&r.right<=bounds.left+bounds.width-insets.right+1&&r.bottom<=bounds.top+bounds.height-insets.bottom+1;
     const hit=inView?document.elementFromPoint(r.left+r.width/2,r.top+r.height/2):null;
     return {label:el.getAttribute('aria-label')||el.textContent.trim().slice(0,70)||el.id,
      box:{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom},inView,
      unobscured:!!hit&&(el===hit||el.contains(hit)),usable:r.width>=43.5&&r.height>=43.5};
-   }));
+   }),viewport.insets||defaultInsets);
    for(const r of rows)if(!r.inView||!r.unobscured||!r.usable)failures.push({screen,viewport,group,...r});
    return rows.length;
   }
   for(const viewport of viewports){
-   await page.setViewportSize(viewport);
+   await page.setViewportSize({width:viewport.width,height:viewport.height});
+   await page.evaluate(insets=>{for(const [edge,value]of Object.entries(insets))document.documentElement.style.setProperty('--safe-area-inset-'+edge,value+'px');},viewport.insets||defaultInsets);
    for(const [family,entries]of Object.entries({task:tasks,dialog:dialogs,settings,information,contentDialog})){
     for(const [screen,show]of Object.entries(entries)){
      try{
@@ -116,7 +122,7 @@ const settings={
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       const escaped=await page.evaluate(()=>{
        if(document.body.dataset.layout!=='task')return [];
-       return [...document.querySelectorAll('#app, .activity-frame, .activity-frame-workspace')].filter(el=>el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2).map(el=>({id:el.id,class:el.className,client:[el.clientWidth,el.clientHeight],content:[el.scrollWidth,el.scrollHeight]}));
+       return [...document.querySelectorAll('#app, .activity-frame, .activity-frame-workspace')].filter(el=>!el.classList.contains('activity-result')&&(el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2)).map(el=>({id:el.id,class:el.className,client:[el.clientWidth,el.clientHeight],content:[el.scrollWidth,el.scrollHeight]}));
       });
       if(escaped.length)failures.push({screen,viewport,group:'unintended task scrolling or clipping',escaped});
       if(['dictation','studyDictation'].includes(screen)){
@@ -126,6 +132,7 @@ const settings={
       const scope=['dialog','settings','contentDialog'].includes(family)?page.locator('dialog[open]').last():page.locator('#app');
       let count=0;
       if(['task','dialog','contentDialog'].includes(family))count+=await controlChecks(scope.getByRole('button'),screen,viewport,'screen actions');
+      if(screen==='summary')count+=await controlChecks(scope.getByRole('textbox'),screen,viewport,'active writing field');
       // Visit every pane; hidden future controls must not get a free pass.
       if(['dictation','studyDictation','summary','onboarding'].includes(screen)){
        const steps=scope.locator('.compact-step-navigation:visible');
@@ -133,6 +140,7 @@ const settings={
         for(let step=1;step<(screen==='summary'?3:2);step++){
          await steps.getByRole('button',{name:/^Next:/}).click();
          count+=await controlChecks(scope.getByRole('button'),screen+' step '+(step+1),viewport,'step actions');
+         if(screen==='summary')count+=await controlChecks(scope.getByRole('textbox'),screen+' step '+(step+1),viewport,'active writing field');
         }
        }
       }
@@ -157,7 +165,7 @@ const settings={
       cases.push({screen,family,viewport,controlsChecked:count});
       if(process.env.GROVE_LAYOUT_SCREENSHOTS&&['home','trace','studyTrace','dictation','studyDictation','studyWords','dictationResult','summary','settingsBackup','restorePreview','feedback'].includes(screen)){
        fs.mkdirSync(process.env.GROVE_LAYOUT_SCREENSHOTS,{recursive:true});
-       await page.screenshot({path:require('node:path').join(process.env.GROVE_LAYOUT_SCREENSHOTS,`${viewport.width}x${viewport.height}-${screen}.png`)});
+       await page.screenshot({path:require('node:path').join(process.env.GROVE_LAYOUT_SCREENSHOTS,`${viewport.width}x${viewport.height}${viewport.insets?'-safe'+Object.values(viewport.insets).join('-'):''}-${screen}.png`)});
       }
      }catch(e){failures.push({screen,family,viewport,error:e.message});}
      writeReport(false);
