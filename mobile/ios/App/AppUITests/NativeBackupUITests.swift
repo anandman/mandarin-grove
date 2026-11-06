@@ -2,6 +2,97 @@ import XCTest
 import UIKit
 
 final class NativeBackupUITests: XCTestCase {
+    @MainActor func testCaptureNativeStoreScreenshots() throws {
+        let owned = ["BC062C51-505F-4C31-967F-28FED4039C62", "D8BDD534-DAAF-4370-96CA-920D1F871524"]
+        guard ProcessInfo.processInfo.environment["GROVE_STORE_CAPTURE"] == "1",
+              owned.contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else {
+            throw XCTSkip("Explicit capture flag and owned synthetic simulator required")
+        }
+        continueAfterFailure = false
+        let device = XCUIDevice.shared, original = device.orientation
+        defer { device.orientation = original == .unknown ? .portrait : original }
+        device.orientation = .portrait
+        let app = XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove")
+        app.launch()
+        guard requireGroveContent(app, context: "before native store capture") else { return }
+
+        // Add/select a demo through ordinary onboarding. Existing learners,
+        // backups and their unknown fields are never replaced or removed.
+        let demo = app.webViews.buttons["🐼 Mei K, Kindergarten"]
+        let name = app.webViews.textFields["Kid's name"]
+        let add = app.webViews.buttons["＋ Add kid"]
+        if !demo.exists && !name.exists && !add.exists {
+            let switchLearner = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Switch learner")).firstMatch
+            XCTAssertTrue(switchLearner.waitForExistence(timeout: 10)); switchLearner.tap()
+        }
+        if demo.waitForExistence(timeout: 1) {
+            demo.tap()
+        } else {
+            if !name.exists {
+                XCTAssertTrue(add.waitForExistence(timeout: 10)); add.tap()
+            }
+            XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText("Mei")
+            app.webViews.switches["Avatar 🐼"].tap()
+            let next = app.webViews.buttons["Next: Grade"]
+            if next.exists && next.isHittable { next.tap() }
+            let kinder = app.webViews.switches["Kinder"]
+            XCTAssertTrue(kinder.waitForExistence(timeout: 10)); kinder.tap()
+            app.webViews.buttons["Let's go ▶"].tap()
+        }
+        let practice = app.webViews.buttons["Practice"]
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+        try captureStoreFrame("01-home")
+
+        practice.tap()
+        let resume = app.webViews.buttons["Continue this round"]
+        if resume.waitForExistence(timeout: 2) { resume.tap() }
+        else {
+            let start = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Start · ")).firstMatch
+            XCTAssertTrue(start.waitForExistence(timeout: 10)); start.tap()
+        }
+        let watch = app.webViews.buttons["Watch strokes"]
+        var foundTrace = false
+        for _ in 0..<6 {
+            if watch.waitForExistence(timeout: 1) && watch.isHittable { foundTrace = true; break }
+            let skip = app.webViews.buttons["Skip ▶"]
+            XCTAssertTrue(skip.waitForExistence(timeout: 10)); skip.tap()
+        }
+        XCTAssertTrue(foundTrace, "A real tracing question must be rendered")
+        try captureStoreFrame("02-handwriting")
+        app.webViews.buttons["Pause"].tap()
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+
+        app.webViews.buttons["Help"].tap()
+        XCTAssertTrue(app.webViews.buttons["Back to Home"].waitForExistence(timeout: 10))
+        try captureStoreFrame("03-writing-help")
+        app.webViews.buttons["Back to Home"].tap()
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+        let grove = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Your grove ›")).firstMatch
+        XCTAssertTrue(grove.waitForExistence(timeout: 10)); grove.tap()
+        XCTAssertTrue(app.webViews.buttons["Back to Home"].waitForExistence(timeout: 10))
+        try captureStoreFrame("04-grove")
+        app.webViews.buttons["Back to Home"].tap()
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+    }
+
+    @MainActor private func captureStoreFrame(_ name: String) throws {
+        // Encode the native screen directly as JPEG; no resizing, compositing,
+        // simulated UI or image editing is used for store screenshots.
+        if XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove").keyboards.firstMatch.exists {
+            let hidden = expectation(for: NSPredicate { _, _ in
+                !XCUIApplication(bundleIdentifier: "design.highgain.mandaringrove").keyboards.firstMatch.exists
+            }, evaluatedWith: nil)
+            wait(for: [hidden], timeout: 5)
+        }
+        let screen = XCUIScreen.main.screenshot()
+        let image = screen.image
+        let pixels = try XCTUnwrap(image.cgImage)
+        let jpeg = try XCTUnwrap(image.jpegData(compressionQuality: 1))
+        let attachment = XCTAttachment(uniformTypeIdentifier: "public.jpeg", name: "store-" + name, payload: jpeg, userInfo: nil)
+        attachment.lifetime = .keepAlways; add(attachment)
+        print("GROVE_STORE_CAPTURE:\(name):\(pixels.width)x\(pixels.height)")
+    }
+
     @MainActor func testNativeKeyboardRotationKeepsInputAndSettingsTouchable() throws {
         guard ["9EFE4227-7925-437A-99B7-FBD467913AE2", "BC062C51-505F-4C31-967F-28FED4039C62"].contains(ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "") else {
             throw XCTSkip("Owned synthetic iPad/iPhone required")
