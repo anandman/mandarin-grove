@@ -1,6 +1,6 @@
 {
   "name": "mandarin-grove-mobile",
-  "version": "0.1.0",
+  "version": "1.0.100",
   "private": true,
   "engines": {
     "node": ">=22"

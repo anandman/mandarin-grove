@@ -1,4 +1,4 @@
-const VER='20261106-focus-99';
+const VER='1.0.100';
 let deferredUpdateVersion='',pendingUpdateVersion='',updateReturnFocus=null;
 
 function deferAppUpdate(){

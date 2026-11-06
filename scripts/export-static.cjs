@@ -2,14 +2,9 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const publicFiles=require('./static-files.json');
+const {checkRelease}=require('./release.cjs');
 function validateRelease(root){
- const read=file=>fs.readFileSync(path.join(root,file),'utf8'),version=read('version.txt').trim();
- if(!/^\d{8}-[a-z0-9-]+$/.test(version))throw Error('Invalid app release version');
- for(const [file,pattern]of [['version-check.js',/\bconst VER='([^']+)'/],['sw.js',/\bconst VERSION='([^']+)'/]]){
-  if(read(file).match(pattern)?.[1]!==version)throw Error('Release version mismatch: '+file);
- }
- const assets=[...read('index.html').matchAll(/<(?:script|link|img)\b[^>]*\b(?:src|href)="([^"]+)"/g)];
- if(!assets.length||assets.some(asset=>new URL(asset[1],'https://grove.invalid/').searchParams.get('v')!==version))throw Error('Release version mismatch: index.html');
+ checkRelease(root);
 }
 function exportStatic(root,output,{feedback='server'}={}){
  if(!['server','local'].includes(feedback))throw Error('Unknown feedback capability');

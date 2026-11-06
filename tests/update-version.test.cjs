@@ -15,6 +15,7 @@ for(const stale of ['version-check.js','sw.js','index.html'])test('static export
   for(const dir of ['audio','strokes'])fs.mkdirSync(path.join(root,dir));
   const version=read('version.txt').trim();
   for(const name of ['index.html','version.txt','sw.js'])fs.writeFileSync(path.join(root,name),read(name));
+  for(const name of ['release.json','package.json','mobile/package.json','mobile/package-lock.json','mobile/android/app/build.gradle','mobile/ios/App/App.xcodeproj/project.pbxproj']){const file=path.join(root,name);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,read(name));}
   fs.writeFileSync(path.join(root,'version-check.js'),"const VER='"+version+"';\n");
   const file=path.join(root,stale);fs.writeFileSync(file,fs.readFileSync(file,'utf8').replaceAll(version,'20200101-old-1'));
   assert.throws(()=>exportStatic(fs.realpathSync(root),out),error=>error.message.includes('Release version mismatch')&&error.message.includes(stale));
