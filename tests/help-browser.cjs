@@ -26,5 +26,26 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=req
  }
  await page.evaluate(async ()=>{PR.cur='helper-other';(await savePR());(await loadS());showHomeworkLookup()});assert.equal(await page.locator('#lookup-input').inputValue(),'');assert.ok(await page.locator('#lookup-practice').isDisabled(),'A different child cannot inherit the selected characters');
  const retryContext=await browser.newContext({serviceWorkers:'block'}),retry=await retryContext.newPage();await retry.route('**/vendor/cc-cedict/dictionary.json*',r=>r.abort());await retry.goto(process.env.APP_URL||'http://127.0.0.1:4181');await retry.evaluate(async ()=>{PR={cur:'helper-fail',list:[{id:'helper-fail',name:'Learner',gr:'2',av:'🐼'}]};(await savePR());S=blank();(await loadS());window.say=()=>{};showHomeworkLookup()});await retry.locator('#lookup-retry').waitFor({state:'visible'});await retry.locator('#lookup-input').fill('学');await retry.locator('#lookup-search').click();assert.ok(await retry.locator('[data-lookup-text="学"]').isVisible(),'School characters remain searchable when dictionary loading fails');await retry.unroute('**/vendor/cc-cedict/dictionary.json*');await retry.locator('#lookup-retry').click();await retry.waitForFunction(()=>document.getElementById('lookup-bank-status')?.dataset.ready==='true');await retryContext.close();
+ // Native packaged assets must not inherit a PWA install failure or setup action.
+ // This is a rendered capability regression; real native packaging stays a separate gate.
+ const savedStatusPlatform=await page.evaluate(()=>{window.lookupStatusPlatform=GrovePlatform;window.lookupOriginalOffline=OFFLINE_STATUS;return Object.keys(localStorage).sort().map(k=>[k,localStorage.getItem(k)]);});
+ let statusCases=0;
+ for(const platform of ['web','ios','android'])for(const status of ['unavailable','loading','error','ready']){
+  await page.evaluate(({platform,status})=>{window.GrovePlatform=Object.freeze({...window.lookupStatusPlatform,platform});OFFLINE_STATUS=status;showHomeworkLookup();dispatchEvent(new Event('grove-offline-status'));},{platform,status});
+  const text=await page.locator('#lookup-offline-status').innerText(),retryVisible=await page.locator('#lookup-offline-retry').isVisible();
+  if(platform==='web'){
+   assert.match(text,{unavailable:/unavailable.*browser/i,loading:/preparing.*offline/i,error:/did not finish/i,ready:/saved.*offline/i}[status]);
+   assert.equal(retryVisible,status==='error','Web offline install retry is offered exactly after a setup error');
+  }else{
+   assert.match(text,/offline/i,platform+' identifies bundled offline availability');
+   assert.match(text,/included|available/i,platform+' identifies bundled assets');
+   assert.doesNotMatch(text,/browser|unavailable|did not finish|preparing/i,platform+' must not inherit PWA installation state '+status);
+   assert.equal(retryVisible,false,platform+' does not offer a PWA installer');
+  }
+  statusCases++;console.log('PASS lookup offline status: '+platform+' / '+status);
+ }
+ await page.evaluate(()=>{window.GrovePlatform=window.lookupStatusPlatform;OFFLINE_STATUS=window.lookupOriginalOffline;dispatchEvent(new Event('grove-offline-status'));delete window.lookupStatusPlatform;delete window.lookupOriginalOffline;});
+ assert.deepEqual(await page.evaluate(()=>Object.keys(localStorage).sort().map(k=>[k,localStorage.getItem(k)])),savedStatusPlatform,'Offline availability presentation preserves every raw saved entry');
+ assert.equal(statusCases,12);
  assert.deepEqual(errors,[]);assert.ok(requests.every(r=>r.method==='GET'),'Typed queries are not posted anywhere');assert.ok(requests.every(r=>!r.url.includes('學校')&&!r.url.includes(encodeURIComponent('學校'))),'Search text stays off request URLs');console.log('PASS: local all-grade lookup, pinyin/ü/traditional words, voice/strokes, Practice handoff, exact progress preservation, IME, child isolation, dictionary retry and phone/tablet themes.');
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
