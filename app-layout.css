@@ -109,7 +109,9 @@ dialog.profile-panel > header h2 { margin: 0; font-size: 24px; }
 dialog.profile-panel > header button, .study-close { min-inline-size: 44px; min-block-size: 44px; }
 
 @media (max-width: 680px) {
- body > header { min-block-size: 52px; padding: 4px 8px; }
+ body > header { min-block-size: 52px; padding: 4px 8px; gap: 4px; flex-wrap: nowrap; }
+ body > header #hd { min-inline-size: 0; flex: 1 1 0; justify-content: flex-end; }
+ body > header #gear, body > header .appearance-toggle { inline-size: 44px; block-size: 44px; padding: 0; line-height: 1; }
  body > header .ttl img { inline-size: 28px !important; block-size: 28px !important; margin-inline-end: 0 !important; }
  body > header #home { display: none !important; }
  body > header .nm { max-inline-size: 5ch; }
@@ -137,7 +139,7 @@ dialog.profile-panel > header button, .study-close { min-inline-size: 44px; min-
 /* A task's Back button shares its title row instead of taking a second row. */
 body > footer { margin: 0; border: 0; }
 body[data-layout="task"] > #page-navigation { position: absolute; inset-block-start: calc(var(--grove-safe-top) + var(--app-navigation-top, 100px)); inset-inline-start: var(--grove-safe-left); inline-size: 76px; z-index: 2; }
-body[data-layout="task"] .activity-frame-heading { padding-inline-start: 76px; min-block-size: 44px; }
+body[data-layout="task"] .activity-frame-heading { padding-inline-start: 0; min-block-size: 44px; }
 .activity-frame-heading .grove-activity-heading > p, .activity-frame-heading .grove-activity-heading .grove-eyebrow { display: none; }
 .activity-frame-information { max-block-size: 54px; }
 .activity-frame-information .writing-help-note { margin: 0; }
